@@ -19,7 +19,7 @@ data:extend({
     },
 
     results = {
-      { type = "item", name = "iron-ore", amount = 5 }
+      { type = "item", name = "iron-ore", amount = 1 }
     }
 
     -- No icon/subgroup specified: the recipe automatically inherits

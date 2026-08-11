@@ -1,1 +1,0 @@
-mklink /J "%APPDATA%\Factorio\mods\hello-world-iron-ore_1.0.0" "C:\Users\Ivan\IdeaProjects\Factorio1\src"
