@@ -1,0 +1,9 @@
+{
+    "Lua.workspace.library": [
+        "c:\\Program Files (x86)\\Steam\\steamapps\\common\\Factorio\\data"
+    ],
+    "Lua.workspace.userThirdParty": [
+        "c:\\Users\\Ivan\\AppData\\Roaming\\Code\\User\\workspaceStorage\\af7c0f2f7642e5d90dd56646664ea5f8\\justarandomgeek.factoriomod-debug\\sumneko-3rd"
+    ],
+    "Lua.workspace.checkThirdParty": "ApplyInMemory"
+}
