@@ -1,9 +1,10 @@
 {
-  "name": "hello-world-iron-ore",
+  "name": "tycoon",
   "version": "1.0.0",
-  "title": "Hello World - Iron Ore Recipe",
-  "author": "YourName",
-  "description": "A tiny hello-world mod that adds a hand-craftable recipe to turn wood into iron ore.",
+  "title": "Tycoon",
+  "author": "Vescator",
+  "description": "A simple Tycoon mod",
   "factorio_version": "2.1",
+  "spoiling_required": true,
   "dependencies": ["base >= 2.1.0"]
 }

@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "Run Factorio",
+            "script": "${workspaceFolder}/tools/run-dev.ps1",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
