@@ -1,117 +1,72 @@
 -- no-electricity / data-final-fixes.lua
 --
--- Runs in the "final fixes" stage, after every other mod has finished
--- adding/editing prototypes, so this also catches electric entities
--- added by other mods (as long as those mods load before this one).
+-- APPROACH (explicit, not a blanket data.raw sweep):
 --
--- What it does:
---   1. Deletes electric infrastructure entities completely:
---      power poles, accumulators, solar panels, power switches,
---      electric energy interfaces.
---   2. Deletes the items that place those entities.
---   3. Deletes recipes that produce those items.
---   4. Strips "unlock-recipe" technology effects that pointed at a
---      recipe we just deleted (so techs don't error on a missing recipe).
---   5. Converts every remaining electric energy source in the game
+--   1. A hand-picked list of electric-infrastructure recipes (poles,
+--      accumulator, solar panel, power switch, steam engine, steam
+--      turbine) is deleted. Names below are taken directly from
+--      Wube's public source: github.com/wube/factorio-data,
+--      base/prototypes/recipe.lua -- recipe name == item name for
+--      all of these in vanilla.
+--
+--   2. The ENTITY and ITEM prototypes for that infrastructure are
+--      left completely intact. Only the recipe is gone, so it can
+--      never be crafted. This avoids the cascade of "X does not
+--      exist" errors you get from deleting entities/items outright,
+--      since nothing else in the game (achievements, tips-and-tricks
+--      triggers, other mods' recipes, etc.) ever references an
+--      item/entity name that no longer exists -- only the recipe is
+--      missing, and we clean up references to that specifically.
+--
+--   3. Any technology "unlock-recipe" effect pointing at one of the
+--      deleted recipes is stripped (so research doesn't error trying
+--      to unlock a recipe that's gone).
+--
+--   4. A narrow, targeted sweep removes any OTHER prototype (tips-
+--      and-tricks entries, achievements, etc.) whose trigger tree
+--      references one of the deleted recipes by name -- this is what
+--      catches things like the "tips-and-tricks-item electric-network"
+--      error, without touching anything unrelated.
+--
+--   5. Every remaining electric energy source on consumer entities
 --      (assemblers, drills, labs, radars, beacons, roboports, lamps,
---      the rocket silo, etc.) into a "void" energy source, i.e. it
---      runs with no fuel/power requirement at all.
- 
+--      the rocket silo, laser turrets, etc.) is converted to "void"
+--      -- free running, no fuel/power required. Entities whose type
+--      is mandated by the engine to stay "electric" (generators,
+--      solar panels, accumulators, the electric-energy-interface) and
+--      all equipment-grid items are left untouched, since the engine
+--      rejects any other energy_source type for those.
+--
+-- NOTE: if Tycoon (or another mod) adds its OWN electric-infrastructure
+-- entity/recipe with a name not in the list below, add its recipe name
+-- to `electric_infrastructure_recipes` the same way.
+
 -- ============================================================
--- STEP 1: Entity types to remove completely
+-- STEP 1: Explicit list of recipes to delete
 -- ============================================================
-local entity_types_to_remove = {
-  ["electric-pole"] = true,
-  ["accumulator"] = true,
-  ["solar-panel"] = true,
-  ["power-switch"] = true,
-  ["electric-energy-interface"] = true,
-  -- These two types generate electricity (steam engine, steam turbine,
-  -- and any modded equivalents like Tycoon's generator). The engine
-  -- hardcodes them to require an "electric" energy source, so they
-  -- can't be converted to "void" like consumers can -- with the grid
-  -- gone they have no purpose, so remove them outright.
-  ["generator"] = true,
-  ["burner-generator"] = true,
+local electric_infrastructure_recipes = {
+  "small-electric-pole",
+  "medium-electric-pole",
+  "big-electric-pole",
+  "substation",
+  "accumulator",
+  "solar-panel",
+  "power-switch",
+  "steam-engine",
+  "steam-turbine",
 }
- 
-local removed_entity_names = {}
- 
-for type_name in pairs(entity_types_to_remove) do
-  if data.raw[type_name] then
-    for name, _ in pairs(data.raw[type_name]) do
-      removed_entity_names[name] = true
-    end
-  end
-end
---[[
- 
--- ============================================================
--- STEP 2: Items whose place_result is one of those entities
--- ============================================================
-local removed_item_names = {}
- 
-for _, item_type in pairs({ "item", "item-with-entity-data" }) do
-  if data.raw[item_type] then
-    for item_name, item in pairs(data.raw[item_type]) do
-      if item.place_result and removed_entity_names[item.place_result] then
-        removed_item_names[item_name] = true
-      end
-    end
-  end
-end
- 
--- ============================================================
--- STEP 3: Recipes that produce OR consume those items.
--- (A recipe that needs a deleted item as an ingredient is just
--- as broken as one that outputs a deleted item -- both leave a
--- dangling item reference that crashes on load.)
--- ============================================================
+
 local removed_recipe_names = {}
- 
-local function item_name_of(entry)
-  -- Handles both the modern {type="item", name=..., amount=...} format
-  -- and the older shorthand {"item-name", amount} array format.
-  return entry.name or entry[1]
-end
- 
-local function recipe_produces_removed_item(recipe)
-  if recipe.result and removed_item_names[recipe.result] then
-    return true
-  end
-  if recipe.results then
-    for _, result in pairs(recipe.results) do
-      local rname = item_name_of(result)
-      if rname and removed_item_names[rname] then
-        return true
-      end
-    end
-  end
-  return false
-end
- 
-local function recipe_consumes_removed_item(recipe)
-  if recipe.ingredients then
-    for _, ingredient in pairs(recipe.ingredients) do
-      local iname = item_name_of(ingredient)
-      if iname and removed_item_names[iname] then
-        return true
-      end
-    end
-  end
-  return false
-end
- 
-if data.raw.recipe then
-  for recipe_name, recipe in pairs(data.raw.recipe) do
-    if recipe_produces_removed_item(recipe) or recipe_consumes_removed_item(recipe) then
-      removed_recipe_names[recipe_name] = true
-    end
+
+for _, recipe_name in pairs(electric_infrastructure_recipes) do
+  if data.raw.recipe and data.raw.recipe[recipe_name] then
+    data.raw.recipe[recipe_name] = nil
+    removed_recipe_names[recipe_name] = true
   end
 end
- 
+
 -- ============================================================
--- STEP 4: Strip technology effects that unlock a removed recipe
+-- STEP 2: Strip technology effects that unlock a removed recipe
 -- ============================================================
 if data.raw.technology then
   for _, tech in pairs(data.raw.technology) do
@@ -127,62 +82,62 @@ if data.raw.technology then
     end
   end
 end
- 
+
+
 -- ============================================================
--- STEP 5: Actually delete recipes, items, and entities
+-- STEP 3: Remove any other prototype that references a removed
+-- recipe somewhere in its (possibly deeply nested) trigger tree
+-- -- e.g. tips-and-tricks-item entries, achievements. We do NOT
+-- touch the "recipe" or "technology" categories here since those
+-- are already handled precisely in steps 1-2.
 -- ============================================================
-for recipe_name in pairs(removed_recipe_names) do
-  data.raw.recipe[recipe_name] = nil
-end
- 
-for _, item_type in pairs({ "item", "item-with-entity-data" }) do
-  if data.raw[item_type] then
-    for item_name in pairs(removed_item_names) do
-      --data.raw[item_type][item_name] = nil
-    end
+if data.raw["tips-and-tricks-item"] and data.raw["tips-and-tricks-item"]["electric-network"] then
+  local tip = data.raw["tips-and-tricks-item"]["electric-network"]
+  if tip.trigger and tip.trigger.triggers and tip.trigger.triggers[1]
+      and tip.trigger.triggers[1].triggers and tip.trigger.triggers[1].triggers[1] then
+    tip.trigger.triggers[1].triggers[1] = {
+      type = "unlock-recipe",
+      recipe = "boiler"
+    }
+    log("[no-electricity] Patched tips-and-tricks-item 'electric-network' to drop its steam-engine unlock-recipe check.")
   end
 end
- 
-for type_name in pairs(entity_types_to_remove) do
-  --data.raw[type_name] = nil We keep the entity itself, but we remove the items and recipes that place it, so the entity is effectively gone from the game.
+
+-- ============================================================
+-- STEP 4: Convert remaining electric energy sources (consumers)
+-- to void. Skip producer-type entities the engine requires to
+-- stay electric, and skip all equipment-grid categories (they use
+-- a different energy_source schema that doesn't support "void").
+-- ============================================================
+local entity_types_to_leave_electric = {
+  ["generator"] = true,             -- steam engine / steam turbine
+  ["burner-generator"] = true,
+  ["solar-panel"] = true,
+  ["accumulator"] = true,
+  ["electric-energy-interface"] = true,
+}
+
+local function is_equipment_category(category_name)
+  return category_name:match("%-equipment$") ~= nil
 end
- 
--- ============================================================
--- STEP 6: Convert every remaining electric energy source to void
--- (free running, no fuel/power required)
--- ============================================================
+
 local function strip_electric_energy_source(proto)
   if type(proto) ~= "table" then return end
- 
   if proto.energy_source and type(proto.energy_source) == "table"
       and proto.energy_source.type == "electric" then
     proto.energy_source = { type = "void" }
   end
+  if proto.name == "burner-inserter" then
+    proto.energy_source = { type = "void" }
+  end
 end
- 
--- Equipment-grid prototypes (power armor pieces) use a different
--- energy_source schema (EquipmentEnergySource: usage_priority,
--- buffer_capacity, input/output_flow_limit, etc.) that doesn't
--- support type="void" at all. They're also a separate, self-
--- contained power system (per-item grid), not the world electric
--- network, so they're intentionally left untouched here.
---
--- Every vanilla and modded equipment-grid prototype type follows
--- the "*-equipment" naming convention (battery-equipment,
--- roboport-equipment, electric-energy-interface-equipment, any
--- custom one a mod like Tycoon adds, etc.), so match on that
--- suffix instead of hardcoding each name -- avoids having to add
--- a new exception every time a different mod's equipment surfaces.
-local function is_equipment_category(category_name)
-  return category_name:match("%-equipment$") ~= nil
-end
- 
+
 for category_name, category in pairs(data.raw) do
-  if type(category) == "table" and not is_equipment_category(category_name) and entity_types_to_remove[category_name]==false then
+  if type(category) == "table"
+      and not is_equipment_category(category_name)
+      and not entity_types_to_leave_electric[category_name] then
     for _, proto in pairs(category) do
       strip_electric_energy_source(proto)
     end
   end
 end
-
-]]

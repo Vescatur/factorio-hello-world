@@ -3,22 +3,11 @@
 local spoil_slow = 5 * 60 * 60
 local spoil_fast = 5 * 60 * 60
 
+
 data:extend({
     {
         type = "item",
-        name = "customer",
-        icon = "__tycoon__/graphics/icons/customer.png",
-        icon_size = 64,
-        subgroup = "raw-material",
-        order = "g[customer]",
-        stack_size = 50,
-        spoil_ticks = spoil_slow,
-    }
-})
-data:extend({
-    {
-        type = "item",
-        name = "customer_iron_gear",
+        name = "customer_iron_gear_wheel",
         icons = {
             {
                 icon = "__tycoon__/graphics/icons/customer.png",
@@ -39,6 +28,39 @@ data:extend({
         spoil_ticks = spoil_fast,
     }
 })
+data:extend({
+    {
+        type = "recipe",
+        name = "customer-iron-to-science",
+        enabled = true,
+        ingredients = {
+            { type = "item", name = "customer_iron_gear_wheel", amount = 1 },
+            { type = "item", name = "iron-gear-wheel", amount = 1 }
+        },
+        results = {
+            { type = "item", name = "automation-science-pack", amount = 4 },
+            { type = "item", name = "customer_iron_gear_wheel", amount = 1 }
+        },
+        icons = {
+            {
+                icon = "__tycoon__/graphics/icons/customer.png",
+                icon_size = 64,
+                icon_mipmaps = 4
+            },
+            {
+                icon = "__base__/graphics/icons/iron-gear-wheel.png",
+                icon_size = 64,
+                icon_mipmaps = 4,
+                scale = 0.3,
+                shift = { 6, 6 }
+            }
+        },
+        energy_required = 3
+    }
+})
+
+
+
 data:extend({
     {
         type = "item",
@@ -70,7 +92,7 @@ data:extend({
         name = "customer-new",
         enabled = true,
         results = {
-            { type = "item", name = "customer", amount = 1 }
+            { type = "item", name = "customer_iron_gear_wheel", amount = 1 }
         },
         energy_required = 2
     }
@@ -82,48 +104,16 @@ data:extend({
         name = "customer-ask",
         enabled = true,
         ingredients = {
-            { type = "item", name = "customer", amount = 1 }
+            { type = "item", name = "customer_iron_gear_wheel", amount = 1 }
         },
         results = {
-            { type = "item", name = "customer_iron_gear", amount = 1, shared_probability = { min = 0.0, max = 0.5 } },
+            { type = "item", name = "customer_iron_gear_wheel", amount = 1, shared_probability = { min = 0.0, max = 0.5 } },
             { type = "item", name = "customer_copper", amount = 1, shared_probability = { min = 0.5, max = 1.0 } }
         },
         icon = "__tycoon__/graphics/icons/customer.png",
         energy_required = 1
     }
 })
-
-data:extend({
-    {
-        type = "recipe",
-        name = "customer-iron-to-science",
-        enabled = true,
-        ingredients = {
-            { type = "item", name = "customer_iron_gear", amount = 1 },
-            { type = "item", name = "iron-gear-wheel", amount = 1 }
-        },
-        results = {
-            { type = "item", name = "automation-science-pack", amount = 4 },
-            { type = "item", name = "customer", amount = 1 }
-        },
-        icons = {
-            {
-                icon = "__tycoon__/graphics/icons/customer.png",
-                icon_size = 64,
-                icon_mipmaps = 4
-            },
-            {
-                icon = "__base__/graphics/icons/iron-gear-wheel.png",
-                icon_size = 64,
-                icon_mipmaps = 4,
-                scale = 0.3,
-                shift = { 6, 6 }
-            }
-        },
-        energy_required = 3
-    }
-})
-
 data:extend({
     {
         type = "recipe",
@@ -135,7 +125,7 @@ data:extend({
         },
         results = {
             { type = "item", name = "automation-science-pack", amount = 2 },
-            { type = "item", name = "customer", amount = 1 }
+            { type = "item", name = "customer_iron_gear_wheel", amount = 1 }
         },
         icons = {
             {
