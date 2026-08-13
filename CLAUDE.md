@@ -21,6 +21,7 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
 
 - `src/` — The mod source (symlinked into Factorio mods folder)
   - `data.lua` — Entry point, requires all services
+  - `control.lua` — Runtime: enforces the single-Entrance limit (the mod's only control-stage code)
   - `services/recipes.lua` — Core: customer types, delivery recipes, coin economy
   - `services/remove_ore.lua` — Strips all ore/resource generation
   - `services/remove_electricity.lua` — Removes electric infrastructure, converts energy sources to void
@@ -76,6 +77,7 @@ Add an entry to the `resources` table in `services/recipes.lua` with `item`, `pr
 - **Never modify `factorio-data/`** — it's base game reference data
 - **Never re-add ores or electricity** — the entire mod design depends on their absence
 - **Customer spawn probabilities must sum to 1.0** — there's a runtime assertion; breaking it crashes the game
+- **Only one Entrance may exist** — it's the sole source of customers, so its count is what bounds the whole economy. `src/control.lua` refuses extra placements. Retune throughput via `energy_required` on `customer-new` or the Entrance's `crafting_speed`, never by allowing more buildings
 - **Mod internal name is `tycoon`** — referenced in paths, icon prefixes (`__tycoon__`), and the symlink
 - **Target Factorio version: 2.1** — uses features not available in earlier versions
 - **Never depend on Space Age** — base game only; don't reference Space Age prototypes or add it to `dependencies`

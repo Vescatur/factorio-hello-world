@@ -1,5 +1,19 @@
 local ores_to_remove = {"coal","stone","copper-ore","iron-ore","uranium-ore","crude-oil"}
 
+-- Smelting recipes that turn ore into plates. With no ore in the world they
+-- are dead weight in the furnace UI, and leaving them in suggests smelting is
+-- still a route to plates -- in Tycoon plates come from coin only (see the
+-- `resources` table in recipes.lua). Both are enabled by default in vanilla,
+-- so no technology unlock or achievement/tips trigger references them; the
+-- ITEM prototypes stay intact, only the recipes go.
+local smelting_recipes_to_remove = {"iron-plate","copper-plate"}
+
+for _, recipe in ipairs(smelting_recipes_to_remove) do
+    if data.raw.recipe[recipe] then
+        data.raw.recipe[recipe] = nil
+    end
+end
+
 for _, ore in ipairs(ores_to_remove) do
     if data.raw["resource"][ore] then
     data.raw["resource"][ore].autoplace = nil

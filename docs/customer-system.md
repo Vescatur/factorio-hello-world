@@ -8,7 +8,15 @@ The entire economy revolves around customers. Customers are **items that spoil**
 
 ### 1. Customer Creation
 
-A "New Customer" recipe produces a `customer_wood` item (the entry-point customer). This takes 60 seconds to craft and requires no ingredients — it's the seed of the economy.
+A "New Customer" recipe produces a `customer_wood` item (the entry-point customer). This takes 60 seconds to craft and requires no ingredients — it's the seed of the economy. It only runs in an **Entrance** building.
+
+### 1a. The Entrance Cap
+
+The customer population is **conserved**: every delivery recipe consumes exactly one customer and emits exactly one replacement (spawn probabilities sum to 1.0). So the population has a single source — the Entrance — and a single sink — spoilage. That makes the Entrance count the one dial controlling how many customers exist.
+
+**Only one Entrance may exist**, enforced at runtime by `src/control.lua`. Placing a second one is refused: the item is returned to the builder and the running Entrance is left untouched. Blueprint ghosts are still allowed; the refusal happens when a bot tries to revive one.
+
+To retune customer throughput, change `energy_required` on the `customer-new` recipe or `crafting_speed` on the Entrance — not the number of buildings.
 
 ### 2. Customer Items
 
