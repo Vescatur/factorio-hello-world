@@ -11,7 +11,7 @@ end
 
 
 -- 60 seconds * 60 ticks
-local spoil_fast = 10 * 60
+local spoil_fast = 30 * 60
 
 data:extend({
     {
@@ -38,8 +38,21 @@ data:extend({
         name = "coin-buy",
         group = "customer-group",
         order = "z"
+    },
+    {
+        type = "item-subgroup",
+        name = "coin",
+        group = "customer-group",
+        order = "y"
     }
 })
+
+-- Coin is the mod's currency, so it must be selectable in inserter/logistics
+-- filters. Base game hides it, which excludes it from every item-picker list.
+data.raw.item.coin.hidden = false
+data.raw.item.coin.hidden_in_factoriopedia = false
+data.raw.item.coin.subgroup = "coin"
+data.raw.item.coin.order = "a[coin]"
 
 data:extend({
     {
@@ -48,7 +61,7 @@ data:extend({
         categories = { "entrance" },
         enabled = true,
         results = {
-            { type = "item", name = "customer_wood", amount = 1 }
+            { type = "item", name = "customer_wood", amount = 1, always_fresh = true }
         },
         energy_required = 60,
         subgroup = "customer-new",
@@ -61,14 +74,16 @@ local customers = {
     {
         item_to_deliver = "wood",
         amount = 10,
-        cost = 10,
+        cost = 1,
+        reward = 1,
+        reward_percentage = 1,
         new_customers = {
             {
-                item="wood",
+                item="iron-plate",
                 chance = 0.5,
             },
             {
-                item="iron-plate",
+                item="copper-plate",
                 chance = 0.5,
             }
         }
@@ -77,20 +92,16 @@ local customers = {
         item_to_deliver = "iron-plate",
         amount = 10,
         cost = 10,
-        reward = 1,
-        reward_percentage = 0.2,
+        reward = 5,
+        reward_percentage = 1,
         new_customers = {
             {
                 item="wood",
                 chance = 0.25,
             },
             {
-                item="iron-plate",
-                chance = 0.25,
-            },
-            {
                 item="copper-plate",
-                chance = 0.25,
+                chance = 0.5,
             },
             {
                 item="iron-gear-wheel",
@@ -100,10 +111,10 @@ local customers = {
     },
     {
         item_to_deliver = "copper-plate",
-        amount = 20,
+        amount = 10,
         cost = 10,
-        reward = 1,
-        reward_percentage = 0.2,
+        reward = 5,
+        reward_percentage = 1,
         new_customers = {
             {
                 item="wood",
@@ -111,11 +122,7 @@ local customers = {
             },
             {
                 item="iron-plate",
-                chance = 0.25,
-            },
-            {
-                item="copper-plate",
-                chance = 0.25,
+                chance = 0.5,
             },
             {
                 item="copper-cable",
@@ -126,8 +133,8 @@ local customers = {
     {
         item_to_deliver = "iron-gear-wheel",
         amount = 20,
-        cost = 10,
-        reward = 3,
+        cost = 60,
+        reward = 12,
         reward_percentage = 1,
         new_customers = {
             {
@@ -139,12 +146,8 @@ local customers = {
                 chance = 0.2,
             },
             {
-                item="iron-gear-wheel",
-                chance = 0.25,
-            },
-            {
                 item="copper-cable",
-                chance = 0.25,
+                chance = 0.5,
             },
             {
                 item="electronic-circuit",
@@ -155,8 +158,8 @@ local customers = {
     {
         item_to_deliver = "copper-cable",
         amount = 60,
-        cost = 10,
-        reward = 3,
+        cost = 60,
+        reward = 12,
         reward_percentage = 1,
         new_customers = {
             {
@@ -169,11 +172,7 @@ local customers = {
             },
             {
                 item="iron-gear-wheel",
-                chance = 0.25,
-            },
-            {
-                item="copper-cable",
-                chance = 0.25,
+                chance = 0.5,
             },
             {
                 item="electronic-circuit",
@@ -185,7 +184,7 @@ local customers = {
         item_to_deliver = "electronic-circuit",
         amount = 100,
         cost = 500,
-        reward = 100,
+        reward = 25,
         reward_percentage = 1,
         new_customers = {
             {
@@ -194,24 +193,20 @@ local customers = {
             },
             {
                 item="iron-plate",
-                chance = 0.1,
+                chance = 0.15,
             },
             {
                 item="copper-plate",
-                chance = 0.1,
+                chance = 0.15,
             },
             {
                 item="iron-gear-wheel",
-                chance = 0.2,
+                chance = 0.3,
             },
             {
                 item="copper-cable",
-                chance = 0.2,
-            },
-            {
-                item="electronic-circuit",
                 chance = 0.3,
-            }
+            },
         }
     }
 }
@@ -296,16 +291,19 @@ end
 local resources = {
     {
         item = "wood",
+        amount = 10,
         price = 1,
         type = "coin"
     },
     {
         item = "iron-plate",
+        amount = 1,
         price = 1,
         type = "coin"
     },
     {
         item = "copper-plate",
+        amount = 1,
         price = 1,
         type = "coin"
     }
@@ -320,7 +318,7 @@ for i,resource in ipairs(resources) do
                 { type = "item", name = resource.type, amount = resource.price }
             },
             results = {
-                { type = "item", name = resource.item, amount = 1 }
+                { type = "item", name = resource.item, amount = resource.amount }
             },
             icons = {
                 {
