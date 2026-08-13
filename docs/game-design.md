@@ -4,6 +4,32 @@
 
 Create a Factorio total-overhaul mod that replaces the traditional mine-and-expand gameplay loop with a **constraint-based tycoon economy**. Instead of mining ores and building ever-larger production lines, players earn resources by serving customers — turning Factorio into a logistics-optimization puzzle.
 
+## Scope and Non-Goals
+
+Two constraints are deliberate and permanent:
+
+### Base game only — no Space Age
+
+The mod targets **vanilla Factorio 2.1** and will **not** use the Space Age expansion. No Space Age
+prototypes, items, planets, surfaces, or quality mechanics are referenced, and `src/info.json`
+declares a dependency on `base` only. Everything the mod needs — spoilage,
+`shared_probability`, `independent_probability` — is available in the 2.1 base game. Players do not
+need to own Space Age to play, and features that would require it are out of scope.
+
+### No compatibility with other mods
+
+The mod is **not intended to be compatible with any other mod** and no effort will be made to
+support running alongside one. This is a direct consequence of the design: a total overhaul that
+deletes ore generation and all electric infrastructure invalidates the assumptions nearly every
+other mod is built on. Attempting to accommodate them would either water down the constraints that
+make the mod interesting or bloat the codebase with conditional handling.
+
+Concretely, this means:
+
+- No soft/optional dependencies in `info.json`
+- No `if mods["other-mod"]` branches or compatibility shims in the data stage
+- Breakage when loaded with other mods is expected and will not be treated as a bug
+
 ## Inspiration: Ultracube
 
 The mod [Ultracube: Age of Cube](https://mods.factorio.com/mod/Ultracube) demonstrates how a single constraint (one irreplaceable cube) fundamentally changes Factorio gameplay:

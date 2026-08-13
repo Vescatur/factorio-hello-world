@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Factorio 2.1** installed via Steam
+- **Factorio 2.1** installed via Steam — base game only; the Space Age expansion is **not** used or required
 - **Steam** at `C:\Program Files (x86)\Steam\steam.exe`
 - **VSCode** with [Factorio Mod Debug](https://marketplace.visualstudio.com/items?itemName=justarandomgeek.factoriomod-debug) extension (provides Lua intellisense for Factorio API)
 
@@ -58,6 +58,10 @@ The `.vscode/settings.json` configures the Lua language server to:
 - Load the Factorio Mod Debug third-party definitions
 
 ## Testing Changes
+
+Always test with **only `base` and `tycoon` enabled**. The mod does not support other mods or the
+Space Age expansion, so any issue that only reproduces with extra mods enabled is out of scope —
+see [game-design.md](game-design.md#scope-and-non-goals).
 
 1. Edit files in `src/`
 2. Run `.\tools\run-headless.ps1` to validate mod loading (catches prototype errors without launching the GUI)

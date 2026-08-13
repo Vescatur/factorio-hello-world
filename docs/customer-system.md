@@ -89,6 +89,10 @@ electronic-circuit customer
 
 ## Key Factorio 2.1 Features Used
 
+All of these are **base game 2.1 features** — none require the Space Age expansion, and the mod
+does not use Space Age content. It is also not compatible with other mods; see
+[game-design.md](game-design.md#scope-and-non-goals).
+
 - **`spoil_ticks`** — makes customer items expire, creating time pressure
 - **`shared_probability`** — mutually exclusive random outputs for spawning exactly one new customer type per delivery
 - **`independent_probability`** — bonus coin rewards with a percentage chance

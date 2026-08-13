@@ -10,6 +10,11 @@ A constraint-based overhaul mod inspired by [Ultracube](https://mods.factorio.co
 - **Vanilla mechanics only** — uses Factorio 2.1's spoilage, `shared_probability`, and `independent_probability` features
 - **Restaurant-tycoon mechanics, not theme** — we borrow the serve-customers-under-pressure loop, not the restaurant setting
 
+## Scope
+
+- **Base game only — no Space Age** — the mod targets vanilla Factorio 2.1 and does not use, depend on, or support the Space Age expansion. No Space Age prototypes, items, planets, or quality mechanics. `src/info.json` depends on `base` only.
+- **No mod compatibility** — the mod is not intended to work alongside other mods and makes no effort to support them. It removes ores and electricity wholesale, so most other mods will break; that is expected and acceptable. Never add compatibility shims, soft dependencies, or conditional handling for other mods.
+
 See [docs/game-design.md](docs/game-design.md) for full design rationale and Ultracube comparison.
 
 ## Project Structure
@@ -73,6 +78,8 @@ Add an entry to the `resources` table in `services/recipes.lua` with `item`, `pr
 - **Customer spawn probabilities must sum to 1.0** — there's a runtime assertion; breaking it crashes the game
 - **Mod internal name is `tycoon`** — referenced in paths, icon prefixes (`__tycoon__`), and the symlink
 - **Target Factorio version: 2.1** — uses features not available in earlier versions
+- **Never depend on Space Age** — base game only; don't reference Space Age prototypes or add it to `dependencies`
+- **Never add mod-compatibility code** — no soft dependencies, no `if mods["..."]` branches, no shims for other mods
 - **Always validate after changes** — run `.\tools\run-headless.ps1` after any mod file change to catch prototype errors before committing
 
 ## Dev Setup
