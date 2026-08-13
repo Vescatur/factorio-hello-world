@@ -1,9 +1,24 @@
 {
   "permissions": {
     "allow": [
+      "Edit",
+      "Write",
+      "Bash(git *)",
+      "Bash(powershell *)",
+      "Bash(./tools/*)",
+      "PowerShell(git *)",
+      "PowerShell(.\\tools\\*)",
+      "PowerShell(& .\\tools\\*)",
       "WebFetch(domain:mods.factorio.com)",
       "WebFetch(domain:www.reddit.com)",
-      "Bash(powershell -File tools/run-headless.ps1)"
-    ]
+      "Bash(powershell -File tools/run-headless.ps1)",
+      "Bash(sed 's/.*\\\\.//')",
+      "Skill(update-config)",
+      "PowerShell(.\\\\tools\\\\run-headless.ps1)",
+      "Bash(python *)",
+      "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Steam\\\\steamapps\\\\common\\\\Factorio\\\\bin\\\\x64\\\\factorio.exe\" --help)",
+      "PowerShell($s = Get-Content .claude/settings.local.json -Raw | ConvertFrom-Json; \"defaultMode: $\\($s.permissions.defaultMode\\)\"; \"allow:\"; $s.permissions.allow | ForEach-Object { \"  $_\" })"
+    ],
+    "defaultMode": "acceptEdits"
   }
 }

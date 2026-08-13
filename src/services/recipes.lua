@@ -284,6 +284,7 @@ for i, customer in ipairs(customers) do
                     shift = { 6, 6 }
                 }
             },
+            categories = { "export" },
             energy_required = 1,
             subgroup = "customer-deliver",
             order = "z["..customer.item_to_deliver.."]",
@@ -329,6 +330,7 @@ for i,resource in ipairs(resources) do
                     scale = 1
                 }
             },
+            categories = { "import" },
             energy_required = 1,
             subgroup = "coin-buy",
             order = "a["..resource.item.."]",
