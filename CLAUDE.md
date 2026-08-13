@@ -21,9 +21,33 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
   - `services/remove_electricity.lua` — Removes electric infrastructure, converts energy sources to void
   - `graphics/icons/` — Custom sprites
   - `locale/en/` — Translations
-- `tools/` — Dev scripts (PowerShell): `creat-link.ps1` (symlink), `run-dev.ps1` (launch), `run-headless.ps1` (headless validation)
+- `tools/` — Dev scripts: `creat-link.ps1` (symlink), `run-dev.ps1` (launch), `run-headless.ps1` (headless validation), `factorio-docs-to-md.py` (API docs → markdown)
 - `factorio-data/` — Base game prototype data. **Read-only reference. Do not modify.**
+- `factorio-docs/markdown/` — Factorio 2.1.14 API reference in markdown. **Generated. Do not edit by hand.**
 - `docs/` — Detailed documentation
+
+## API Reference
+
+`factorio-docs/markdown/` holds the full Factorio 2.1.14 API (1880 files, ~9 MB), generated from the
+official API dump by `tools/factorio-docs-to-md.py`.
+
+**It is far too large to read in full — navigate it, never load it:**
+
+1. If you know the exact name, open the file directly: `factorio-docs/markdown/prototypes/SegmentedUnitPrototype.md`.
+2. Otherwise grep the relevant `index.md`, then open the single file you need.
+
+| Looking for | Go to |
+| --- | --- |
+| A prototype definition (data stage) | `prototypes/index.md` |
+| A property type (`Sound`, `IconData`, ...) | `types/index.md` |
+| A runtime `Lua*` class (control stage) | `classes/index.md` |
+| Runtime concepts / events | `concepts/index.md`, `events/index.md` |
+| `defines.*` enums | `defines/defines.md` |
+| Prose guides (data lifecycle, mod structure, migrations) | `auxiliary/` |
+
+To regenerate (e.g. after a Factorio update), re-download the docs bundle into `factorio-docs/html/`
+(gitignored) and run `python tools/factorio-docs-to-md.py --clean`. It verifies its own output and
+fails on any broken internal link.
 
 ## Key Conventions
 

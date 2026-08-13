@@ -17,7 +17,12 @@
       "PowerShell(.\\\\tools\\\\run-headless.ps1)",
       "Bash(python *)",
       "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Steam\\\\steamapps\\\\common\\\\Factorio\\\\bin\\\\x64\\\\factorio.exe\" --help)",
-      "PowerShell($s = Get-Content .claude/settings.local.json -Raw | ConvertFrom-Json; \"defaultMode: $\\($s.permissions.defaultMode\\)\"; \"allow:\"; $s.permissions.allow | ForEach-Object { \"  $_\" })"
+      "PowerShell($s = Get-Content .claude/settings.local.json -Raw | ConvertFrom-Json; \"defaultMode: $\\($s.permissions.defaultMode\\)\"; \"allow:\"; $s.permissions.allow | ForEach-Object { \"  $_\" })",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell($so=\"$env:APPDATA\\\\Factorio\\\\script-output\"; foreach\\($f in @\\(\"item-locale.json\",\"recipe-locale.json\",\"entity-locale.json\",\"item-group-locale.json\"\\)\\){ Write-Host \"=== $f\"; \\(Get-Content \"$so\\\\$f\" -Raw | ConvertFrom-Json\\).PSObject.Properties | Where-Object { $_.Name -match 'customer|coin_to|entrance' } | ForEach-Object { \"$\\($_.Name\\) => $\\($_.Value | ConvertTo-Json -Compress\\)\" } })",
+      "Bash(grep -n '`\\\\[LuaGuiElement\\\\]\\(runtime:LuaGuiElement\\)`' auxiliary/json-docs-prototype.md)",
+      "Bash(echo \"exit: $?\")",
+      "PowerShell(Get-Process *)"
     ],
     "defaultMode": "acceptEdits"
   }
