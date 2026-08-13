@@ -60,5 +60,14 @@ The `.vscode/settings.json` configures the Lua language server to:
 ## Testing Changes
 
 1. Edit files in `src/`
-2. In Factorio, the data stage runs on game load — restart Factorio to pick up `data.lua` changes
-3. For runtime/control stage changes (if added later), use `/c` console commands or restart the save
+2. Run `.\tools\run-headless.ps1` to validate mod loading (catches prototype errors without launching the GUI)
+3. Run `.\tools\run-dev.ps1` to playtest in-game
+4. For runtime/control stage changes (if added later), use `/c` console commands or restart the save
+
+### Headless Validation
+
+`tools/run-headless.ps1` starts Factorio as a headless server, waits for the map to load, then exits. It prints all Factorio output and returns:
+
+- **Exit 0** — mod loaded successfully
+- **Exit 1** — Factorio crashed or exited with an error (prototype/data error)
+- **Exit 2** — timed out (60s) without finishing load

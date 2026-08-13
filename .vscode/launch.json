@@ -8,6 +8,14 @@
             "script": "${workspaceFolder}/tools/run-dev.ps1",
             "args": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "Run Headless Factorio",
+            "script": "${workspaceFolder}/tools/run-headless.ps1",
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

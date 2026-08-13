@@ -21,7 +21,7 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
   - `services/remove_electricity.lua` — Removes electric infrastructure, converts energy sources to void
   - `graphics/icons/` — Custom sprites
   - `locale/en/` — Translations
-- `tools/` — Dev scripts (PowerShell): `creat-link.ps1` (symlink), `run-dev.ps1` (launch)
+- `tools/` — Dev scripts (PowerShell): `creat-link.ps1` (symlink), `run-dev.ps1` (launch), `run-headless.ps1` (headless validation)
 - `factorio-data/` — Base game prototype data. **Read-only reference. Do not modify.**
 - `docs/` — Detailed documentation
 
@@ -49,6 +49,7 @@ Add an entry to the `resources` table in `services/recipes.lua` with `item`, `pr
 - **Customer spawn probabilities must sum to 1.0** — there's a runtime assertion; breaking it crashes the game
 - **Mod internal name is `tycoon`** — referenced in paths, icon prefixes (`__tycoon__`), and the symlink
 - **Target Factorio version: 2.1** — uses features not available in earlier versions
+- **Always validate after changes** — run `.\tools\run-headless.ps1` after any mod file change to catch prototype errors before committing
 
 ## Dev Setup
 
