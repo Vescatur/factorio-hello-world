@@ -45,13 +45,14 @@ data:extend({
     {
         type = "recipe",
         name = "customer-new",
+        categories = { "entrance" },
         enabled = true,
         results = {
             { type = "item", name = "customer_wood", amount = 1 }
         },
         energy_required = 60,
         subgroup = "customer-new",
-         order = "a"
+        order = "a"
     }
 })
 
