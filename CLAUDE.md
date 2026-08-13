@@ -1,0 +1,63 @@
+# Tycoon — Factorio 2.1 Total Overhaul Mod
+
+A constraint-based overhaul mod inspired by [Ultracube](https://mods.factorio.com/mod/Ultracube). Instead of mining and expanding, players serve customers to earn coins — the only way to acquire resources. The goal: what can we do with existing Factorio mechanics that requires a completely new factory design?
+
+## Design Philosophy
+
+- **No ores, no electricity** — all resource generation and electric infrastructure are removed
+- **Customers are the economy** — they arrive as spoiling items, request goods, pay in coins
+- **Optimize, don't expand** — the coin bottleneck and customer spoilage (10s) reward efficiency over scale
+- **Vanilla mechanics only** — uses Factorio 2.1's spoilage, `shared_probability`, and `independent_probability` features
+- **Restaurant-tycoon mechanics, not theme** — we borrow the serve-customers-under-pressure loop, not the restaurant setting
+
+See [docs/game-design.md](docs/game-design.md) for full design rationale and Ultracube comparison.
+
+## Project Structure
+
+- `src/` — The mod source (symlinked into Factorio mods folder)
+  - `data.lua` — Entry point, requires all services
+  - `services/recipes.lua` — Core: customer types, delivery recipes, coin economy
+  - `services/remove_ore.lua` — Strips all ore/resource generation
+  - `services/remove_electricity.lua` — Removes electric infrastructure, converts energy sources to void
+  - `graphics/icons/` — Custom sprites
+  - `locale/en/` — Translations
+- `tools/` — Dev scripts (PowerShell): `creat-link.ps1` (symlink), `run-dev.ps1` (launch)
+- `factorio-data/` — Base game prototype data. **Read-only reference. Do not modify.**
+- `docs/` — Detailed documentation
+
+## Key Conventions
+
+### Adding a New Customer Type
+
+Add an entry to the `customers` table in `services/recipes.lua`. Each entry needs:
+- `item_to_deliver` — vanilla item name the customer wants
+- `amount` — how many items to deliver
+- `cost` — guaranteed coin reward
+- `reward` / `reward_percentage` — optional bonus coins with probability
+- `new_customers` — list of `{item, chance}` pairs. **Chances must sum to exactly 1.0** (asserted at load)
+
+The loop at the bottom auto-generates the customer item, delivery recipe, and icons.
+
+### Adding a Coin-Purchasable Resource
+
+Add an entry to the `resources` table in `services/recipes.lua` with `item`, `price`, and `type`.
+
+## Rules
+
+- **Never modify `factorio-data/`** — it's base game reference data
+- **Never re-add ores or electricity** — the entire mod design depends on their absence
+- **Customer spawn probabilities must sum to 1.0** — there's a runtime assertion; breaking it crashes the game
+- **Mod internal name is `tycoon`** — referenced in paths, icon prefixes (`__tycoon__`), and the symlink
+- **Target Factorio version: 2.1** — uses features not available in earlier versions
+
+## Dev Setup
+
+See [docs/dev-setup.md](docs/dev-setup.md). Quick start:
+1. `.\tools\creat-link.ps1` — symlink `src/` into Factorio mods
+2. `.\tools\run-dev.ps1` — launch Factorio with dev save
+
+## Further Reading
+
+- [docs/game-design.md](docs/game-design.md) — Vision, Ultracube inspiration, design principles
+- [docs/customer-system.md](docs/customer-system.md) — Full customer/coin economy spec with probability trees
+- [docs/dev-setup.md](docs/dev-setup.md) — Environment setup, project structure, testing workflow

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:mods.factorio.com)",
+      "WebFetch(domain:www.reddit.com)",
+      "Bash(powershell -File tools/run-headless.ps1)"
+    ]
+  }
+}

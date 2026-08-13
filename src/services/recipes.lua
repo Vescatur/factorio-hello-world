@@ -11,7 +11,7 @@ end
 
 
 -- 60 seconds * 60 ticks
-local spoil_fast = 60 * 60
+local spoil_fast = 10 * 60
 
 data:extend({
     {
@@ -49,7 +49,7 @@ data:extend({
         results = {
             { type = "item", name = "customer_wood", amount = 1 }
         },
-        energy_required = 2,
+        energy_required = 60,
         subgroup = "customer-new",
          order = "a"
     }
@@ -61,8 +61,6 @@ local customers = {
         item_to_deliver = "wood",
         amount = 10,
         cost = 10,
-        reward = 1,
-        reward_percentage = 0.1,
         new_customers = {
             {
                 item="wood",
@@ -83,28 +81,44 @@ local customers = {
         new_customers = {
             {
                 item="wood",
-                chance = 0.5,
+                chance = 0.25,
             },
             {
                 item="iron-plate",
-                chance = 0.5,
+                chance = 0.25,
+            },
+            {
+                item="copper-plate",
+                chance = 0.25,
+            },
+            {
+                item="iron-gear-wheel",
+                chance = 0.25,
             }
         }
     },
     {
         item_to_deliver = "copper-plate",
-        amount = 10,
+        amount = 20,
         cost = 10,
         reward = 1,
         reward_percentage = 0.2,
         new_customers = {
             {
                 item="wood",
-                chance = 0.5,
+                chance = 0.25,
             },
             {
                 item="iron-plate",
-                chance = 0.5,
+                chance = 0.25,
+            },
+            {
+                item="copper-plate",
+                chance = 0.25,
+            },
+            {
+                item="copper-cable",
+                chance = 0.25,
             }
         }
     },
@@ -117,11 +131,23 @@ local customers = {
         new_customers = {
             {
                 item="wood",
-                chance = 0.5,
+                chance = 0.2,
             },
             {
                 item="iron-plate",
-                chance = 0.5,
+                chance = 0.2,
+            },
+            {
+                item="iron-gear-wheel",
+                chance = 0.25,
+            },
+            {
+                item="copper-cable",
+                chance = 0.25,
+            },
+            {
+                item="electronic-circuit",
+                chance = 0.1,
             }
         }
     },
@@ -134,11 +160,23 @@ local customers = {
         new_customers = {
             {
                 item="wood",
-                chance = 0.5,
+                chance = 0.2,
             },
             {
-                item="iron-plate",
-                chance = 0.5,
+                item="copper-plate",
+                chance = 0.2,
+            },
+            {
+                item="iron-gear-wheel",
+                chance = 0.25,
+            },
+            {
+                item="copper-cable",
+                chance = 0.25,
+            },
+            {
+                item="electronic-circuit",
+                chance = 0.1,
             }
         }
     },
@@ -151,11 +189,27 @@ local customers = {
         new_customers = {
             {
                 item="wood",
-                chance = 0.5,
+                chance = 0.1,
             },
             {
                 item="iron-plate",
-                chance = 0.5,
+                chance = 0.1,
+            },
+            {
+                item="copper-plate",
+                chance = 0.1,
+            },
+            {
+                item="iron-gear-wheel",
+                chance = 0.2,
+            },
+            {
+                item="copper-cable",
+                chance = 0.2,
+            },
+            {
+                item="electronic-circuit",
+                chance = 0.3,
             }
         }
     }
@@ -190,7 +244,8 @@ for i, customer in ipairs(customers) do
     for _, new_customer in ipairs(customer.new_customers) do
         table.insert(new_customers, { 
             type = "item", name = "customer_" .. new_customer.item, amount = 1,
-            shared_probability = {min = min_probability, max = min_probability + new_customer.chance}
+            shared_probability = {min = min_probability, max = min_probability + new_customer.chance},
+            always_fresh = true
         })
         min_probability = min_probability + new_customer.chance
     end
@@ -205,10 +260,15 @@ for i, customer in ipairs(customers) do
                 { type = "item", name = "customer_" .. customer.item_to_deliver, amount = 1 },
                 { type = "item", name = customer.item_to_deliver, amount = customer.amount }
             },
-            results = mergeTables({
-                { type = "item", name = "coin", amount = customer.cost },
-                { type = "item", name = "coin", amount = customer.reward, independent_probability = customer.reward_percentage },
-            }, new_customers),
+            results = mergeTables(
+                customer.reward and {
+                    { type = "item", name = "coin", amount = customer.cost },
+                    { type = "item", name = "coin", amount = customer.reward, independent_probability = customer.reward_percentage },
+                } or {
+                    { type = "item", name = "coin", amount = customer.cost },
+                },
+                new_customers
+            ),
             icons = {
                 {
                     icon = "__base__/graphics/icons/coin.png",
