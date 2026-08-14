@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Gold Bar -- utility-tier currency (re-skins utility-science-pack).
+
+  A single cast ingot in three-quarter view. The only icon of the seven with a
+  visible top face, which is what separates it from the flat paper tiers at a
+  glance.
+
+  Palette:  top #FFD764  front #E8A825  side #C4870F  outline #4A2E06
+
+  Rendered by tools/svg-to-png.py at 64x64.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <g stroke="#4A2E06" stroke-width="3" stroke-linejoin="round">
+    <!-- Front face: wider at the base, the way a cast bar tapers. -->
+    <path fill="#E8A825" d="M 10 48 L 54 48 L 48 30 L 16 30 Z" />
+    <!-- Top face: the front's top edge, pushed back and up. -->
+    <path fill="#FFD764" d="M 16 30 L 48 30 L 54 21 L 22 21 Z" />
+  </g>
+
+  <!-- Cast highlight on the top face and a shade along the front's right end. -->
+  <path fill="#FFE9A8" d="M 21 28 L 29 23 L 47 23 L 44 28 Z" />
+  <path fill="#C4870F" d="M 44 32 L 48.5 46 L 40 46 Z" />
+</svg>

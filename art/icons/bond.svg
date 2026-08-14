@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Bond -- production-tier currency (re-skins production-science-pack).
+
+  A sealed certificate, portrait format, so it does not collide with the
+  landscape banknote at icon size. Purple ink and a wax seal keep the vanilla
+  production pack's colour.
+
+  Palette:  paper #EDE7F6  ink #6C3FA8  rule #A98FD1  seal #8E2F6B  outline #2A1740
+
+  Rendered by tools/svg-to-png.py at 64x64.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect fill="#EDE7F6" stroke="#2A1740" stroke-width="3" x="13" y="8" width="38" height="48" rx="2" />
+
+  <!-- Ornate inner border. -->
+  <rect fill="none" stroke="#6C3FA8" stroke-width="2" x="17.5" y="12.5" width="29" height="39" rx="1.5" />
+
+  <!-- Heading rule and body lines. -->
+  <g fill="#6C3FA8">
+    <rect x="21" y="17" width="22" height="3.5" rx="1.5" />
+  </g>
+  <g fill="#A98FD1">
+    <rect x="21" y="25" width="22" height="2.5" rx="1.2" />
+    <rect x="21" y="30.5" width="22" height="2.5" rx="1.2" />
+    <rect x="21" y="36" width="14" height="2.5" rx="1.2" />
+  </g>
+
+  <!-- Wax seal with ribbon tails, bottom-right. -->
+  <g stroke="#2A1740" stroke-width="2.5" stroke-linejoin="round">
+    <path fill="#8E2F6B" d="M 36 48 L 33 58 L 39 55 L 44 59 L 44 48 Z" />
+    <circle fill="#B5407F" cx="40" cy="46" r="8" />
+  </g>
+  <circle fill="none" stroke="#8E2F6B" stroke-width="2" cx="40" cy="46" r="4" />
+</svg>

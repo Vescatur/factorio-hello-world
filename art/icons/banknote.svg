@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Banknote -- chemical-tier currency (re-skins chemical-science-pack).
+
+  A single bill, tilted so its outline is unmistakable against the coins and
+  bars. Blue, to keep the vanilla chemical pack's slot colour in the lab and
+  tech tree.
+
+  Palette:  paper #4E8FC0  print #2C6289  panel #DCEAF5  outline #17364C
+
+  Rendered by tools/svg-to-png.py at 64x64.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <g transform="rotate(-9 32 32)">
+    <rect fill="#4E8FC0" stroke="#17364C" stroke-width="3" x="7" y="20" width="50" height="27" rx="2" />
+
+    <!-- Engraved border. -->
+    <rect fill="none" stroke="#2C6289" stroke-width="2" x="11.5" y="24.5" width="41" height="18" rx="1.5" />
+
+    <!-- Portrait panel and the guilloche bars either side of it. -->
+    <ellipse fill="#DCEAF5" stroke="#2C6289" stroke-width="2" cx="32" cy="33.5" rx="8" ry="7" />
+    <g fill="#2C6289">
+      <rect x="15" y="29" width="10" height="2.5" rx="1.2" />
+      <rect x="15" y="35.5" width="10" height="2.5" rx="1.2" />
+      <rect x="39" y="29" width="10" height="2.5" rx="1.2" />
+      <rect x="39" y="35.5" width="10" height="2.5" rx="1.2" />
+    </g>
+
+    <!-- Highlight along the top edge. -->
+    <rect fill="#7FB4DB" x="9" y="21.5" width="46" height="2.5" rx="1.2" />
+  </g>
+</svg>

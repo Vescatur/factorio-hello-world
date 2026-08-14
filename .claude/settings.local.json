@@ -30,7 +30,8 @@
       "PowerShell(& \"C:\\\\Users\\\\Ivan\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Ivan-Documents-Develop-factorio-factorio-hello-world\\\\4fd3f28b-d39d-4f67-a4b3-56df568c9f50\\\\scratchpad\\\\find-cwd.ps1\")",
       "PowerShell(foreach \\($id in 27576,21392,25228,26932,21000\\) { try { Stop-Process -Id $id -Force -Confirm:$false -ErrorAction Stop; \"killed $id\" } catch { \"not running / failed: $id\" } })",
       "Read(//c/Program Files \\\\\\(x86\\\\\\)/Steam/steamapps/common/Factorio/data/base/scenarios//**)",
-      "Read(//c/Program Files \\\\\\(x86\\\\\\)/Steam/steamapps/common/Factorio/data/base//**)"
+      "Read(//c/Program Files \\\\\\(x86\\\\\\)/Steam/steamapps/common/Factorio/data/base//**)",
+      "PowerShell(python tools/svg-to-png.py --all)"
     ],
     "defaultMode": "acceptEdits"
   }

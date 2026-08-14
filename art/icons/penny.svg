@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Penny -- tier 1 currency (re-skins automation-science-pack).
+
+  A single copper coin, face-on. It is the mod's base denomination, so it is
+  the flattest, plainest shape of the seven; everything above it gains volume
+  or paper.
+
+  Palette:  fill #C4712F  outline #2B1A0D  highlight #E5A46B  shade #8A4A1C
+
+  Rendered by tools/svg-to-png.py at 64x64.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <circle fill="#C4712F" stroke="#2B1A0D" stroke-width="3" cx="32" cy="32" r="21" />
+
+  <!-- Bevel: a light band along the upper-left rim, a dark one opposite. -->
+  <path fill="#E5A46B" d="M 32 13 A 19 19 0 0 0 13 32 L 17 32 A 15 15 0 0 1 32 17 Z" />
+  <path fill="#8A4A1C" d="M 32 51 A 19 19 0 0 0 51 32 L 47 32 A 15 15 0 0 1 32 47 Z" />
+
+  <!-- Inner ring, so the face reads as struck metal rather than a plain disc. -->
+  <circle fill="none" stroke="#8A4A1C" stroke-width="2" cx="32" cy="32" r="14.5" />
+
+  <!-- Denomination "1", drawn as paths so no font has to be available. -->
+  <g fill="#6B3410">
+    <path d="M 29 22 L 34.5 22 L 34.5 39 L 29 39 Z" />
+    <path d="M 29 22 L 29 27 L 24.5 27.5 L 23.5 23.5 Z" />
+    <path d="M 24 38 L 40 38 L 40 43 L 24 43 Z" />
+  </g>
+</svg>

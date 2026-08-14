@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Silver Coin -- tier 2 currency (re-skins logistic-science-pack).
+
+  A stack of three coins seen from the side. Deliberately NOT another face-on
+  disc: at 64x64 the penny and this have to be told apart by silhouette, not
+  just by hue, so the penny stays flat and this one gets height.
+
+  Palette:  face #DFE6EC  edge #C6CED6  outline #2B1A0D  shade #8B959D
+
+  Rendered by tools/svg-to-png.py at 64x64.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <g stroke="#2B1A0D" stroke-width="3" stroke-linejoin="round">
+    <!-- Bottom coin: rim, then the disc face that hides the rim's top arc. -->
+    <path fill="#C6CED6" d="M 12 50 A 20 7 0 0 0 52 50 L 52 42 A 20 7 0 0 1 12 42 Z" />
+    <ellipse fill="#DFE6EC" cx="32" cy="42" rx="20" ry="7" />
+
+    <!-- Middle coin. -->
+    <path fill="#C6CED6" d="M 12 42 A 20 7 0 0 0 52 42 L 52 34 A 20 7 0 0 1 12 34 Z" />
+    <ellipse fill="#DFE6EC" cx="32" cy="34" rx="20" ry="7" />
+
+    <!-- Top coin. -->
+    <path fill="#C6CED6" d="M 12 34 A 20 7 0 0 0 52 34 L 52 26 A 20 7 0 0 1 12 26 Z" />
+    <ellipse fill="#DFE6EC" cx="32" cy="26" rx="20" ry="7" />
+  </g>
+
+  <!-- Struck face on the top coin, plus a shade under the left of each rim. -->
+  <ellipse fill="none" stroke="#8B959D" stroke-width="2" cx="32" cy="26" rx="13" ry="4.2" />
+  <g fill="#8B959D">
+    <path d="M 12.5 44 A 20 7 0 0 0 20 49.5 L 20 41.5 A 20 7 0 0 1 12.5 36 Z" />
+    <path d="M 12.5 36 A 20 7 0 0 0 20 41.5 L 20 33.5 A 20 7 0 0 1 12.5 28 Z" />
+  </g>
+</svg>
