@@ -1,3 +1,4 @@
 factorio-docs/html/*
 tools/tycoon_*.zip
-tools/__pycache__/*
+__pycache__/
+*.pyc

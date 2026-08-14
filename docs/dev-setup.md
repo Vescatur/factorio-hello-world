@@ -101,7 +101,7 @@ see [game-design.md](game-design.md#scope-and-non-goals).
 1. Edit files in `src/`
 2. Check the Problems panel is still empty (see [above](#the-problems-panel-must-stay-empty))
 3. Run `.\tools\run-headless.ps1` to validate mod loading (catches prototype errors without launching the GUI)
-4. Run `python tools\find-missing-locale.py` to catch prototypes with no translation
+4. Run `python tools\find-missing-locale.py` to catch prototypes with no translation — it must come back empty (see [below](#the-report-must-come-back-empty))
 5. Run `.\tools\run-dev.ps1` to playtest in-game
 6. For runtime/control stage changes (if added later), use `/c` console commands or restart the save
 
@@ -126,11 +126,41 @@ explosions, stickers) stay out of the report, and runs three static checks over 
 keys naming a prototype that no longer exists, `{"tycoon.foo"}` strings in Lua that no `.cfg` defines,
 and keys the reference language has but another language is missing.
 
+#### The report must come back empty
+
+**A clean run prints one line and nothing else** — no `MISSING`, `STALE`, `UNTRANSLATED` or
+`UNUSED SUPPRESSIONS` block above it:
+
+```
+OK: no missing translations (14 description(s) intentionally left out).
+```
+
+(The count is whatever the suppression list currently covers.)
+
+Same rule as the [Problems panel](#the-problems-panel-must-stay-empty), for the same reason: a report
+that always lists something is a report nobody reads. Advisories are not "just advisories" — every
+line in the output is either fixed or deliberately silenced, and there are only two ways to clear one:
+
+- **Write the description** — the default. If a player would wonder what the thing does, it needs a
+  sentence in `src/locale/en/hello-world.cfg`.
+- **Suppress it, deliberately** — when the name already says everything, as with a building called
+  Import. Paste the reported line into `INTENTIONALLY_UNDESCRIBED` at the top of
+  `tools/find-missing-locale.py`, under the comment group that explains why, and add a new group if
+  none fits. Use `*` for prototypes generated in a loop, so future ones are covered too:
+  `recipe-description.customer_*_deliver`.
+
+Never silence a whole category, and never suppress a missing *name* — those render as
+`Unknown key: ...` in game and are always a bug.
+
+The suppression list cannot rot: an entry that stops matching anything is reported as an unused
+suppression, so a rename leaves the report dirty until the entry is deleted.
+
 ```powershell
 python tools\find-missing-locale.py             # full check (runs Factorio three times, ~5s)
 python tools\find-missing-locale.py --skip-dump # reuse the cached dumps
 python tools\find-missing-locale.py --all       # include the base game's own gaps
-python tools\find-missing-locale.py --strict    # also fail on missing descriptions and stale keys
+python tools\find-missing-locale.py --show-suppressed  # list the intentional description gaps
+python tools\find-missing-locale.py --strict    # also fail on missing descriptions, stale keys and unused suppressions
 ```
 
 - **Exit 0** — every prototype and runtime key is translated
