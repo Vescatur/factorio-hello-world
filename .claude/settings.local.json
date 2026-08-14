@@ -31,7 +31,8 @@
       "PowerShell(foreach \\($id in 27576,21392,25228,26932,21000\\) { try { Stop-Process -Id $id -Force -Confirm:$false -ErrorAction Stop; \"killed $id\" } catch { \"not running / failed: $id\" } })",
       "Read(//c/Program Files \\\\\\(x86\\\\\\)/Steam/steamapps/common/Factorio/data/base/scenarios//**)",
       "Read(//c/Program Files \\\\\\(x86\\\\\\)/Steam/steamapps/common/Factorio/data/base//**)",
-      "PowerShell(python tools/svg-to-png.py --all)"
+      "PowerShell(python tools/svg-to-png.py --all)",
+      "PowerShell($i = Get-Item \"$env:APPDATA\\\\Factorio\\\\mods\\\\tycoon_1.0.0.zip\" -Force; $i.Attributes; $i.GetType\\(\\).Name; if \\($i.PSIsContainer\\) { Get-ChildItem $i.FullName -Force | Select-Object Name })"
     ],
     "defaultMode": "acceptEdits"
   }

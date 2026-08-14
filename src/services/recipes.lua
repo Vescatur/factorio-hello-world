@@ -54,6 +54,11 @@ data.raw.item.coin.hidden_in_factoriopedia = false
 data.raw.item.coin.subgroup = "coin"
 data.raw.item.coin.order = "a[coin]"
 
+-- Coins rot too: earnings that sit in a chest are gone a minute later, so the
+-- player has to spend what they take in instead of banking it. No spoil_result
+-- -- the coin simply vanishes.
+data.raw.item.coin.spoil_ticks = 60 * 60
+
 data:extend({
     {
         type = "recipe",
