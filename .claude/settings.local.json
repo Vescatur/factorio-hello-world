@@ -32,7 +32,8 @@
       "Read(//c/Program Files \\\\\\(x86\\\\\\)/Steam/steamapps/common/Factorio/data/base/scenarios//**)",
       "Read(//c/Program Files \\\\\\(x86\\\\\\)/Steam/steamapps/common/Factorio/data/base//**)",
       "PowerShell(python tools/svg-to-png.py --all)",
-      "PowerShell($i = Get-Item \"$env:APPDATA\\\\Factorio\\\\mods\\\\tycoon_1.0.0.zip\" -Force; $i.Attributes; $i.GetType\\(\\).Name; if \\($i.PSIsContainer\\) { Get-ChildItem $i.FullName -Force | Select-Object Name })"
+      "PowerShell($i = Get-Item \"$env:APPDATA\\\\Factorio\\\\mods\\\\tycoon_1.0.0.zip\" -Force; $i.Attributes; $i.GetType\\(\\).Name; if \\($i.PSIsContainer\\) { Get-ChildItem $i.FullName -Force | Select-Object Name })",
+      "Bash(\"/c/Program Files \\(x86\\)/Steam/steamapps/common/Factorio/bin/x64/factorio.exe\" --help)"
     ],
     "defaultMode": "acceptEdits"
   }
