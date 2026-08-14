@@ -118,6 +118,7 @@ Never spell those prototype names out elsewhere — `require("services.currency"
 - **Never depend on Space Age** — base game only; don't reference Space Age prototypes or add it to `dependencies`
 - **Never add mod-compatibility code** — no soft dependencies, no `if mods["..."]` branches, no shims for other mods
 - **Always validate after changes** — run `.\tools\run-headless.ps1` after any mod file change to catch prototype errors before committing, and `python tools\find-missing-locale.py` after adding or renaming any prototype
+- **Leave the VSCode Problems panel empty** — zero entries, so the next one that appears is worth reading. Fix the code, or, when the bundled Factorio type definitions are wrong (they mark optional fields required — check `factorio-docs/markdown/types/` and vanilla's own usage before believing a warning), suppress that one line with `---@diagnostic disable-next-line: <code>` and a comment saying why. Never disable a rule file-wide or workspace-wide. See [docs/dev-setup.md](docs/dev-setup.md#the-problems-panel-must-stay-empty)
 
 ## Dev Setup
 

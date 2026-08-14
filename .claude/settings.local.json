@@ -37,7 +37,8 @@
       "Bash(mkdir -p vanillamods)",
       "Bash(pwd -W)",
       "Bash(\"/c/Program Files \\(x86\\)/Steam/steamapps/common/Factorio/bin/x64/factorio.exe\" --mod-directory \"$\\(pwd -W\\)/vanillamods\" --dump-data)",
-      "PowerShell(Set-Location \"C:\\\\Users\\\\Ivan\\\\Documents\\\\Develop\\\\factorio\\\\factorio-hello-world\"; python tools/find-missing-locale.py 2>&1 | Select-Object -Last 25; Write-Host \"=== resolved names ===\"; $j = Get-Content \"$env:TEMP\\\\factorio-locale-check\\\\locale\\\\item-locale.json\" -Raw | ConvertFrom-Json; foreach \\($k in @\\(\"automation-science-pack\",\"logistic-science-pack\",\"military-science-pack\",\"chemical-science-pack\",\"production-science-pack\",\"utility-science-pack\",\"space-science-pack\",\"lab\"\\)\\) { \"$k = $\\($j.names.$k\\)\" })"
+      "PowerShell(Set-Location \"C:\\\\Users\\\\Ivan\\\\Documents\\\\Develop\\\\factorio\\\\factorio-hello-world\"; python tools/find-missing-locale.py 2>&1 | Select-Object -Last 25; Write-Host \"=== resolved names ===\"; $j = Get-Content \"$env:TEMP\\\\factorio-locale-check\\\\locale\\\\item-locale.json\" -Raw | ConvertFrom-Json; foreach \\($k in @\\(\"automation-science-pack\",\"logistic-science-pack\",\"military-science-pack\",\"chemical-science-pack\",\"production-science-pack\",\"utility-science-pack\",\"space-science-pack\",\"lab\"\\)\\) { \"$k = $\\($j.names.$k\\)\" })",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\Ivan\\\\Documents\\\\Develop\\\\factorio\\\\factorio-hello-world\"; python tools/find-missing-locale.py --skip-dump; Write-Host \"exit=$LASTEXITCODE\")"
     ],
     "defaultMode": "acceptEdits"
   }

@@ -70,6 +70,9 @@ for index, denomination in ipairs(denominations) do
     -- them shimmers. That would mangle flat currency art, so it goes.
     item.random_tint_color = nil
 
+    -- text_color is optional in the real API (and vanilla omits it), but the
+    -- bundled type definitions mark it required.
+    ---@diagnostic disable-next-line: missing-fields
     item.color_hint = { text = denomination.hint }
     item.subgroup = "currency"
     item.order = string.char(string.byte("a") + index - 1) .. "[" .. denomination.icon .. "]"

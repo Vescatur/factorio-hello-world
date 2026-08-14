@@ -259,7 +259,7 @@ for _, customer in ipairs(customers) do
     new_customers = {}
     min_probability = 0
     for _, new_customer in ipairs(customer.new_customers) do
-        table.insert(new_customers, { 
+        table.insert(new_customers, {
             type = "item", name = "customer_" .. new_customer.item, amount = 1,
             shared_probability = {min = min_probability, max = min_probability + new_customer.chance},
             always_fresh = true
@@ -331,7 +331,7 @@ local resources = {
         currency = currency.penny
     }
 }
-for i,resource in ipairs(resources) do
+for _, resource in ipairs(resources) do
     data:extend({
         {
             type = "recipe",

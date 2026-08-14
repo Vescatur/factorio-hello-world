@@ -57,6 +57,40 @@ factorio-hello-world/
 The `.vscode/settings.json` configures the Lua language server to:
 - Include Factorio's data directory for API autocompletion
 - Load the Factorio Mod Debug third-party definitions
+- Ignore `factorio-data/` and `factorio-docs/` so only our code is analysed
+
+### The Problems panel must stay empty
+
+**VSCode's Problems panel should show zero entries.** It is a real signal — a typo'd field name or an
+undefined global shows up there long before `run-headless.ps1` gets a chance to fail — but only while
+it is empty. One permanently-red panel and nobody reads it again.
+
+Keeping it empty means every entry is either fixed or deliberately silenced:
+
+- **Fix it** — the default. Unused locals, trailing whitespace, undefined globals, genuinely wrong
+  field names.
+- **Silence it, narrowly** — when the warning is wrong. The Factorio type definitions ship by
+  [Factorio Mod Debug](https://marketplace.visualstudio.com/items?itemName=justarandomgeek.factoriomod-debug)
+  are generated and imperfect: they mark optional fields required, so correct code gets flagged.
+  Verify against `factorio-docs/markdown/types/` and the base game's own usage in `factorio-data/`
+  first, then suppress at the exact line with a comment saying why:
+
+  ```lua
+  -- text_color is optional in the real API (and vanilla omits it), but the
+  -- bundled type definitions mark it required.
+  ---@diagnostic disable-next-line: missing-fields
+  item.color_hint = { text = denomination.hint }
+  ```
+
+  Line-scoped `disable-next-line`, never a file-wide or workspace-wide disable of the rule — a rule
+  that is wrong once is still worth running everywhere else.
+
+`factorio-data/` and `factorio-docs/` are excluded wholesale via `Lua.workspace.ignoreDir`, plus
+`Lua.diagnostics.ignoredFiles` and `Lua.diagnostics.libraryFiles` set to `"Disable"` (without those
+two, the warnings come straight back the moment you open one of those files). Base game reference
+data is not ours to fix, and it alone produced ~1900 warnings.
+
+Settings changes need **`Lua: Restart Server`** from the command palette before the panel reflects them.
 
 ## Testing Changes
 
@@ -65,10 +99,11 @@ Space Age expansion, so any issue that only reproduces with extra mods enabled i
 see [game-design.md](game-design.md#scope-and-non-goals).
 
 1. Edit files in `src/`
-2. Run `.\tools\run-headless.ps1` to validate mod loading (catches prototype errors without launching the GUI)
-3. Run `python tools\find-missing-locale.py` to catch prototypes with no translation
-4. Run `.\tools\run-dev.ps1` to playtest in-game
-5. For runtime/control stage changes (if added later), use `/c` console commands or restart the save
+2. Check the Problems panel is still empty (see [above](#the-problems-panel-must-stay-empty))
+3. Run `.\tools\run-headless.ps1` to validate mod loading (catches prototype errors without launching the GUI)
+4. Run `python tools\find-missing-locale.py` to catch prototypes with no translation
+5. Run `.\tools\run-dev.ps1` to playtest in-game
+6. For runtime/control stage changes (if added later), use `/c` console commands or restart the save
 
 ### Headless Validation
 
