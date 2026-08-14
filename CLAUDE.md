@@ -6,7 +6,7 @@ A constraint-based overhaul mod inspired by [Ultracube](https://mods.factorio.co
 
 - **No ores, no electricity** — all resource generation and electric infrastructure are removed
 - **Customers are the economy** — they arrive as spoiling items, request goods, pay in coins
-- **Optimize, don't expand** — the coin bottleneck and customer spoilage (10s) reward efficiency over scale
+- **Optimize, don't expand** — the coin bottleneck and customer spoilage reward efficiency over scale
 - **Vanilla mechanics only** — uses Factorio 2.1's spoilage, `shared_probability`, and `independent_probability` features
 - **Restaurant-tycoon mechanics, not theme** — we borrow the serve-customers-under-pressure loop, not the restaurant setting
 
@@ -25,9 +25,10 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
   - `services/recipes.lua` — Core: customer types, delivery recipes, coin economy
   - `services/remove_ore.lua` — Strips all ore/resource generation
   - `services/remove_electricity.lua` — Removes electric infrastructure, converts energy sources to void
-  - `graphics/icons/` — Custom sprites
+  - `graphics/icons/` — Custom sprites. **Generated from `art/icons/` — edit the SVG, not the PNG.**
   - `locale/en/` — Translations
-- `tools/` — Dev scripts: `creat-link.ps1` (symlink), `run-dev.ps1` (launch), `run-headless.ps1` (headless validation), `factorio-docs-to-md.py` (API docs → markdown)
+- `art/icons/` — Editable SVG sources for the custom sprites. Kept out of `src/` so only shipped assets are symlinked into the mods folder
+- `tools/` — Dev scripts: `creat-link.ps1` (symlink), `run-dev.ps1` (launch), `run-headless.ps1` (headless validation), `factorio-docs-to-md.py` (API docs → markdown), `svg-to-png.py` (icon SVG → PNG)
 - `factorio-data/` — Base game prototype data. **Read-only reference. Do not modify.**
 - `factorio-docs/markdown/` — Factorio 2.1.14 API reference in markdown. **Generated. Do not edit by hand.**
 - `docs/` — Detailed documentation
@@ -64,9 +65,16 @@ Add an entry to the `customers` table in `services/recipes.lua`. Each entry need
 - `amount` — how many items to deliver
 - `cost` — guaranteed coin reward
 - `reward` / `reward_percentage` — optional bonus coins with probability
+- `spoils_into` — optional bare item name of what this one decays into when its timer runs out (asserted at load). Either another customer type, or a **terminal token** from the `terminal_tokens` set — currently just `ghost`, which is not a customer and gets no delivery recipe
 - `new_customers` — list of `{item, chance}` pairs. **Chances must sum to exactly 1.0** (asserted at load)
 
 The loop at the bottom auto-generates the customer item, delivery recipe, and icons.
+
+### Adding or Editing an Icon
+
+Edit the SVG in `art/icons/`, then run `python tools/svg-to-png.py --all` to regenerate
+`src/graphics/icons/`. Needs `pip install -r tools/requirements.txt` once. Never hand-edit the PNGs —
+they are build output and get overwritten.
 
 ### Adding a Coin-Purchasable Resource
 
@@ -78,6 +86,7 @@ Add an entry to the `resources` table in `services/recipes.lua` with `item`, `pr
 - **Never re-add ores or electricity** — the entire mod design depends on their absence
 - **Customer spawn probabilities must sum to 1.0** — there's a runtime assertion; breaking it crashes the game
 - **Only one Entrance may exist** — it's the sole source of customers, so its count is what bounds the whole economy. `src/control.lua` refuses extra placements. Retune throughput via `energy_required` on `customer-new` or the Entrance's `crafting_speed`, never by allowing more buildings
+- **Ghosts are a permanent dead end** — `customer_ghost` has no spoil timer and no recipe, on purpose. It piles up forever, and one spoiling inside a machine's ingredient slot jams that machine for good. That hazard is the challenge; never add a spoil timer, disposal recipe, or any other way to get rid of ghosts
 - **Mod internal name is `tycoon`** — referenced in paths, icon prefixes (`__tycoon__`), and the symlink
 - **Target Factorio version: 2.1** — uses features not available in earlier versions
 - **Never depend on Space Age** — base game only; don't reference Space Age prototypes or add it to `dependencies`
