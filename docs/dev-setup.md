@@ -40,7 +40,8 @@ factorio-hello-world/
 │   ├── info.json           # Mod metadata (name: "tycoon", version, dependencies)
 │   ├── data.lua            # Entry point — requires all services
 │   ├── services/
-│   │   ├── recipes.lua     # Customer/coin economy (the core of the mod)
+│   │   ├── recipes.lua     # Customer economy (the core of the mod)
+│   │   ├── currency.lua    # Re-skins the science packs into currency denominations
 │   │   ├── remove_ore.lua  # Strips all ore generation from the map
 │   │   └── remove_electricity.lua  # Removes electric infrastructure
 │   ├── graphics/icons/     # Custom sprites (customer.png)
@@ -65,8 +66,9 @@ see [game-design.md](game-design.md#scope-and-non-goals).
 
 1. Edit files in `src/`
 2. Run `.\tools\run-headless.ps1` to validate mod loading (catches prototype errors without launching the GUI)
-3. Run `.\tools\run-dev.ps1` to playtest in-game
-4. For runtime/control stage changes (if added later), use `/c` console commands or restart the save
+3. Run `python tools\find-missing-locale.py` to catch prototypes with no translation
+4. Run `.\tools\run-dev.ps1` to playtest in-game
+5. For runtime/control stage changes (if added later), use `/c` console commands or restart the save
 
 ### Headless Validation
 
@@ -75,3 +77,29 @@ see [game-design.md](game-design.md#scope-and-non-goals).
 - **Exit 0** — mod loaded successfully
 - **Exit 1** — Factorio crashed or exited with an error (prototype/data error)
 - **Exit 2** — timed out (60s) without finishing load
+
+### Locale Validation
+
+`tools/find-missing-locale.py` asks Factorio for both halves of the problem — `--dump-data` lists every
+prototype that exists, `--dump-prototype-locale` lists every prototype whose name and description
+resolve to real text. Anything in the first dump but not the second renders as `Unknown key` in game.
+The customer items and delivery recipes are generated in a loop, so this is the only reliable way to
+notice when a new one ships without a translation.
+
+It also dumps a base-only baseline, so base game internals that have no locale on purpose (projectiles,
+explosions, stickers) stay out of the report, and runs three static checks over `src/locale/`: stale
+keys naming a prototype that no longer exists, `{"tycoon.foo"}` strings in Lua that no `.cfg` defines,
+and keys the reference language has but another language is missing.
+
+```powershell
+python tools\find-missing-locale.py             # full check (runs Factorio three times, ~5s)
+python tools\find-missing-locale.py --skip-dump # reuse the cached dumps
+python tools\find-missing-locale.py --all       # include the base game's own gaps
+python tools\find-missing-locale.py --strict    # also fail on missing descriptions and stale keys
+```
+
+- **Exit 0** — every prototype and runtime key is translated
+- **Exit 1** — missing translations found (listed as ready-to-paste `.cfg` lines)
+- **Exit 2** — the check could not run (Factorio or the API docs not found)
+
+Stdlib only, no `pip install` needed. Override the executable with `--factorio` or `FACTORIO_EXE`.

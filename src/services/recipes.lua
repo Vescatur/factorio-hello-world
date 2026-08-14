@@ -1,3 +1,7 @@
+-- Denomination item names, so nothing below has to know that money is really
+-- a re-skinned science pack. See services/currency.lua.
+local currency = require("services.currency")
+
 local function mergeTables(t1, t2)
     local result = {}
     for _, v in ipairs(t1) do
@@ -18,7 +22,7 @@ data:extend({
         type = "item-group",
         name = "customer-group",
         order = "z",
-        icon = "__base__/graphics/icons/coin.png",
+        icon = "__tycoon__/graphics/icons/penny.png",
         icon_size = 64
     },
     {
@@ -35,29 +39,18 @@ data:extend({
     },
     {
         type = "item-subgroup",
-        name = "coin-buy",
+        name = "currency-buy",
         group = "customer-group",
         order = "z"
     },
+    -- The seven denominations, ordered penny-first by currency.lua.
     {
         type = "item-subgroup",
-        name = "coin",
+        name = "currency",
         group = "customer-group",
         order = "y"
     }
 })
-
--- Coin is the mod's currency, so it must be selectable in inserter/logistics
--- filters. Base game hides it, which excludes it from every item-picker list.
-data.raw.item.coin.hidden = false
-data.raw.item.coin.hidden_in_factoriopedia = false
-data.raw.item.coin.subgroup = "coin"
-data.raw.item.coin.order = "a[coin]"
-
--- Coins rot too: earnings that sit in a chest are gone a minute later, so the
--- player has to spend what they take in instead of banking it. No spoil_result
--- -- the coin simply vanishes.
-data.raw.item.coin.spoil_ticks = 60 * 60
 
 data:extend({
     {
@@ -286,16 +279,16 @@ for _, customer in ipairs(customers) do
             },
             results = mergeTables(
                 customer.reward and {
-                    { type = "item", name = "coin", amount = customer.cost },
-                    { type = "item", name = "coin", amount = customer.reward, independent_probability = customer.reward_percentage },
+                    { type = "item", name = currency.penny, amount = customer.cost },
+                    { type = "item", name = currency.penny, amount = customer.reward, independent_probability = customer.reward_percentage },
                 } or {
-                    { type = "item", name = "coin", amount = customer.cost },
+                    { type = "item", name = currency.penny, amount = customer.cost },
                 },
                 new_customers
             ),
             icons = {
                 {
-                    icon = "__base__/graphics/icons/coin.png",
+                    icon = "__tycoon__/graphics/icons/penny.png",
                     icon_size = 64,
                     icon_mipmaps = 4
                 },
@@ -316,34 +309,36 @@ for _, customer in ipairs(customers) do
 end
 
 
+-- Everything is bought with pennies for now; higher denominations get their
+-- own price lists when the upper customer tiers land.
 local resources = {
     {
         item = "wood",
         amount = 10,
         price = 1,
-        type = "coin"
+        currency = currency.penny
     },
     {
         item = "iron-plate",
         amount = 10,
         price = 10,
-        type = "coin"
+        currency = currency.penny
     },
     {
         item = "copper-plate",
         amount = 10,
         price = 10,
-        type = "coin"
+        currency = currency.penny
     }
 }
 for i,resource in ipairs(resources) do
     data:extend({
         {
             type = "recipe",
-            name = "coin_to_" .. resource.item,
+            name = "buy_" .. resource.item,
             enabled = true,
             ingredients = {
-                { type = "item", name = resource.type, amount = resource.price }
+                { type = "item", name = resource.currency, amount = resource.price }
             },
             results = {
                 { type = "item", name = resource.item, amount = resource.amount }
@@ -358,7 +353,7 @@ for i,resource in ipairs(resources) do
             },
             categories = { "import" },
             energy_required = 1,
-            subgroup = "coin-buy",
+            subgroup = "currency-buy",
             order = "a["..resource.item.."]",
         }
     })

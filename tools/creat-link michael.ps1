@@ -1,1 +1,0 @@
-cmd /c 'mklink /J "%APPDATA%\Factorio\mods\tycoon_1.0.0" ".\..\src"'

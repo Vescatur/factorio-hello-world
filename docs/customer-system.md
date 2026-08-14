@@ -1,6 +1,6 @@
 # Customer System
 
-> This document describes **mechanics only**. Every concrete number — item amounts, coin costs and
+> This document describes **mechanics only**. Every concrete number — item amounts, payouts and
 > rewards, spoil duration, spawn probabilities, decay targets, resource prices — lives in the
 > `customers` and `resources` tables in [`src/services/recipes.lua`](../src/services/recipes.lua),
 > which is the single source of truth. Read the tables there for current values.
@@ -9,8 +9,10 @@
 
 The entire economy revolves around customers. Customers are **items that spoil** — an unserved
 customer downgrades to a simpler order, and the simplest order leaves a **ghost** behind. Serving a
-customer yields **coins** (the sole currency) and **spawns new customers** based on weighted
-probabilities.
+customer yields **money** and **spawns new customers** based on weighted probabilities.
+
+Money is the re-skinned science pack ladder — see [Currency](#currency) below. Customers currently
+all pay in **Pennies**, the bottom denomination.
 
 ## How It Works
 
@@ -83,13 +85,55 @@ its item prototype.
 
 Each customer type has a delivery recipe `customer_{item}_deliver` that:
 - **Inputs**: 1 customer item + N of the requested item
-- **Outputs**: coins (guaranteed + bonus chance) + exactly one new customer via weighted probability
+- **Outputs**: money (guaranteed + bonus chance) + exactly one new customer via weighted probability
 
 ### 4. Buying Resources
 
-Coins can be spent on raw materials via `coin_to_{item}` recipes — the only way to acquire base
-resources, since ore generation is removed. Which items are purchasable and at what price is the
-`resources` table.
+Money can be spent on raw materials via `buy_{item}` recipes — the only way to acquire base
+resources, since ore generation is removed. Which items are purchasable, at what price and in which
+denomination is the `resources` table.
+
+## Currency
+
+There is no separate money item. [`src/services/currency.lua`](../src/services/currency.lua)
+**re-skins the seven vanilla science packs in place** into a ladder of denominations:
+
+| Prototype | Denomination |
+| --- | --- |
+| `automation-science-pack` | Penny |
+| `logistic-science-pack` | Silver Coin |
+| `military-science-pack` | War Chest |
+| `chemical-science-pack` | Banknote |
+| `production-science-pack` | Bond |
+| `utility-science-pack` | Gold Bar |
+| `space-science-pack` | Diamond |
+
+Re-skinning rather than adding new items is what makes research cost money for free: `lab.inputs`
+and every technology's `unit.ingredients` already name these prototypes, so **a technology's research
+cost is now its price**, at vanilla numbers — a technology that wanted 100 red packs wants 100
+Pennies. The lab is renamed the **Investment Office**; it already runs without power, since
+`remove_electricity.lua` voids its energy source.
+
+The Penny replaced the base game `coin`, which is hidden again.
+
+### Money is earned, never crafted
+
+The six vanilla pack recipes are **deleted**, not hidden. Red is 1 copper plate + 1 iron gear wheel
+and green is an inserter + a belt, all craftable from purchased plates — leaving those recipes in
+would let the factory print its own money and the customer economy would stop mattering. There is
+also **no exchange between denominations**, in either direction. Both rules exist to keep one
+property true: the denomination a customer pays in is what gates the tier of research you can afford.
+
+The six technologies named after a pack now have no effects at all. They stay in the tree as
+prerequisites and are renamed after their denomination ("The Banknote"), reading as the licence to
+deal at that tier.
+
+### Reachability
+
+Only Pennies have a source today, so only Penny-priced research is fundable. The upper denominations
+are earned by serving the higher customer tiers, which are not built yet. `space-science-pack`
+(Diamond) has no recipe in vanilla — it comes from launching a satellite, which this mod cannot
+reach — so it is currency with no source at all until one is designed.
 
 ## Spawn Probabilities
 
