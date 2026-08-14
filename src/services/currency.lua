@@ -1,18 +1,22 @@
 -- currency.lua
 --
--- Money IS science. The seven vanilla science packs are re-skinned in place
--- into a ladder of denominations, so a technology's "research cost" is
+-- Money IS science. Six of the seven vanilla science packs are re-skinned in
+-- place into a ladder of denominations, so a technology's "research cost" is
 -- literally its price, and a lab is where profit gets spent.
 --
 --   automation-science-pack  -> Penny        (replaces the base game coin)
 --   logistic-science-pack    -> Silver Coin
---   military-science-pack    -> War Chest
 --   chemical-science-pack    -> Banknote
 --   production-science-pack  -> Bond
 --   utility-science-pack     -> Gold Bar
 --   space-science-pack       -> Diamond
 --
--- WHY RE-SKIN INSTEAD OF ADDING SEVEN NEW ITEMS:
+-- military-science-pack is the seventh, and it is not money. It used to be the
+-- War Chest, but every technology priced in it was a combat technology, so when
+-- combat left the mod the denomination had nothing left to buy. It retires in
+-- remove_military.lua, which hides it the way STEP 4 below hides the coin.
+--
+-- WHY RE-SKIN INSTEAD OF ADDING SIX NEW ITEMS:
 --
 --   * `lab.inputs` and every technology's `unit.ingredients` already name
 --     these prototypes, so the whole tech tree re-prices itself for free --
@@ -41,7 +45,6 @@ local stack_size = 200
 local denominations = {
     { key = "penny",       pack = "automation-science-pack", icon = "penny",       hint = "P" },
     { key = "silver_coin", pack = "logistic-science-pack",   icon = "silver-coin", hint = "S" },
-    { key = "war_chest",   pack = "military-science-pack",   icon = "war-chest",   hint = "W" },
     { key = "banknote",    pack = "chemical-science-pack",   icon = "banknote",    hint = "N" },
     { key = "bond",        pack = "production-science-pack", icon = "bond",        hint = "B" },
     { key = "gold_bar",    pack = "utility-science-pack",    icon = "gold-bar",    hint = "G" },
@@ -108,10 +111,11 @@ end
 -- Same treatment remove_electricity.lua gives its deleted recipes: a
 -- technology pointing at a recipe that no longer exists is a load error.
 --
--- The technologies themselves stay. Six of them are named after a pack and
+-- The technologies themselves stay. Five of them are named after a pack and
 -- are now effect-less, which is intentional: they remain prerequisites in the
 -- tree and read as being licensed to deal in that denomination (the locale
--- file renames them to match).
+-- file renames them to match). The sixth, military-science-pack, is deleted
+-- outright by remove_military.lua along with the rest of the combat tree.
 -- ============================================================
 local stripped_effects = 0
 

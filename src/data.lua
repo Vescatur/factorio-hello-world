@@ -1,5 +1,7 @@
 require("services.remove_ore")
 require("services.remove_electricity")
+require("services.remove_enemies")
+require("services.remove_military")
 require("services.entrance")
 require("services.import")
 require("services.export")

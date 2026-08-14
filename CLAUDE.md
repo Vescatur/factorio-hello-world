@@ -5,8 +5,9 @@ A constraint-based overhaul mod inspired by [Ultracube](https://mods.factorio.co
 ## Design Philosophy
 
 - **No ores, no electricity** — all resource generation and electric infrastructure are removed
+- **No enemies, no combat** — there is nothing to defend against, so biters and the whole weapon tree are gone
 - **Customers are the economy** — they arrive as spoiling items, request goods, pay in currency
-- **Money is science** — the science packs are re-skinned into currency denominations, so research is literally what you spend profit on
+- **Money is science** — six of the science packs are re-skinned into currency denominations, so research is literally what you spend profit on
 - **Optimize, don't expand** — the money bottleneck and customer spoilage reward efficiency over scale
 - **Vanilla mechanics only** — uses Factorio 2.1's spoilage, `shared_probability`, and `independent_probability` features
 - **Restaurant-tycoon mechanics, not theme** — we borrow the serve-customers-under-pressure loop, not the restaurant setting
@@ -24,9 +25,12 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
   - `data.lua` — Entry point, requires all services
   - `control.lua` — Runtime: enforces the single-Entrance limit (the mod's only control-stage code)
   - `services/recipes.lua` — Core: customer types, delivery recipes, the payout economy
-  - `services/currency.lua` — Re-skins the seven science packs into currency denominations; also the module the rest of the mod asks for currency item names
+  - `services/currency.lua` — Re-skins six science packs into currency denominations; also the module the rest of the mod asks for currency item names
+  - `services/entrance.lua`, `services/import.lua`, `services/export.lua` — The three machines the whole loop runs through
   - `services/remove_ore.lua` — Strips all ore/resource generation
   - `services/remove_electricity.lua` — Removes electric infrastructure, converts energy sources to void
+  - `services/remove_enemies.lua` — Stops enemies generating and hides them
+  - `services/remove_military.lua` — Deletes the combat recipes and technologies
   - `graphics/icons/` — Custom sprites. **Generated from `art/icons/` — edit the SVG, not the PNG.**
   - `locale/en/` — Translations
 - `art/icons/` — Editable SVG sources for the custom sprites. Kept out of `src/` so only shipped assets are symlinked into the mods folder
@@ -88,7 +92,7 @@ Add an entry to the `resources` table in `services/recipes.lua` with `item`, `am
 
 ### Currency
 
-Money is not a separate item set: `services/currency.lua` **re-skins the seven vanilla science packs
+Money is not a separate item set: `services/currency.lua` **re-skins six of the vanilla science packs
 in place** into a denomination ladder, so every technology's existing `unit.ingredients` becomes its
 price and the lab is where profit is spent.
 
@@ -96,7 +100,6 @@ price and the lab is where profit is spent.
 | --- | --- |
 | `automation-science-pack` | Penny (replaced the base game `coin`) |
 | `logistic-science-pack` | Silver Coin |
-| `military-science-pack` | War Chest |
 | `chemical-science-pack` | Banknote |
 | `production-science-pack` | Bond |
 | `utility-science-pack` | Gold Bar |
@@ -105,10 +108,33 @@ price and the lab is where profit is spent.
 Never spell those prototype names out elsewhere — `require("services.currency")` returns a
 `{ penny = "automation-science-pack", ... }` map, and everything else asks it by denomination.
 
+`military-science-pack` is the seventh pack and is **not** money. It used to be the War Chest, but
+every technology priced in it was a combat technology, so removing combat left the denomination with
+nothing to buy. It is hidden by `remove_military.lua` the way `coin` is. Don't re-add it to the
+ladder — re-pricing the tree onto a seventh tier is a separate economy decision, not a revert.
+
+### Removing enemies and combat
+
+`remove_enemies.lua` and `remove_military.lua` run from `data.lua` like every other service — there
+is no `data-final-fixes.lua`. They touch prototypes base declares in its own `data.lua`
+(`main_menu_simulations` is filled in there, at `base/data.lua:78-105`), and base's `data-updates.lua`
+only generates fluid barrels, so nothing they remove gets added back afterwards.
+
+Enemies are **hidden and stripped of autoplace, not deleted**. That is an engine limit, not a
+preference: `'entity' prototype type 'unit' requires at least 1 prototype be defined so save files
+can be loaded`, and the same holds for `unit-spawner` and `turret` (whose only vanilla members are
+the four worms — the player-built turrets are all subtypes). Nothing spawns and nothing is listed, so
+the result is the same in play. Don't attempt the deletion again; it fails at load.
+
+Military items follow the `remove_electricity.lua` trade-off — **recipe deleted, item hidden, item
+and entity prototypes kept** — so `car.guns`, `lab.inputs` and the spidertron tips-and-tricks entries
+still resolve. Radar is deliberately kept craftable: `satellite` needs five of them.
+
 ## Rules
 
 - **Never modify `factorio-data/`** — it's base game reference data
 - **Never re-add ores or electricity** — the entire mod design depends on their absence
+- **Never re-add enemies or combat content** — there is nothing to defend, so weapons, ammo, turrets, walls and combat vehicles have no function. Most of the tree was already unreachable anyway: `explosives` needs coal and sulfur needs crude oil, and `remove_ore.lua` deletes both. Radar, `modular-armor`/`power-armor` (equipment-grid carriers) and the car are kept on purpose and are not combat content
 - **Customer spawn probabilities must sum to 1.0** — there's a runtime assertion; breaking it crashes the game
 - **Only one Entrance may exist** — it's the sole source of customers, so its count is what bounds the whole economy. `src/control.lua` refuses extra placements. Retune throughput via `energy_required` on `customer-new` or the Entrance's `crafting_speed`, never by allowing more buildings
 - **Money is earned, never crafted** — the science pack recipes are deleted, not hidden, because red and green are craftable from purchased plates and would let the factory print its own money. Never restore a recipe that produces a currency item, and never add an exchange recipe between denominations: what a customer pays is what gates the tier of research you can afford

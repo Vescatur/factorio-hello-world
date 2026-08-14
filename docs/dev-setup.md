@@ -39,11 +39,17 @@ factorio-hello-world/
 ├── src/                    # The mod (deployed via symlink)
 │   ├── info.json           # Mod metadata (name: "tycoon", version, dependencies)
 │   ├── data.lua            # Entry point — requires all services
+│   ├── control.lua         # Runtime — single-Entrance limit, starter inventory
 │   ├── services/
 │   │   ├── recipes.lua     # Customer economy (the core of the mod)
-│   │   ├── currency.lua    # Re-skins the science packs into currency denominations
+│   │   ├── currency.lua    # Re-skins six science packs into currency denominations
+│   │   ├── entrance.lua    # The building customers arrive from
+│   │   ├── import.lua      # Buy goods with currency
+│   │   ├── export.lua      # Deliver to a customer for currency
 │   │   ├── remove_ore.lua  # Strips all ore generation from the map
-│   │   └── remove_electricity.lua  # Removes electric infrastructure
+│   │   ├── remove_electricity.lua  # Removes electric infrastructure
+│   │   ├── remove_enemies.lua      # Stops enemies generating, hides them
+│   │   └── remove_military.lua     # Deletes combat recipes and technologies
 │   ├── graphics/icons/     # Custom sprites (customer.png)
 │   └── locale/en/          # English translations
 ├── tools/                  # Dev scripts (PowerShell)

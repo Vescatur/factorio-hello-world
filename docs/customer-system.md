@@ -96,13 +96,12 @@ denomination is the `resources` table.
 ## Currency
 
 There is no separate money item. [`src/services/currency.lua`](../src/services/currency.lua)
-**re-skins the seven vanilla science packs in place** into a ladder of denominations:
+**re-skins six of the vanilla science packs in place** into a ladder of denominations:
 
 | Prototype | Denomination |
 | --- | --- |
 | `automation-science-pack` | Penny |
 | `logistic-science-pack` | Silver Coin |
-| `military-science-pack` | War Chest |
 | `chemical-science-pack` | Banknote |
 | `production-science-pack` | Bond |
 | `utility-science-pack` | Gold Bar |
@@ -116,17 +115,30 @@ Pennies. The lab is renamed the **Investment Office**; it already runs without p
 
 The Penny replaced the base game `coin`, which is hidden again.
 
+### The seventh pack: why there is no War Chest
+
+`military-science-pack` was the War Chest, between the Silver Coin and the Banknote. It is not money
+any more. Every one of the 62 technologies that priced research in it was a combat technology — damage
+and shooting-speed ladders, turrets, armor, artillery, the military tiers — so when combat left the
+mod (see [game-design.md](game-design.md#why-this-creates-a-new-factory-design)) the denomination had
+nothing left to buy. A currency the player can earn and never spend is worse than one tier fewer, so
+the ladder is six tiers and `remove_military.lua` hides the pack the way `coin` is hidden.
+
+Restoring it would mean re-pricing existing non-combat technologies onto a seventh tier. That is an
+economy design decision, not a revert.
+
 ### Money is earned, never crafted
 
-The six vanilla pack recipes are **deleted**, not hidden. Red is 1 copper plate + 1 iron gear wheel
+The five remaining vanilla pack recipes are **deleted**, not hidden. Red is 1 copper plate + 1 iron gear wheel
 and green is an inserter + a belt, all craftable from purchased plates — leaving those recipes in
 would let the factory print its own money and the customer economy would stop mattering. There is
 also **no exchange between denominations**, in either direction. Both rules exist to keep one
 property true: the denomination a customer pays in is what gates the tier of research you can afford.
 
-The six technologies named after a pack now have no effects at all. They stay in the tree as
-prerequisites and are renamed after their denomination ("The Banknote"), reading as the licence to
-deal at that tier.
+The five technologies named after a surviving pack now have no effects at all. They stay in the tree
+as prerequisites and are renamed after their denomination ("The Banknote"), reading as the licence to
+deal at that tier. The `military-science-pack` technology is deleted outright with the rest of the
+combat tree.
 
 ### Reachability
 
