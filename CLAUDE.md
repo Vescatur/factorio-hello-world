@@ -23,13 +23,15 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
 
 - `src/` — The mod source (symlinked into Factorio mods folder)
   - `data.lua` — Entry point, requires all services
-  - `data-updates.lua` — Requires `services/shop.lua` only. Exists because base generates the fluid barrel items in *its* data-updates, so the shop cannot name `crude-oil-barrel` any earlier
+  - `data-updates.lua` — Requires `shop.lua`, then `tolls.lua`, then `cost.lua`, **in that order** — the order is correctness, not readability, and the file says why. Exists because base generates the fluid barrel items in *its* data-updates, so neither the shop nor the toll injector can see a complete recipe list any earlier
   - `control.lua` — Runtime: enforces the single-Entrance limit and sets the starter inventory (the mod's only control-stage code)
-  - `lib/prototypes.lua` — The four moves every removal service makes: delete recipes (and strip the unlock effects naming them), hide items, delete technologies, re-link the prerequisites and dependents left dangling. Not a service; required by the ones below
-  - `services/customers.lua` — Core: the customer tier table, their items and spoil chain. Returns the tier list and each tier's item name; the recipes that consume them live with the machine that crafts them
+  - `lib/prototypes.lua` — The four moves every removal service makes: delete recipes (and strip the unlock effects naming them), hide items, delete technologies, re-link the prerequisites and dependents left dangling. Also `find_item`/`icons_of`, the type-agnostic item lookup — reach for those instead of `data.raw.item[name]`, which is nil for armor, modules, rail planners and item-with-entity-data. Not a service; required by the ones below
+  - `services/customers.lua` — Core: the band and order tables, the customer items, and the generated spoil chain and spawn weights. Returns the bands, the orders and each order's item name; the recipes that consume them live with the machine that crafts them
   - `services/currency.lua` — Re-skins six science packs into currency denominations; also the module the rest of the mod asks for currency item names
-  - `services/entrance.lua`, `services/import.lua`, `services/export.lua` — The three machines the whole loop runs through, plus the recipes two of them craft: `customer-new` and the `customer_*_deliver` payouts
-  - `services/shop.lua` — The `buy_*` price list the Import machine crafts. Separate from `import.lua` because it runs a stage later
+  - `services/entrance.lua`, `services/import.lua`, `services/export.lua` — The three machines the whole loop runs through, plus the recipes two of them craft: `customer-new` and the `customer_*_deliver` payouts. `export.lua` also wires each band's licence onto its technology
+  - `services/shop.lua` — The `buy_*` price list the Import machine crafts, each good priced in the denomination of the era that needs it. Separate from `import.lua` because it runs a stage later. Returns its `resources` table, which `cost.lua` uses as the solver's seeds
+  - `services/tolls.lua` — Charges a coin to craft. Derives each recipe's denomination from the technology that unlocks it, and owns the exemption list (fluid-only, smelting, barrels, start-enabled). Also puts the Diamond client into the `satellite` recipe
+  - `services/cost.lua` — Emits no prototypes. Re-solves the recipe graph and asserts the authored refunds still cover what each order costs, so the numbers in `customers.lua` cannot rot silently
   - `services/item_groups.lua` — The Tycoon tab and its subgroup ordering
   - `services/remove_ore.lua` — Strips ore/resource generation, deletes the mining drills and pumpjack, stops rocks dropping coal, and prices `oil-processing` in money since its "mine crude oil" trigger can never fire
   - `services/remove_electricity.lua` — Removes electric infrastructure, converts every electric *and burner* energy source to void
@@ -69,26 +71,33 @@ fails on any broken internal link.
 
 ## Key Conventions
 
-### Adding a New Customer Type
+### Adding or Changing a Customer Order
 
-Add an entry to the `tiers` table in `services/customers.lua`. Each entry needs:
-- `item_to_deliver` — vanilla item name the customer wants
-- `amount` — how many items to deliver
-- `cost` — guaranteed payout, in Pennies
-- `reward` / `reward_percentage` — optional bonus Pennies with probability
-- `spoils_into` — optional bare item name of what this one decays into when its timer runs out (asserted at load). Either another customer type, or a **terminal token** from the `terminal_tokens` set — currently just `ghost`, which is not a customer and gets no delivery recipe
-- `new_customers` — list of `{item, chance}` pairs. **Chances must sum to exactly 1.0** (asserted at load)
+Orders live in the `orders` table in `services/customers.lua`, three per band, and each entry needs:
+
+- `band` / `grade` — where it sits on the ladder. `band` indexes the `bands` table (1 = penny), `grade` is 1 easy, 2 medium, 3 hard. **Grade 3 is the band's bridge upward** and is what pays a coin of the next denomination
+- `item` — the vanilla item ordered. Finished goods only: never ore, plates, gears or circuits
+- `amount` — how many to deliver
+- `refund` — a map of denomination key to amount, e.g. `{ penny = 48, silver_coin = 2 }`. This must cover the **full embedded cost** of `amount × item`, tolls included
+- `profit` — a plain number, paid in the band's own currency
+
+The spoil chain, the spawn weights and the band's licence are all **generated** from `band` and
+`grade` — do not hand-write them. Neither is the refund solved at load: author it, and let
+`cost.lua` tell you if it is short. To get the number, read the `[cost]` lines the previous load
+already logged and round up.
 
 Like `currency.lua`, this module owns its prototype names: `require("services.customers")` returns
-`{ tiers = ..., item = { wood = "customer_wood", ... }, entry = "wood" }`. Ask it for a name rather
-than concatenating the `customer_` prefix somewhere else.
+`{ bands, orders, item = { ["wooden-chest"] = "customer_wooden-chest", ... }, entry, weight_total }`.
+Ask it for a name rather than concatenating the `customer_` prefix somewhere else.
 
-The loop at the bottom of `customers.lua` auto-generates the customer item and its icon, and the loop
-at the bottom of `services/export.lua` generates the matching delivery recipe and payout — no edit is
-needed there. Neither generates locale, so add `item-name.customer_<item>` and
-`recipe-name.customer_<item>_deliver` to
-`src/locale/en/hello-world.cfg` and run `python tools/find-missing-locale.py` to confirm nothing else
-is untranslated.
+Nothing generates locale, so add `item-name.customer_<item>`,
+`item-description.customer_<item>` and `recipe-name.customer_<item>_deliver` to
+`src/locale/en/hello-world.cfg`, then run `python tools/find-missing-locale.py` to confirm nothing
+else is untranslated.
+
+**The penny band is special.** Its orders must be craftable from recipes that are enabled at game
+start and need no copper, because copper costs Silver and the only source of Silver is the penny
+band's own hard order. Anything else deadlocks a new game.
 
 ### Adding or Editing an Icon
 
@@ -99,7 +108,10 @@ they are build output and get overwritten.
 ### Adding a Purchasable Resource
 
 Add an entry to the `resources` table in `services/shop.lua` with `item`, `amount`, `price`, and
-`currency` (a field from the `currency` module, e.g. `currency.penny`).
+`currency` (a field from the `currency` module, e.g. `currency.penny`). Price it in the denomination
+of the era that needs it, and grow the lot size with the denomination so unit prices stay in the same
+range across the ladder. Changing any price invalidates the authored refunds — `cost.lua` will say
+so at the next load.
 
 ### Currency
 
@@ -149,8 +161,11 @@ still resolve. Radar is deliberately kept craftable: `satellite` needs five of t
   stays banned is anything on the map to mine and anything that generates or distributes power. The
   mining drills and the pumpjack are deleted for the same reason — there is nothing to point them at
 - **Never re-add enemies or combat content** — there is nothing to defend, so weapons, ammo, turrets, walls and combat vehicles have no function. Most of the tree was already unreachable anyway: `explosives` needs coal and sulfur needs crude oil, and `remove_ore.lua` deletes both. Radar, `modular-armor`/`power-armor` (equipment-grid carriers) and the car are kept on purpose and are not combat content
-- **Customer spawn probabilities must sum to 1.0** — there's a runtime assertion; breaking it crashes the game
-- **Only one Entrance may exist** — it's the sole source of customers, so its count is what bounds the whole economy. `src/control.lua` refuses extra placements. Retune throughput via `energy_required` on `customer-new` or the Entrance's `crafting_speed` — both in `services/entrance.lua` — never by allowing more buildings
+- **Customer spawn weights are integers, never decimals** — they must sum to `weight_total`, and there's a load assertion. Decimals are the trap: `0.1 + 0.2 + 0.7` is `1.0000000000000002` in IEEE doubles, which fails the assertion outright and, worse, leaves a one-ULP gap between two `shared_probability` bands where a delivery emits no successor and silently drains the population
+- **Never toll a smelting recipe** — every furnace has `source_inventory_size = 1`, so a smelting recipe cannot take a second ingredient. Adding one raises no error; it just makes the item uncraftable in every furnace in the game. `services/tolls.lua` guards this, and the guard must stay
+- **Never gate the penny band behind a technology** — its delivery recipes ship `enabled = true` because every technology in the game is downstream of a lab, a lab needs copper, and copper costs Silver that only the penny band can pay. Gating it deadlocks a new game in the first minute
+- **The penny band's hard order must keep its Silver bridge** — it is the only source of the first Silver Coin, and without it the `electronics` trigger can never fire and no research is ever possible
+- **Only one Entrance may exist** — it's the sole source of customers, so its count is what bounds the whole economy. `src/control.lua` refuses extra placements. Retune throughput via `energy_required` on `customer-new` or the Entrance's `crafting_speed` — both in `services/entrance.lua` — never by allowing more buildings. A satellite launch is the one other place a customer leaves the population: it consumes its Diamond client and emits no successor
 - **Money is earned, never crafted** — the science pack recipes are deleted, not hidden, because red and green are craftable from purchased plates and would let the factory print its own money. Never restore a recipe that produces a currency item, and never add an exchange recipe between denominations: what a customer pays is what gates the tier of research you can afford
 - **Ghosts are a permanent dead end** — `customer_ghost` has no spoil timer and no recipe, on purpose. It piles up forever, and one spoiling inside a machine's ingredient slot jams that machine for good. That hazard is the challenge; never add a spoil timer, disposal recipe, or any other way to get rid of ghosts
 - **Mod internal name is `tycoon`** — referenced in paths, icon prefixes (`__tycoon__`), and the symlink

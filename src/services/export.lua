@@ -1,5 +1,6 @@
--- The orders to fill and what they pay. See services/customers.lua, and
--- services/currency.lua for why the payout is really a science pack.
+-- The orders to fill and what they pay. See services/customers.lua for the band
+-- table, and services/currency.lua for why the payout is really a science pack.
+local prototypes = require("lib.prototypes")
 local customers = require("services.customers")
 local currency = require("services.currency")
 
@@ -67,61 +68,140 @@ data:extend({
 })
 
 
--- ==== One delivery recipe per customer tier ====
+-- ==== One delivery recipe per order ====
 --
--- This is where money enters the game: hand a customer the goods they asked
--- for and they pay `cost`, plus `reward` on an independent roll. The same
--- results list also carries the customers they bring in behind them, as
--- contiguous shared_probability bands so exactly one successor arrives.
-for _, customer in ipairs(customers.tiers) do
-    local results = {
-        { type = "item", name = currency.penny, amount = customer.cost },
-    }
-    if customer.reward then
-        table.insert(results, {
-            type = "item", name = currency.penny, amount = customer.reward,
-            independent_probability = customer.reward_percentage
-        })
+-- This is where money enters the game. Hand a customer the goods they asked for
+-- and you get back everything the goods cost you -- raw materials in whichever
+-- denomination the shop charges for them, plus every crafting toll embedded in
+-- the recipe tree -- and then profit on top, in the band's own currency. The
+-- hard order of each band pays a little of the next denomination as well; that
+-- drip is the only way up the ladder.
+--
+-- The same results list also carries the customer who arrives behind this one,
+-- as contiguous shared_probability bands so exactly one successor turns up.
+
+-- The refund and the profit are frequently the same denomination -- a penny-band
+-- order refunds Pennies and profits in Pennies -- and a recipe may not name the
+-- same item in two results. Accumulate by item name first, emit once.
+local function payout_of(order, band)
+    local totals = {}
+    local order_of_appearance = {}
+
+    local function pay(currency_name, amount)
+        if not amount or amount <= 0 then
+            return
+        end
+        if not totals[currency_name] then
+            table.insert(order_of_appearance, currency_name)
+        end
+        totals[currency_name] = (totals[currency_name] or 0) + amount
     end
 
-    local min_probability = 0
-    for _, new_customer in ipairs(customer.new_customers) do
+    for denomination, amount in pairs(order.refund) do
+        assert(currency[denomination],
+            "export: '" .. order.item .. "' refunds '" .. denomination .. "', which is not a denomination")
+        pay(currency[denomination], amount)
+    end
+
+    pay(band.currency, order.profit)
+
+    -- The bridge: the hard order of a band pays a little of the band above.
+    if order.grade == 3 then
+        local above = customers.bands[order.band + 1]
+        if above then
+            pay(above.currency, 1)
+        end
+    end
+
+    local results = {}
+    for _, currency_name in ipairs(order_of_appearance) do
+        local amount = totals[currency_name]
+        assert(amount == math.floor(amount) and amount > 0 and amount <= 65535,
+            "export: '" .. order.item .. "' pays " .. amount .. " " .. currency_name
+                .. "; a result amount must be a positive integer below 65536")
+        table.insert(results, { type = "item", name = currency_name, amount = amount })
+    end
+    return results
+end
+
+
+-- The successors, as contiguous bands over 0..1. Built from cumulative integer
+-- weights so band k+1's `min` is the same arithmetic as band k's `max` and no
+-- gap can open between them -- a gap is a delivery that produces no customer at
+-- all, which would quietly drain the population.
+local function append_successors(results, order)
+    local cumulative = 0
+    for _, successor in ipairs(order.successors) do
+        local from = cumulative
+        cumulative = cumulative + successor.weight
         table.insert(results, {
-            type = "item", name = customers.item[new_customer.item], amount = 1,
-            shared_probability = { min = min_probability, max = min_probability + new_customer.chance },
+            type = "item", name = successor.item, amount = 1,
+            shared_probability = {
+                min = from / customers.weight_total,
+                max = cumulative / customers.weight_total,
+            },
             always_fresh = true
         })
-        min_probability = min_probability + new_customer.chance
     end
+    assert(cumulative == customers.weight_total,
+        "export: successor weights for '" .. order.item .. "' sum to " .. cumulative)
+end
+
+
+local gated = 0
+
+for _, order in ipairs(customers.orders) do
+    local band = customers.bands[order.band]
+    local results = payout_of(order, band)
+    append_successors(results, order)
+
+    -- The recipe wears the denomination it pays in, with the goods it wants
+    -- overlaid -- so the crafting menu reads as a price list.
+    local icons = prototypes.icons_of(order.item)
+    table.insert(icons, 1, {
+        icon = "__tycoon__/graphics/icons/" .. band.icon .. ".png",
+        icon_size = 64,
+        icon_mipmaps = 4
+    })
+    for index = 2, #icons do
+        icons[index].scale = 0.3
+        icons[index].shift = { 6, 6 }
+    end
+
+    local recipe_name = customers.item[order.item] .. "_deliver"
 
     data:extend({
         {
             type = "recipe",
-            name = customers.item[customer.item_to_deliver] .. "_deliver",
-            enabled = true,
+            name = recipe_name,
+            -- A band you have no licence for still gets customers; you simply
+            -- cannot serve them, and they decay back down a band. The penny
+            -- band has no licence and ships enabled, because every technology in
+            -- the game is downstream of the first delivery.
+            enabled = band.licence == nil,
             ingredients = {
-                { type = "item", name = customers.item[customer.item_to_deliver], amount = 1 },
-                { type = "item", name = customer.item_to_deliver, amount = customer.amount }
+                { type = "item", name = customers.item[order.item], amount = 1 },
+                { type = "item", name = order.item, amount = order.amount }
             },
             results = results,
-            icons = {
-                {
-                    icon = "__tycoon__/graphics/icons/penny.png",
-                    icon_size = 64,
-                    icon_mipmaps = 4
-                },
-                {
-                    icon = "__base__/graphics/icons/" .. customer.item_to_deliver .. ".png",
-                    icon_size = 64,
-                    icon_mipmaps = 4,
-                    scale = 0.3,
-                    shift = { 6, 6 }
-                }
-            },
+            icons = icons,
             categories = { "export" },
             energy_required = 1,
             subgroup = "customer-deliver",
-            order = "z["..customer.item_to_deliver.."]",
+            order = string.char(string.byte("a") + order.band - 1) .. order.grade .. "[" .. order.item .. "]",
         }
     })
+
+    -- The licence. These four technologies were left effect-less when their
+    -- science pack recipes were deleted; dealing in a denomination is what they
+    -- unlock now, which is what their names in the locale file already claimed.
+    if band.licence then
+        local tech = data.raw.technology[band.licence]
+        assert(tech, "export: licence technology '" .. band.licence .. "' is missing")
+        tech.effects = tech.effects or {}
+        table.insert(tech.effects, { type = "unlock-recipe", recipe = recipe_name })
+        gated = gated + 1
+    end
 end
+
+log("[export] " .. #customers.orders .. " delivery recipes, " .. gated .. " behind a licence.")

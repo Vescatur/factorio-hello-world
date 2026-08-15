@@ -32,7 +32,8 @@
       "Bash(awk '/^### Empty gate/,0' docs/prototype-audit.md)",
       "Bash(grep -oP '^\\\\| `\\\\K[^`]+')",
       "Bash(python -c ' *)",
-      "Bash(cp audit3.py /c/Users/Ivan/Documents/Develop/factorio/factorio-hello-world/tools/build-prototype-audit.py)"
+      "Bash(cp audit3.py /c/Users/Ivan/Documents/Develop/factorio/factorio-hello-world/tools/build-prototype-audit.py)",
+      "PowerShell(Get-Item *)"
     ],
     "defaultMode": "auto"
   },

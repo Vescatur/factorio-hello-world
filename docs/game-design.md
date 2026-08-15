@@ -44,7 +44,7 @@ The mod [Ultracube: Age of Cube](https://mods.factorio.com/mod/Ultracube) demons
 We borrow the **mechanical philosophy** of restaurant tycoon games, not their theme:
 
 1. **Customers arrive** — they are items that spoil quickly, creating time pressure
-2. **Customers request specific goods** — wood, iron plates, circuits, etc.
+2. **Customers request specific goods** — finished things you would build anyway: chests, belts, assemblers, robots, modules. Never ore, plates or circuits
 3. **Delivering earns money** — the only way to acquire raw materials
 4. **Serving customers spawns new customers** — with weighted probabilities that gate progression
 5. **Research is what you spend profit on** — the science packs are re-skinned into currency denominations, so a technology's research cost is literally its price
@@ -56,7 +56,7 @@ We borrow the **mechanical philosophy** of restaurant tycoon games, not their th
 - **No enemies, no combat** — biters, spitters and nests never generate, and the weapon tree (guns, ammo, grenades, turrets, walls, gates, mines, combat armor and equipment, tank, spidertron, artillery) is removed along with its technologies. There is no territory to hold and no ore patch to defend, so defence was never a problem this mod posed — and most of the tree was unreachable regardless, since `explosives` needs coal and sulfur needs crude oil. Removing it means the crafting menu and tech tree describe the game you are actually playing.
 - **Money is the bottleneck** — every raw material and every technology has a price, paid only out of customer deliveries. See [customer-system.md](customer-system.md#currency) for the denomination ladder.
 - **Spoilage creates urgency** — customers expire in seconds, so your factory must be responsive, not just high-throughput
-- **Customer chains create progression** — serving a wood customer might spawn an iron-plate customer, which might spawn a circuits customer. The probability weights control how fast you unlock higher tiers.
+- **Customer chains create progression** — orders sit in five bands, one per denomination, and only a band's hardest order can bring in a customer from the band above. Serving pushes up, spoiling pulls down, so the mix parks itself on the hardest thing the factory can actually deliver.
 
 ### Design Principles
 

@@ -77,26 +77,57 @@ end
 -- Items
 -- ============================================================
 
--- Hide an item without deleting it. The prototype stays because other
--- prototypes reference it by name -- `lab.inputs`, `car.guns`, tips-and-tricks
--- triggers -- but it leaves the crafting menu and Factoriopedia so there is no
--- uncraftable clutter.
+-- Find an item prototype by name, whatever kind of item it is.
 --
--- Items are spread over a dozen categories (plain "item", but also gun, ammo,
--- capsule, armor, item-with-entity-data, ...). Rather than list them, this looks
--- for a prototype of that name carrying a `stack_size`, which every item has and
--- no entity does. That keeps the entity visible in Factoriopedia while its item
--- disappears from the crafting menu.
-function prototypes.hide_item(item_name)
+-- Items are spread over a dozen categories: plain "item", but also gun, ammo,
+-- capsule, armor, module, rail-planner, item-with-entity-data and more. Rather
+-- than list them, this looks for a prototype of that name carrying a
+-- `stack_size`, which every item has and no entity does.
+--
+-- Reach for this instead of `data.raw.item[name]` anywhere the name comes from
+-- a table someone might extend. `data.raw.item.car` is nil (it is
+-- item-with-entity-data), and so is `data.raw.item["power-armor-mk2"]` (armor)
+-- and `data.raw.item.rail` (rail-planner).
+function prototypes.find_item(item_name)
     for _, category in pairs(data.raw) do
         local prototype = type(category) == "table" and category[item_name]
         if type(prototype) == "table" and prototype.stack_size then
-            prototype.hidden = true
-            prototype.hidden_in_factoriopedia = true
-            return true
+            return prototype
         end
     end
-    return false
+    return nil
+end
+
+
+-- The icons of an item, in the `icons` array form, ready to be copied into
+-- another prototype. Read them off the prototype rather than assembling a path
+-- into __base__/graphics/icons/: a barrel has no file of its own, it is a
+-- three-layer composite, and plenty of items are named differently from their
+-- sprite.
+function prototypes.icons_of(item_name)
+    local item = prototypes.find_item(item_name)
+    assert(item, "prototypes: no item prototype named '" .. item_name .. "'")
+
+    if item.icons then
+        return util.table.deepcopy(item.icons)
+    end
+    return { { icon = item.icon, icon_size = item.icon_size or 64 } }
+end
+
+
+-- Hide an item without deleting it. The prototype stays because other
+-- prototypes reference it by name -- `lab.inputs`, `car.guns`, tips-and-tricks
+-- triggers -- but it leaves the crafting menu and Factoriopedia so there is no
+-- uncraftable clutter. The entity keeps its Factoriopedia entry; only the item
+-- disappears from the crafting menu.
+function prototypes.hide_item(item_name)
+    local prototype = prototypes.find_item(item_name)
+    if not prototype then
+        return false
+    end
+    prototype.hidden = true
+    prototype.hidden_in_factoriopedia = true
+    return true
 end
 
 

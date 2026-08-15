@@ -3,10 +3,25 @@
 -- The only way raw materials enter the factory, now that nothing can be mined.
 -- The shop stocks raw material only: ore, not plates. Smelting them is the
 -- player's job, which is what gives the furnace a reason to exist and what makes
--- the iron and copper plate customers worth serving rather than reselling.
+-- the finished-goods orders worth serving rather than reselling.
 --
--- Everything is bought with pennies for now; higher denominations get their own
--- price lists when the upper customer tiers land.
+-- ============================================================
+-- EACH GOOD IS PRICED IN THE DENOMINATION OF THE ERA THAT NEEDS IT
+--
+-- Wood, iron and stone are penny goods: they are what the opening band of
+-- customers wants, and they are all a new game can afford. Copper costs Silver,
+-- and coal and crude oil cost Banknotes -- so a resource is not merely
+-- expensive before its era, it is unbuyable.
+--
+-- Copper is the load-bearing one. Electronic circuits need copper, a lab needs
+-- circuits, and every technology needs a lab -- so the whole tech tree now sits
+-- behind earning the first Silver Coin, and the only thing that mints one is the
+-- penny band's hard order. The opening of the game reads: chop wood, serve
+-- wooden chests, buy stone and iron, serve belts and iron chests, earn a Silver,
+-- buy copper, build a lab.
+--
+-- The lot size grows with the denomination so the unit prices stay in the same
+-- range across the whole ladder -- you buy coal by the hundred, not by the ten.
 --
 -- WHY THIS RUNS IN data-updates AND NOT data: crude oil arrives barrelled, and
 -- base generates every barrel item and its fill/empty recipes in its OWN
@@ -14,13 +29,9 @@
 -- so a shop that stocks it cannot be built until a stage later. The Import
 -- machine itself stays in services/import.lua at the data stage; only the price
 -- list moved.
---
--- PRICES are the tuning knob for the whole early economy. Ore sits below what
--- plates used to cost, so the mandatory smelting step is not a straight tax on
--- what the player could previously buy ready-made.
+-- ============================================================
 
--- Denomination item names, so the price list doesn't have to know that money is
--- really a re-skinned science pack. See services/currency.lua.
+local prototypes = require("lib.prototypes")
 local currency = require("services.currency")
 
 local resources = {
@@ -37,46 +48,32 @@ local resources = {
         currency = currency.penny
     },
     {
-        item = "copper-ore",
-        amount = 10,
-        price = 6,
-        currency = currency.penny
-    },
-    {
-        item = "coal",
-        amount = 10,
-        price = 6,
-        currency = currency.penny
-    },
-    {
         item = "stone",
         amount = 10,
         price = 4,
         currency = currency.penny
     },
     {
+        item = "copper-ore",
+        amount = 10,
+        price = 1,
+        currency = currency.silver_coin
+    },
+    {
+        item = "coal",
+        amount = 100,
+        price = 1,
+        currency = currency.banknote
+    },
+    {
         -- Unbarrelling hands back a reusable empty barrel, so the only ongoing
         -- cost is the oil itself.
         item = "crude-oil-barrel",
-        amount = 1,
-        price = 10,
-        currency = currency.penny
+        amount = 10,
+        price = 1,
+        currency = currency.banknote
     }
 }
-
--- The buy recipe wears the icon of what it sells. Read it off the item rather
--- than assembling a path into __base__/graphics/icons/: a barrel has no file of
--- its own, it is a three-layer composite, and a future shop good could be the
--- same.
-local function icons_for(item_name)
-    local item = data.raw.item[item_name]
-    assert(item, "shop: no item prototype named '" .. item_name .. "' to sell")
-
-    if item.icons then
-        return util.table.deepcopy(item.icons)
-    end
-    return { { icon = item.icon, icon_size = item.icon_size or 64 } }
-end
 
 for _, resource in ipairs(resources) do
     data:extend({
@@ -90,7 +87,8 @@ for _, resource in ipairs(resources) do
             results = {
                 { type = "item", name = resource.item, amount = resource.amount }
             },
-            icons = icons_for(resource.item),
+            -- The buy recipe wears the icon of what it sells.
+            icons = prototypes.icons_of(resource.item),
             categories = { "import" },
             energy_required = 1,
             subgroup = "currency-buy",
@@ -98,3 +96,5 @@ for _, resource in ipairs(resources) do
         }
     })
 end
+
+return resources
