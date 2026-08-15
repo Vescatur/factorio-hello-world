@@ -105,8 +105,10 @@ end
 -- ============================================================
 local starter_inventory = {
     [ENTRANCE] = 1,
-    ["import"] = 1,
-    ["export"] = 1,
+    ["import"] = 3,
+    ["export"] = 3,
+    ["assembling-machine-1"] = 5,
+    ["burner-inserter"] = 10,
 }
 
 local function apply_starter_inventory()

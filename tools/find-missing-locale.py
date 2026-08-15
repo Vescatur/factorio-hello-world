@@ -102,7 +102,7 @@ INTENTIONALLY_UNDESCRIBED = [
     "recipe-description.import",
     "recipe-description.export",
     "recipe-description.entrance",
-    # Generated per customer type by the loop in services/recipes.lua. The
+    # Generated per customer type by the loop in services/export.lua. The
     # customer item says what the order is and what it decays into.
     "recipe-description.customer_*_deliver",
     # Item groups show a name in the crafting tab and nothing else.

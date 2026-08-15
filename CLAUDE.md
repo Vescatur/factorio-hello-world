@@ -24,9 +24,10 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
 - `src/` — The mod source (symlinked into Factorio mods folder)
   - `data.lua` — Entry point, requires all services
   - `control.lua` — Runtime: enforces the single-Entrance limit (the mod's only control-stage code)
-  - `services/recipes.lua` — Core: customer types, delivery recipes, the payout economy
+  - `services/customers.lua` — Core: the customer tier table, their items and spoil chain. Returns the tier list and each tier's item name; the recipes that consume them live with the machine that crafts them
   - `services/currency.lua` — Re-skins six science packs into currency denominations; also the module the rest of the mod asks for currency item names
-  - `services/entrance.lua`, `services/import.lua`, `services/export.lua` — The three machines the whole loop runs through
+  - `services/entrance.lua`, `services/import.lua`, `services/export.lua` — The three machines the whole loop runs through, each with the recipes it crafts: `customer-new`, the `buy_*` price list, and the `customer_*_deliver` payouts
+  - `services/item_groups.lua` — The Tycoon tab and its subgroup ordering
   - `services/remove_ore.lua` — Strips all ore/resource generation
   - `services/remove_electricity.lua` — Removes electric infrastructure, converts energy sources to void
   - `services/remove_enemies.lua` — Stops enemies generating and hides them
@@ -66,7 +67,7 @@ fails on any broken internal link.
 
 ### Adding a New Customer Type
 
-Add an entry to the `customers` table in `services/recipes.lua`. Each entry needs:
+Add an entry to the `tiers` table in `services/customers.lua`. Each entry needs:
 - `item_to_deliver` — vanilla item name the customer wants
 - `amount` — how many items to deliver
 - `cost` — guaranteed payout, in Pennies
@@ -74,8 +75,14 @@ Add an entry to the `customers` table in `services/recipes.lua`. Each entry need
 - `spoils_into` — optional bare item name of what this one decays into when its timer runs out (asserted at load). Either another customer type, or a **terminal token** from the `terminal_tokens` set — currently just `ghost`, which is not a customer and gets no delivery recipe
 - `new_customers` — list of `{item, chance}` pairs. **Chances must sum to exactly 1.0** (asserted at load)
 
-The loop at the bottom auto-generates the customer item, delivery recipe, and icons. It does **not**
-generate locale, so add `item-name.customer_<item>` and `recipe-name.customer_<item>_deliver` to
+Like `currency.lua`, this module owns its prototype names: `require("services.customers")` returns
+`{ tiers = ..., item = { wood = "customer_wood", ... }, entry = "wood" }`. Ask it for a name rather
+than concatenating the `customer_` prefix somewhere else.
+
+The loop at the bottom of `customers.lua` auto-generates the customer item and its icon, and the loop
+at the bottom of `services/export.lua` generates the matching delivery recipe and payout — no edit is
+needed there. Neither generates locale, so add `item-name.customer_<item>` and
+`recipe-name.customer_<item>_deliver` to
 `src/locale/en/hello-world.cfg` and run `python tools/find-missing-locale.py` to confirm nothing else
 is untranslated.
 
@@ -87,8 +94,8 @@ they are build output and get overwritten.
 
 ### Adding a Purchasable Resource
 
-Add an entry to the `resources` table in `services/recipes.lua` with `item`, `amount`, `price`, and
-`currency` (a field from the `currency` module, e.g. `currency.penny`).
+Add an entry to the `resources` table at the bottom of `services/import.lua` with `item`, `amount`,
+`price`, and `currency` (a field from the `currency` module, e.g. `currency.penny`).
 
 ### Currency
 
@@ -136,7 +143,7 @@ still resolve. Radar is deliberately kept craftable: `satellite` needs five of t
 - **Never re-add ores or electricity** — the entire mod design depends on their absence
 - **Never re-add enemies or combat content** — there is nothing to defend, so weapons, ammo, turrets, walls and combat vehicles have no function. Most of the tree was already unreachable anyway: `explosives` needs coal and sulfur needs crude oil, and `remove_ore.lua` deletes both. Radar, `modular-armor`/`power-armor` (equipment-grid carriers) and the car are kept on purpose and are not combat content
 - **Customer spawn probabilities must sum to 1.0** — there's a runtime assertion; breaking it crashes the game
-- **Only one Entrance may exist** — it's the sole source of customers, so its count is what bounds the whole economy. `src/control.lua` refuses extra placements. Retune throughput via `energy_required` on `customer-new` or the Entrance's `crafting_speed`, never by allowing more buildings
+- **Only one Entrance may exist** — it's the sole source of customers, so its count is what bounds the whole economy. `src/control.lua` refuses extra placements. Retune throughput via `energy_required` on `customer-new` or the Entrance's `crafting_speed` — both in `services/entrance.lua` — never by allowing more buildings
 - **Money is earned, never crafted** — the science pack recipes are deleted, not hidden, because red and green are craftable from purchased plates and would let the factory print its own money. Never restore a recipe that produces a currency item, and never add an exchange recipe between denominations: what a customer pays is what gates the tier of research you can afford
 - **Ghosts are a permanent dead end** — `customer_ghost` has no spoil timer and no recipe, on purpose. It piles up forever, and one spoiling inside a machine's ingredient slot jams that machine for good. That hazard is the challenge; never add a spoil timer, disposal recipe, or any other way to get rid of ghosts
 - **Mod internal name is `tycoon`** — referenced in paths, icon prefixes (`__tycoon__`), and the symlink

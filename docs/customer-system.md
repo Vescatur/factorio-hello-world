@@ -2,8 +2,9 @@
 
 > This document describes **mechanics only**. Every concrete number — item amounts, payouts and
 > rewards, spoil duration, spawn probabilities, decay targets, resource prices — lives in the
-> `customers` and `resources` tables in [`src/services/recipes.lua`](../src/services/recipes.lua),
-> which is the single source of truth. Read the tables there for current values.
+> `tiers` table in [`src/services/customers.lua`](../src/services/customers.lua) and the `resources`
+> table in [`src/services/import.lua`](../src/services/import.lua), which are the single source of
+> truth. Read the tables there for current values.
 
 ## Overview
 
@@ -65,7 +66,7 @@ iron-gear-wheel    → iron-plate   → wood         → ghost
 
 `ghost` is a **terminal token**: a valid `spoils_into` target that is not a customer. It has no order
 to fill, so the generation loop skips it and `customer_ghost` is written by hand in
-`recipes.lua`. It is deliberately a dead end:
+`customers.lua`. It is deliberately a dead end:
 
 - **No spoil timer** — a ghost never decays into anything.
 - **No recipe of any kind** — it cannot be served, sold, or voided.
@@ -78,7 +79,7 @@ recipe will consume it. That is intended, not a bug: designing the factory so wo
 time out mid-slot is part of the challenge. Do not "fix" it by giving ghosts a spoil timer or a
 disposal recipe.
 
-To add another terminal token, put it in the `terminal_tokens` set in `recipes.lua` and hand-write
+To add another terminal token, put it in the `terminal_tokens` set in `customers.lua` and hand-write
 its item prototype.
 
 ### 3. Delivery Recipes
