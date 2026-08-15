@@ -87,24 +87,24 @@ local orders = {
     { band = 1, grade = 3, item = "iron-chest",             amount = 10, refund = { penny = 48 },  profit = 12 },
 
     -- Silver -- the first copper, and the first machines built out of it.
-    { band = 2, grade = 1, item = "inserter",               amount = 10, refund = { penny = 24,  silver_coin = 2 },  profit = 1 },
-    { band = 2, grade = 2, item = "splitter",               amount = 10, refund = { penny = 106, silver_coin = 8 },  profit = 5 },
-    { band = 2, grade = 3, item = "assembling-machine-2",   amount = 5,  refund = { penny = 140, silver_coin = 10 }, profit = 6 },
+    { band = 2, grade = 1, item = "inserter",               amount = 10, refund = { penny = 26 },  profit = 1 },
+    { band = 2, grade = 2, item = "splitter",               amount = 10, refund = { penny = 114 }, profit = 5 },
+    { band = 2, grade = 3, item = "assembling-machine-2",   amount = 5,  refund = { penny = 145, silver_coin = 5 }, profit = 6 },
 
     -- Banknote -- nothing here exists without coal and crude oil.
-    { band = 3, grade = 1, item = "bulk-inserter",          amount = 5,  refund = { penny = 170, silver_coin = 31,  banknote = 1 }, profit = 1 },
-    { band = 3, grade = 2, item = "electric-furnace",       amount = 5,  refund = { penny = 220, silver_coin = 63,  banknote = 8 }, profit = 4 },
-    { band = 3, grade = 3, item = "productivity-module",    amount = 10, refund = { penny = 90,  silver_coin = 143, banknote = 5 }, profit = 5 },
+    { band = 3, grade = 1, item = "bulk-inserter",          amount = 5,  refund = { penny = 186, silver_coin = 15,  banknote = 1 }, profit = 1 },
+    { band = 3, grade = 2, item = "electric-furnace",       amount = 5,  refund = { penny = 233, silver_coin = 50,  banknote = 8 }, profit = 4 },
+    { band = 3, grade = 3, item = "productivity-module",    amount = 10, refund = { penny = 123, silver_coin = 110, banknote = 5 }, profit = 5 },
 
     -- Bond -- the robot era.
-    { band = 4, grade = 1, item = "construction-robot",     amount = 10, refund = { penny = 143, silver_coin = 63,  banknote = 34 }, profit = 2 },
-    { band = 4, grade = 2, item = "logistic-robot",         amount = 10, refund = { penny = 155, silver_coin = 110, banknote = 36 }, profit = 4 },
-    { band = 4, grade = 3, item = "roboport",               amount = 2,  refund = { penny = 486, silver_coin = 225, banknote = 10 }, profit = 6 },
+    { band = 4, grade = 1, item = "construction-robot",     amount = 10, refund = { penny = 156, silver_coin = 50,  banknote = 34 }, profit = 2 },
+    { band = 4, grade = 2, item = "logistic-robot",         amount = 10, refund = { penny = 175, silver_coin = 90,  banknote = 36 }, profit = 4 },
+    { band = 4, grade = 3, item = "roboport",               amount = 2,  refund = { penny = 531, silver_coin = 180, banknote = 10 }, profit = 6 },
 
     -- Gold -- everything here pays a Bond toll of its own to be built at all.
     { band = 5, grade = 1, item = "express-transport-belt", amount = 20, refund = { penny = 378,  silver_coin = 20,  banknote = 4,  bond = 20 }, profit = 2 },
-    { band = 5, grade = 2, item = "beacon",                 amount = 5,  refund = { penny = 330,  silver_coin = 268, banknote = 9,  bond = 5 },  profit = 4 },
-    { band = 5, grade = 3, item = "productivity-module-3",  amount = 2,  refund = { penny = 1071, silver_coin = 994, banknote = 86, bond = 2 },  profit = 6 },
+    { band = 5, grade = 2, item = "beacon",                 amount = 5,  refund = { penny = 398,  silver_coin = 200, banknote = 9,  bond = 5 },  profit = 4 },
+    { band = 5, grade = 3, item = "productivity-module-3",  amount = 2,  refund = { penny = 1400, silver_coin = 665, banknote = 86, bond = 2 },  profit = 6 },
 }
 
 
