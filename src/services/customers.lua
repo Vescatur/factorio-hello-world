@@ -194,11 +194,15 @@ end
 local function successors_of(order)
     local weights = {}
 
+    -- What a delivery emits is the CUSTOMER, never the goods. `order.item` is
+    -- the vanilla item they want -- putting that in a result would hand the
+    -- player free chests and drain the population at the same time.
     local function give(target, weight)
         if not target then
             return false
         end
-        weights[target.item] = (weights[target.item] or 0) + weight
+        local customer = item_by_key[target.item]
+        weights[customer] = (weights[customer] or 0) + weight
         return true
     end
 
@@ -228,13 +232,13 @@ local function successors_of(order)
 
     local successors = {}
     local total = 0
-    for item, weight in pairs(weights) do
-        table.insert(successors, { item = item, weight = weight })
+    for customer, weight in pairs(weights) do
+        table.insert(successors, { customer = customer, weight = weight })
         total = total + weight
     end
     -- pairs() has no defined order and the shared_probability bands built from
     -- this list have to be stable across loads, or two players' saves disagree.
-    table.sort(successors, function(a, b) return a.item < b.item end)
+    table.sort(successors, function(a, b) return a.customer < b.customer end)
 
     assert(total == weight_total,
         "customers: successor weights for '" .. order.item .. "' sum to " .. total
@@ -319,10 +323,19 @@ assert(item_by_key[entry], "customers: entry order '" .. entry .. "' is not an o
 
 log("[customers] " .. #orders .. " orders across " .. #bands .. " bands, plus ghost and diamond.")
 
+-- Every customer prototype name, as a set. Anything emitted by a delivery
+-- recipe has to be in here: the one thing that must never end up in a result is
+-- the vanilla item the customer is asking for.
+local is_customer = {}
+for _, name in pairs(item_by_key) do
+    is_customer[name] = true
+end
+
 return {
     bands = bands,
     orders = orders,
     item = item_by_key,
+    is_customer = is_customer,
     entry = entry,
     weight_total = weight_total,
 }

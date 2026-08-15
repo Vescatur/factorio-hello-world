@@ -80,7 +80,16 @@ local function adopt()
         end
     end
     if removed > 0 then
-        game.print({ "tycoon.entrance-removed", removed })
+        -- Passed as a string rather than a number. Both render identically, and
+        -- a number really is a legal LocalisedString parameter -- the API
+        -- reference for LocalisedString says so outright -- but the bundled type
+        -- definitions only admit strings, gui elements and item stacks, so the
+        -- conversion is cheaper than a suppression.
+        --
+        -- Do not quote an example localised string in a comment here: the check
+        -- in tools/find-missing-locale.py greps the source for that idiom and
+        -- will report the example as a missing key.
+        game.print({ "tycoon.entrance-removed", tostring(removed) })
     end
 end
 

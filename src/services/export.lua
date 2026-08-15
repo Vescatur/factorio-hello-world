@@ -5,12 +5,7 @@ local customers = require("services.customers")
 local currency = require("services.currency")
 
 local export_tint = {r=0.6, g=0.7, b=1}
-local export_graphics = util.table.deepcopy(data.raw["assembling-machine"]["assembling-machine-1"].graphics_set)
-for _, layer in pairs(export_graphics.animation.layers) do
-    if not layer.draw_as_shadow then
-        layer.tint = export_tint
-    end
-end
+local export_graphics = prototypes.tinted_machine_graphics("assembling-machine-1", export_tint)
 
 data:extend({
     {
@@ -132,10 +127,18 @@ end
 local function append_successors(results, order)
     local cumulative = 0
     for _, successor in ipairs(order.successors) do
+        -- What arrives is the next CUSTOMER, never the goods they want. Emitting
+        -- the vanilla item here would hand the player free goods and drain the
+        -- population in the same craft, so the name is checked rather than
+        -- trusted.
+        assert(customers.is_customer[successor.customer],
+            "export: '" .. order.item .. "' would emit '" .. tostring(successor.customer)
+                .. "', which is not a customer item")
+
         local from = cumulative
         cumulative = cumulative + successor.weight
         table.insert(results, {
-            type = "item", name = successor.item, amount = 1,
+            type = "item", name = successor.customer, amount = 1,
             shared_probability = {
                 min = from / customers.weight_total,
                 max = cumulative / customers.weight_total,

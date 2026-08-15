@@ -115,6 +115,35 @@ function prototypes.icons_of(item_name)
 end
 
 
+-- ============================================================
+-- Machine graphics
+-- ============================================================
+
+-- A tinted copy of another assembling machine's graphics, for the three Tycoon
+-- machines that are recoloured assembling-machine-1s. Shadows are left alone --
+-- tinting them turns the shadow into a coloured smear.
+--
+-- `animation` is optional on the graphics set (a machine can be drawn entirely
+-- through `working_visualisations` instead), so it is asserted rather than
+-- assumed: if a future Factorio version restructures assembling-machine-1, this
+-- says so instead of failing somewhere less obvious.
+function prototypes.tinted_machine_graphics(source_name, tint)
+    local source = data.raw["assembling-machine"][source_name]
+    assert(source, "prototypes: no assembling machine named '" .. source_name .. "'")
+
+    local graphics = util.table.deepcopy(source.graphics_set)
+    assert(graphics and graphics.animation and graphics.animation.layers,
+        "prototypes: '" .. source_name .. "' has no layered animation to tint")
+
+    for _, layer in pairs(graphics.animation.layers) do
+        if not layer.draw_as_shadow then
+            layer.tint = tint
+        end
+    end
+    return graphics
+end
+
+
 -- Hide an item without deleting it. The prototype stays because other
 -- prototypes reference it by name -- `lab.inputs`, `car.guns`, tips-and-tricks
 -- triggers -- but it leaves the crafting menu and Factoriopedia so there is no

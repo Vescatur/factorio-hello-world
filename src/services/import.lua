@@ -1,11 +1,8 @@
 
+local prototypes = require("lib.prototypes")
+
 local import_tint = {r=1, g=0.6, b=0.3}
-local import_graphics = util.table.deepcopy(data.raw["assembling-machine"]["assembling-machine-1"].graphics_set)
-for _, layer in pairs(import_graphics.animation.layers) do
-    if not layer.draw_as_shadow then
-        layer.tint = import_tint
-    end
-end
+local import_graphics = prototypes.tinted_machine_graphics("assembling-machine-1", import_tint)
 
 data:extend({
     {

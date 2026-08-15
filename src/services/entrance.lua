@@ -1,13 +1,10 @@
 -- The customer item the Entrance spawns. See services/customers.lua.
 local customers = require("services.customers")
 
+local prototypes = require("lib.prototypes")
+
 local entrance_tint = {r=0.5, g=1, b=0.5}
-local entrance_graphics = util.table.deepcopy(data.raw["assembling-machine"]["assembling-machine-1"].graphics_set)
-for _, layer in pairs(entrance_graphics.animation.layers) do
-    if not layer.draw_as_shadow then
-        layer.tint = entrance_tint
-    end
-end
+local entrance_graphics = prototypes.tinted_machine_graphics("assembling-machine-1", entrance_tint)
 
 data:extend({
     {
