@@ -51,8 +51,8 @@ We borrow the **mechanical philosophy** of restaurant tycoon games, not their th
 
 ### Why This Creates a New Factory Design
 
-- **No ores on the map** — all resource generation is removed. You cannot mine anything.
-- **No electricity** — all electric infrastructure recipes are removed; machines run for free (void energy). Power management is not a concern.
+- **No ore patches on the map** — all resource generation is removed, and the mining drills and pumpjack go with it. Ore itself is a shop good: you buy it and smelt it, which is the only route to a plate. Trees and rocks stay hand-minable as the bootstrap — you cannot buy anything before a customer has paid you, and the first wood has to come from somewhere.
+- **No electricity, and no fuel either** — all electric infrastructure recipes are removed and every energy source, electric and burner alike, is converted to void. Machines and furnaces run for free. Coal is bought for chemistry, never burned.
 - **No enemies, no combat** — biters, spitters and nests never generate, and the weapon tree (guns, ammo, grenades, turrets, walls, gates, mines, combat armor and equipment, tank, spidertron, artillery) is removed along with its technologies. There is no territory to hold and no ore patch to defend, so defence was never a problem this mod posed — and most of the tree was unreachable regardless, since `explosives` needs coal and sulfur needs crude oil. Removing it means the crafting menu and tech tree describe the game you are actually playing.
 - **Money is the bottleneck** — every raw material and every technology has a price, paid only out of customer deliveries. See [customer-system.md](customer-system.md#currency) for the denomination ladder.
 - **Spoilage creates urgency** — customers expire in seconds, so your factory must be responsive, not just high-throughput

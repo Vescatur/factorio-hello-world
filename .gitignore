@@ -2,3 +2,4 @@ factorio-docs/html/*
 tools/tycoon_*.zip
 __pycache__/
 *.pyc
+tools/.audit-dumps/

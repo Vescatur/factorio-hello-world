@@ -1,6 +1,3 @@
--- Denomination item names, so the price list below doesn't have to know that
--- money is really a re-skinned science pack. See services/currency.lua.
-local currency = require("services.currency")
 
 local import_tint = {r=1, g=0.6, b=0.3}
 local import_graphics = util.table.deepcopy(data.raw["assembling-machine"]["assembling-machine-1"].graphics_set)
@@ -67,56 +64,3 @@ data:extend({
 
 table.insert(data.raw["character"]["character"].crafting_categories, "import")
 
-
--- ==== The shop: one buy recipe per resource ====
---
--- The only way raw materials enter the factory, now that nothing can be mined.
--- Everything is bought with pennies for now; higher denominations get their
--- own price lists when the upper customer tiers land.
-local resources = {
-    {
-        item = "wood",
-        amount = 10,
-        price = 1,
-        currency = currency.penny
-    },
-    {
-        item = "iron-plate",
-        amount = 10,
-        price = 10,
-        currency = currency.penny
-    },
-    {
-        item = "copper-plate",
-        amount = 10,
-        price = 10,
-        currency = currency.penny
-    }
-}
-for _, resource in ipairs(resources) do
-    data:extend({
-        {
-            type = "recipe",
-            name = "buy_" .. resource.item,
-            enabled = true,
-            ingredients = {
-                { type = "item", name = resource.currency, amount = resource.price }
-            },
-            results = {
-                { type = "item", name = resource.item, amount = resource.amount }
-            },
-            icons = {
-                {
-                    icon = "__base__/graphics/icons/" .. resource.item .. ".png",
-                    icon_size = 64,
-                    icon_mipmaps = 4,
-                    scale = 1
-                }
-            },
-            categories = { "import" },
-            energy_required = 1,
-            subgroup = "currency-buy",
-            order = "a["..resource.item.."]",
-        }
-    })
-end

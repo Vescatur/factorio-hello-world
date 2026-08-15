@@ -21,7 +21,18 @@
       "WebFetch(domain:wiki.factorio.com)",
       "WebFetch(domain:forums.factorio.com)",
       "WebFetch(domain:www.reddit.com)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Read(//c/Users/Ivan/AppData/Local/Temp/claude/C--Users-Ivan-Documents-Develop-factorio-factorio-hello-world/2501cc34-5026-4138-bc28-af4ce064c879/scratchpad/**)",
+      "Bash(cp \"/c/Users/Ivan/AppData/Roaming/Factorio/script-output/data-raw-dump.json\" .)",
+      "PowerShell(New-Item *)",
+      "Bash(cd *)",
+      "Bash(awk '/^## Technologies/,/^### Keep/' docs/prototype-audit.md)",
+      "Bash(python audit3.py)",
+      "Bash(cp audit3.md /c/Users/Ivan/Documents/Develop/factorio/factorio-hello-world/docs/prototype-audit.md)",
+      "Bash(awk '/^### Empty gate/,0' docs/prototype-audit.md)",
+      "Bash(grep -oP '^\\\\| `\\\\K[^`]+')",
+      "Bash(python -c ' *)",
+      "Bash(cp audit3.py /c/Users/Ivan/Documents/Develop/factorio/factorio-hello-world/tools/build-prototype-audit.py)"
     ],
     "defaultMode": "auto"
   },

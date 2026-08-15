@@ -92,10 +92,15 @@ end
 -- and all three cost wood, which itself can only be bought with coin. Without
 -- one of each in hand a new game cannot start, so they are handed out directly.
 --
--- The vanilla freeplay kit is dropped rather than extended: the burner mining
--- drill and stone furnace have nothing to work with (remove_ore.lua strips
--- every resource and both plate smelting recipes), and the iron plate / wood
--- would just be a one-off handout on top of the coin economy.
+-- The stone furnace is here because the shop sells ore rather than plates, so
+-- smelting is mandatory and the character cannot hand-craft a `smelting`
+-- recipe. One furnace is the difference between starting the game and having to
+-- chop enough wood to afford the stone for one.
+--
+-- The vanilla freeplay kit is dropped rather than extended: its burner mining
+-- drill has nothing to work with (remove_ore.lua strips every resource patch
+-- and deletes the drill outright), and its iron plate and wood would just be a
+-- one-off handout on top of the coin economy.
 --
 -- Freeplay owns the list, so it has to be set through its remote interface
 -- instead of a prototype. Verified ordering: the scenario's on_init runs before
@@ -109,6 +114,7 @@ local starter_inventory = {
     ["export"] = 3,
     ["assembling-machine-1"] = 5,
     ["burner-inserter"] = 10,
+    ["stone-furnace"] = 3,
 }
 
 local function apply_starter_inventory()

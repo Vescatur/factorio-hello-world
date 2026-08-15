@@ -23,15 +23,19 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
 
 - `src/` — The mod source (symlinked into Factorio mods folder)
   - `data.lua` — Entry point, requires all services
-  - `control.lua` — Runtime: enforces the single-Entrance limit (the mod's only control-stage code)
+  - `data-updates.lua` — Requires `services/shop.lua` only. Exists because base generates the fluid barrel items in *its* data-updates, so the shop cannot name `crude-oil-barrel` any earlier
+  - `control.lua` — Runtime: enforces the single-Entrance limit and sets the starter inventory (the mod's only control-stage code)
+  - `lib/prototypes.lua` — The four moves every removal service makes: delete recipes (and strip the unlock effects naming them), hide items, delete technologies, re-link the prerequisites and dependents left dangling. Not a service; required by the ones below
   - `services/customers.lua` — Core: the customer tier table, their items and spoil chain. Returns the tier list and each tier's item name; the recipes that consume them live with the machine that crafts them
   - `services/currency.lua` — Re-skins six science packs into currency denominations; also the module the rest of the mod asks for currency item names
-  - `services/entrance.lua`, `services/import.lua`, `services/export.lua` — The three machines the whole loop runs through, each with the recipes it crafts: `customer-new`, the `buy_*` price list, and the `customer_*_deliver` payouts
+  - `services/entrance.lua`, `services/import.lua`, `services/export.lua` — The three machines the whole loop runs through, plus the recipes two of them craft: `customer-new` and the `customer_*_deliver` payouts
+  - `services/shop.lua` — The `buy_*` price list the Import machine crafts. Separate from `import.lua` because it runs a stage later
   - `services/item_groups.lua` — The Tycoon tab and its subgroup ordering
-  - `services/remove_ore.lua` — Strips all ore/resource generation
-  - `services/remove_electricity.lua` — Removes electric infrastructure, converts energy sources to void
+  - `services/remove_ore.lua` — Strips ore/resource generation, deletes the mining drills and pumpjack, stops rocks dropping coal, and prices `oil-processing` in money since its "mine crude oil" trigger can never fire
+  - `services/remove_electricity.lua` — Removes electric infrastructure, converts every electric *and burner* energy source to void
   - `services/remove_enemies.lua` — Stops enemies generating and hides them
   - `services/remove_military.lua` — Deletes the combat recipes and technologies
+  - `services/remove_uranium.lua` — Deletes the uranium chain and re-costs `fission-reactor-equipment` off uranium fuel
   - `graphics/icons/` — Custom sprites. **Generated from `art/icons/` — edit the SVG, not the PNG.**
   - `locale/en/` — Translations
 - `art/icons/` — Editable SVG sources for the custom sprites. Kept out of `src/` so only shipped assets are symlinked into the mods folder
@@ -94,8 +98,8 @@ they are build output and get overwritten.
 
 ### Adding a Purchasable Resource
 
-Add an entry to the `resources` table at the bottom of `services/import.lua` with `item`, `amount`,
-`price`, and `currency` (a field from the `currency` module, e.g. `currency.penny`).
+Add an entry to the `resources` table in `services/shop.lua` with `item`, `amount`, `price`, and
+`currency` (a field from the `currency` module, e.g. `currency.penny`).
 
 ### Currency
 
@@ -140,7 +144,10 @@ still resolve. Radar is deliberately kept craftable: `satellite` needs five of t
 ## Rules
 
 - **Never modify `factorio-data/`** — it's base game reference data
-- **Never re-add ores or electricity** — the entire mod design depends on their absence
+- **Never re-add ore *patches* or electricity** — the entire mod design depends on their absence. Ore
+  *items* are a different thing: they are shop goods, and smelting them is how plates are made. What
+  stays banned is anything on the map to mine and anything that generates or distributes power. The
+  mining drills and the pumpjack are deleted for the same reason — there is nothing to point them at
 - **Never re-add enemies or combat content** — there is nothing to defend, so weapons, ammo, turrets, walls and combat vehicles have no function. Most of the tree was already unreachable anyway: `explosives` needs coal and sulfur needs crude oil, and `remove_ore.lua` deletes both. Radar, `modular-armor`/`power-armor` (equipment-grid carriers) and the car are kept on purpose and are not combat content
 - **Customer spawn probabilities must sum to 1.0** — there's a runtime assertion; breaking it crashes the game
 - **Only one Entrance may exist** — it's the sole source of customers, so its count is what bounds the whole economy. `src/control.lua` refuses extra placements. Retune throughput via `energy_required` on `customer-new` or the Entrance's `crafting_speed` — both in `services/entrance.lua` — never by allowing more buildings
