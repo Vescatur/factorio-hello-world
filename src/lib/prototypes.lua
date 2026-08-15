@@ -144,6 +144,27 @@ function prototypes.tinted_machine_graphics(source_name, tint)
 end
 
 
+-- The circuit-network wiring of another assembling machine: the connector
+-- definitions -- one per direction, which is why it is a four-tuple -- and the
+-- reach, for a machine that reuses that machine's sprite and so wants the wire
+-- to land in the same spot on it.
+--
+-- Returned as a pair because both fields are needed: a connector without a
+-- `circuit_wire_max_distance` leaves the entity with a connection point no wire
+-- can reach, and the engine reports nothing.
+--
+-- The tables are shared rather than copied, the way vanilla shares one
+-- connector definition across assembling-machine 1, 2 and 3.
+function prototypes.machine_circuit_connection(source_name)
+    local source = data.raw["assembling-machine"][source_name]
+    assert(source, "prototypes: no assembling machine named '" .. source_name .. "'")
+    assert(source.circuit_connector and source.circuit_wire_max_distance,
+        "prototypes: '" .. source_name .. "' has no circuit connector to copy")
+
+    return source.circuit_connector, source.circuit_wire_max_distance
+end
+
+
 -- Hide an item without deleting it. The prototype stays because other
 -- prototypes reference it by name -- `lab.inputs`, `car.guns`, tips-and-tricks
 -- triggers -- but it leaves the crafting menu and Factoriopedia so there is no

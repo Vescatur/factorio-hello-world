@@ -6,6 +6,8 @@ local currency = require("services.currency")
 
 local export_tint = {r=0.6, g=0.7, b=1}
 local export_graphics = prototypes.tinted_machine_graphics("assembling-machine-1", export_tint)
+local circuit_connector, circuit_wire_max_distance =
+    prototypes.machine_circuit_connection("assembling-machine-1")
 
 data:extend({
     {
@@ -55,6 +57,8 @@ data:extend({
         selection_box = { { -1.5, -1.5 }, { 1.5, 1.5 } },
         graphics_set = export_graphics,
         icon_draw_specification = data.raw["assembling-machine"]["assembling-machine-1"].icon_draw_specification,
+        circuit_connector = circuit_connector,
+        circuit_wire_max_distance = circuit_wire_max_distance,
         crafting_categories = { "export" },
         crafting_speed = 1,
         energy_source = { type = "void" },

@@ -1,0 +1,11 @@
+# Line endings are pinned so the same commit checks out byte-identical on every
+# machine. Without this, `core.autocrlf` decides per-machine and the release zip
+# built by tools/create_zip.py differs between developers for the same githash.
+#
+# The index is already pure LF, so `eol=lf` only affects what lands in the
+# working tree -- it forces LF there too, on Windows as well as Linux.
+* text=auto eol=lf
+
+# Binary: never touch the bytes, never diff as text.
+*.png binary
+*.zip binary

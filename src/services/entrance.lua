@@ -5,6 +5,8 @@ local prototypes = require("lib.prototypes")
 
 local entrance_tint = {r=0.5, g=1, b=0.5}
 local entrance_graphics = prototypes.tinted_machine_graphics("assembling-machine-1", entrance_tint)
+local circuit_connector, circuit_wire_max_distance =
+    prototypes.machine_circuit_connection("assembling-machine-1")
 
 data:extend({
     {
@@ -54,6 +56,8 @@ data:extend({
         selection_box = { { -1.5, -1.5 }, { 1.5, 1.5 } },
         graphics_set = entrance_graphics,
         icon_draw_specification = data.raw["assembling-machine"]["assembling-machine-1"].icon_draw_specification,
+        circuit_connector = circuit_connector,
+        circuit_wire_max_distance = circuit_wire_max_distance,
         crafting_categories = { "entrance" },
         crafting_speed = 1,
         energy_source = { type = "void" },
