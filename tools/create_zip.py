@@ -26,6 +26,46 @@ def get_mod_version(base_dir: Path) -> str:
         return json.load(f)["version"]
 
 
+def is_binary(blob: bytes) -> bool:
+    """Git's own text/binary rule: a NUL byte anywhere near the start."""
+    return b"\x00" in blob[:8000]
+
+
+def assert_lf_only(entries):
+    """Refuse to build from a working tree that still has CRLF in it.
+
+    `.gitattributes` pins the checkout to LF, but attributes only apply when git
+    actually writes a file. A clone that predates them keeps whatever bytes are
+    already on disk, and `text=auto` normalises CRLF back to LF on add -- so
+    `git status` stays clean and nothing anywhere warns. Two machines on the same
+    commit then build different zips. Catch it here instead of in a diff of the
+    artifacts afterwards.
+
+    Binary files are skipped: their bytes are none of our business, and a PNG
+    signature literally starts with \\r\\n.
+    """
+    offenders = [
+        (arcname, blob.count(b"\r\n"))
+        for arcname, blob in entries
+        if b"\r\n" in blob and not is_binary(blob)
+    ]
+    if not offenders:
+        return
+
+    listing = "\n".join(f"  {name}  ({count} CRLF)" for name, count in offenders)
+    raise SystemExit(
+        f"Refusing to build: {len(offenders)} file(s) have CRLF line endings.\n"
+        f"{listing}\n\n"
+        "This zip would not match one built from an LF checkout of the same commit.\n"
+        "Re-materialise the working tree -- commit or stash first, this discards\n"
+        "uncommitted changes:\n"
+        "  git rm --cached -r . -q\n"
+        "  git reset --hard\n"
+        "Then confirm it is clear:\n"
+        '  git ls-files --eol | grep -c "w/crlf"   # must print 0'
+    )
+
+
 def create_release_zip():
     """Create a zip file for the mod and copy it into the user's Factorio mods folder."""
     base_dir = Path(__file__).resolve().parent.parent
@@ -42,11 +82,15 @@ def create_release_zip():
     entries = sorted(
         (
             (Path("tycoon") / p.relative_to(src_dir)).as_posix(),
-            p,
+            p.read_bytes(),
         )
         for p in src_dir.rglob("*")
         if p.is_file()
     )
+
+    # Before the archive is opened, so a rejected build leaves no zip behind and
+    # never reaches the mods folder.
+    assert_lf_only(entries)
 
     with zipfile.ZipFile(
         zip_path,
@@ -54,12 +98,12 @@ def create_release_zip():
         compression=zipfile.ZIP_DEFLATED,
         compresslevel=COMPRESS_LEVEL,
     ) as zipf:
-        for arcname, file_path in entries:
+        for arcname, blob in entries:
             info = zipfile.ZipInfo(arcname, date_time=ZIP_EPOCH)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.create_system = ZIP_CREATE_SYSTEM
             info.external_attr = ZIP_MODE
-            zipf.writestr(info, file_path.read_bytes())
+            zipf.writestr(info, blob)
 
     digest = hashlib.sha256(zip_path.read_bytes()).hexdigest()
 
