@@ -4,6 +4,8 @@
 -- entire economy. Extra placements are refused and refunded; the Entrance that
 -- is already running is never touched.
 
+local loader_assist = require("runtime.loader_assist")
+
 local ENTRANCE = "entrance"
 
 -- The tracked Entrance is invalidated lazily: mining or destroying it makes the
@@ -148,7 +150,33 @@ script.on_configuration_changed(on_setup)
 -- ghost is consumed by that build, so there is no retry loop.
 local entrance_filter = { { filter = "name", name = ENTRANCE } }
 
-script.on_event(defines.events.on_built_entity, on_built, entrance_filter)
+-- The Entrance limit and the loader assist both want on_built_entity, and an
+-- event takes ONE handler: a second script.on_event for the same event replaces
+-- the first rather than adding to it. So they share a handler here and the filter
+-- is the union of what each needs. Filter entries are OR-ed, so this fires for
+-- an Entrance or for any 1x1 loader and nothing else.
+--
+-- The other four events stay on the Entrance alone. The loader assist is for
+-- hand placement only -- a robot or a script build carries a mode that was
+-- chosen deliberately, and second-guessing a blueprint is not this helper's job.
+local hand_built_filter = {
+    { filter = "name", name = ENTRANCE },
+    { filter = "type", type = "loader-1x1" },
+}
+
+local function on_hand_built(event)
+    local entity = event.entity
+    if not (entity and entity.valid) then
+        return
+    end
+    if entity.name == ENTRANCE then
+        on_built(event)
+    else
+        loader_assist.on_built(event)
+    end
+end
+
+script.on_event(defines.events.on_built_entity, on_hand_built, hand_built_filter)
 script.on_event(defines.events.on_robot_built_entity, on_built, entrance_filter)
 script.on_event(defines.events.script_raised_built, on_built, entrance_filter)
 script.on_event(defines.events.script_raised_revive, on_built, entrance_filter)

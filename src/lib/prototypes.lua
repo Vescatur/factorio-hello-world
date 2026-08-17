@@ -9,6 +9,10 @@
 -- remove_electricity.lua and remove_uranium.lua all needed the same four steps
 -- and the prerequisite re-link in particular is too subtle to write twice.
 --
+-- Two of those moves have an inverse here as well -- add_unlock and unhide_item
+-- -- because loaders.lua puts back something base ships hidden. Each sits beside
+-- the move it undoes rather than in a section of its own.
+--
 -- Everything here is data-stage only and mutates `data.raw` in place.
 
 local prototypes = {}
@@ -70,6 +74,27 @@ function prototypes.drop_unlock(technology_name, recipe_name)
     end
     tech.effects = kept
     return dropped
+end
+
+
+-- Hang a recipe off a technology that does not name it yet. The inverse of
+-- drop_unlock, and the way a recipe base ships disabled and unlocks from nowhere
+-- gets a route to the player. Idempotent: a second call is a no-op rather than a
+-- duplicate effect, which the engine tolerates but which shows twice in the
+-- technology screen.
+function prototypes.add_unlock(technology_name, recipe_name)
+    local tech = data.raw.technology[technology_name]
+    assert(tech, "prototypes: no technology named '" .. technology_name .. "'")
+
+    tech.effects = tech.effects or {}
+    for _, effect in pairs(tech.effects) do
+        if effect.type == "unlock-recipe" and effect.recipe == recipe_name then
+            return false
+        end
+    end
+
+    table.insert(tech.effects, { type = "unlock-recipe", recipe = recipe_name })
+    return true
 end
 
 
@@ -185,6 +210,31 @@ function prototypes.hide_items(item_names)
     local count = 0
     for _, item_name in ipairs(item_names) do
         if prototypes.hide_item(item_name) then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+
+-- The inverse: bring an item base ships hidden back into the crafting menu and
+-- Factoriopedia. Cleared to nil rather than set to false, so the prototype looks
+-- exactly like one that was never hidden in the first place.
+function prototypes.unhide_item(item_name)
+    local prototype = prototypes.find_item(item_name)
+    if not prototype then
+        return false
+    end
+    prototype.hidden = nil
+    prototype.hidden_in_factoriopedia = nil
+    return true
+end
+
+
+function prototypes.unhide_items(item_names)
+    local count = 0
+    for _, item_name in ipairs(item_names) do
+        if prototypes.unhide_item(item_name) then
             count = count + 1
         end
     end

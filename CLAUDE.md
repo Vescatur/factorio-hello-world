@@ -24,7 +24,8 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
 - `src/` — The mod source (symlinked into Factorio mods folder)
   - `data.lua` — Entry point, requires all services
   - `data-updates.lua` — Requires `shop.lua`, then `tolls.lua`, then `cost.lua`, **in that order** — the order is correctness, not readability, and the file says why. Exists because base generates the fluid barrel items in *its* data-updates, so neither the shop nor the toll injector can see a complete recipe list any earlier
-  - `control.lua` — Runtime: enforces the single-Entrance limit and sets the starter inventory (the mod's only control-stage code)
+  - `control.lua` — Runtime entry point: enforces the single-Entrance limit, sets the starter inventory, and owns the event registrations every runtime module hangs off
+  - `runtime/loader_assist.lua` — Control stage. On hand placement, switches a loader to `input` when the tile it faces holds something that can hold items, or the tile behind holds a belt running into it. Takes **two writes**, and the second is not optional: assigning `loader_type` preserves the bound side by swinging the arrow 180°, so the aimed direction has to be written back afterwards. A loader with a container already behind it is left alone, which is what keeps a deliberate unloader (and a hand-revived blueprint) intact
   - `lib/prototypes.lua` — The four moves every removal service makes: delete recipes (and strip the unlock effects naming them), hide items, delete technologies, re-link the prerequisites and dependents left dangling. Also `find_item`/`icons_of`, the type-agnostic item lookup — reach for those instead of `data.raw.item[name]`, which is nil for armor, modules, rail planners and item-with-entity-data. Not a service; required by the ones below
   - `services/customers.lua` — Core: the band and order tables, the customer items, and the generated spoil chain and spawn weights. Returns the bands, the orders and each order's item name; the recipes that consume them live with the machine that crafts them
   - `services/currency.lua` — Re-skins six science packs into currency denominations; also the module the rest of the mod asks for currency item names
@@ -33,6 +34,7 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
   - `services/tolls.lua` — Charges a coin to craft. Derives each recipe's denomination from the technology that unlocks it, and owns the exemption list (fluid-only, smelting, barrels, start-enabled). Also puts the Diamond client into the `satellite` recipe
   - `services/cost.lua` — Emits no prototypes. Re-solves the recipe graph and asserts the authored refunds still cover what each order costs, so the numbers in `customers.lua` cannot rot silently
   - `services/item_groups.lua` — The Tycoon tab and its subgroup ordering
+  - `services/loaders.lua` — The one service that adds rather than removes. Un-hides the three vanilla loaders — entity, item and recipe are all `hidden` in base and no technology names them — **retypes them from `loader` to `loader-1x1`** so they take one tile, and hangs each off the logistics technology that unlocks its belt tier. Attaching them to a technology rather than setting `enabled = true` is what prices them: `tolls.lua` reads the denomination off the unlocking technology, so they cost a Penny, a Silver and a Bond without a line of pricing code. The retype is why there are no new prototypes here — `place_result` and `minable.result` name a prototype, not a type, so the items, recipes and icons carry over untouched
   - `services/remove_ore.lua` — Strips ore/resource generation, deletes the mining drills and pumpjack, stops rocks dropping coal, and prices `oil-processing` in money since its "mine crude oil" trigger can never fire
   - `services/remove_electricity.lua` — Removes electric infrastructure, converts every electric *and burner* energy source to void
   - `services/remove_enemies.lua` — Stops enemies generating and hides them
@@ -73,22 +75,30 @@ fails on any broken internal link.
 
 ### Adding or Changing a Customer Order
 
-Orders live in the `orders` table in `services/customers.lua`, three per band, and each entry needs:
+Orders live in the `orders` table in `services/customers.lua`, currently three per band, and each
+entry needs:
 
-- `band` / `grade` — where it sits on the ladder. `band` indexes the `bands` table (1 = penny), `grade` is 1 easy, 2 medium, 3 hard. **Grade 3 is the band's bridge upward** and is what pays a coin of the next denomination
+- `band` / `grade` — where it sits on the ladder. `band` indexes the `bands` table (1 = penny), `grade` counts up from 1 (easiest). A band may hold **any number of grades** as long as they run 1..N with no gaps; nothing in the code assumes three. **The band's top grade is its bridge upward** and is what pays a coin of the next denomination — that is derived as `order.is_top`, never written as `grade == 3`
 - `item` — the vanilla item ordered. Finished goods only: never ore, plates, gears or circuits
 - `amount` — how many to deliver
 - `refund` — a map of denomination key to amount, e.g. `{ penny = 48, silver_coin = 2 }`. This must cover the **full embedded cost** of `amount × item`, tolls included
 - `profit` — a plain number, paid in the band's own currency
+- `spawn` — who walks in when this order is served, as whole percent **indexed by grade**: `spawn[g]` is the chance of a grade-`g` customer of the same band, plus the named key `up` for the drip to the band above. One number per grade the band has, `0` included, summing to `weight_total` (100)
 
-The spoil chain, the spawn weights and the band's licence are all **generated** from `band` and
-`grade` — do not hand-write them. Neither is the refund solved at load: author it, and let
-`cost.lua` tell you if it is short. To get the number, read the `[cost]` lines the previous load
-already logged and round up.
+The spoil chain, the successor list and the band's licence are all **generated** from `band` and
+`grade` — do not hand-write them. The spawn percentages are the exception: they are authored per
+order, because they are a design choice rather than a consequence of position. Neither is the refund
+solved at load: author it, and let `cost.lua` tell you if it is short. To get the number, read the
+`[cost]` lines the previous load already logged and round up.
+
+Adding or removing a grade means **every `spawn` row in that band changes length**. A stale row
+fails the load naming the order, the band and both lengths, so this cannot rot silently — but it is
+a whole-band edit, not a one-row one.
 
 Like `currency.lua`, this module owns its prototype names: `require("services.customers")` returns
-`{ bands, orders, item = { ["wooden-chest"] = "customer_wooden-chest", ... }, entry, weight_total }`.
-Ask it for a name rather than concatenating the `customer_` prefix somewhere else.
+`{ bands, orders, top_grade, item = { ["wooden-chest"] = "customer_wooden-chest", ... }, entry, weight_total }`.
+Ask it for a name rather than concatenating the `customer_` prefix somewhere else, and ask
+`top_grade[band]` (or an order's `is_top`) rather than assuming a band ends at grade 3.
 
 Nothing generates locale, so add `item-name.customer_<item>`,
 `item-description.customer_<item>` and `recipe-name.customer_<item>_deliver` to
@@ -161,7 +171,10 @@ still resolve. Radar is deliberately kept craftable: `satellite` needs five of t
   stays banned is anything on the map to mine and anything that generates or distributes power. The
   mining drills and the pumpjack are deleted for the same reason — there is nothing to point them at
 - **Never re-add enemies or combat content** — there is nothing to defend, so weapons, ammo, turrets, walls and combat vehicles have no function. Most of the tree was already unreachable anyway: `explosives` needs coal and sulfur needs crude oil, and `remove_ore.lua` deletes both. Radar, `modular-armor`/`power-armor` (equipment-grid carriers) and the car are kept on purpose and are not combat content
-- **Customer spawn weights are integers, never decimals** — they must sum to `weight_total`, and there's a load assertion. Decimals are the trap: `0.1 + 0.2 + 0.7` is `1.0000000000000002` in IEEE doubles, which fails the assertion outright and, worse, leaves a one-ULP gap between two `shared_probability` bands where a delivery emits no successor and silently drains the population
+- **Customer spawn weights are integers, never decimals** — each order's `spawn` row must sum to `weight_total`, and there's a load assertion. Decimals are the trap: `0.1 + 0.2 + 0.7` is `1.0000000000000002` in IEEE doubles, which fails the assertion outright and, worse, leaves a one-ULP gap between two `shared_probability` bands where a delivery emits no successor and silently drains the population. A `0` is fine and means "never spawn this grade" — it is dropped rather than emitted as a zero-width slice
+- **A loader's bound side is intrinsic — `loader_type` does not move it** — the side a loader loads/unloads is the tile it faces in `input` mode and the tile behind it in `output`, and both `rotate()` and assigning `loader_type` *preserve* that side by flipping the direction to compensate. So `loader.loader_type = "input"` is not a mode switch: the arrow swings 180° and the loader stays bound to the same neighbour. Writing `direction` is the only lever that moves the binding. Any code changing a loader's mode must set the mode and then write the intended direction back — `runtime/loader_assist.lua` documents the measured truth table. Verify such a change by asserting **items actually moved**, never by reading `loader_type` back
+- **One `script.on_event` call per event, ever** — a second registration for the same event *replaces* the first and raises no error, so the concern registered earlier just stops working. `src/control.lua` is the only place that calls `script.on_event`: runtime modules export a handler and it composes them, which is why the Entrance limit and `runtime/loader_assist.lua` share one `on_built_entity` registration with the union of their filters. Filter entries are OR-ed. Add a runtime module the same way — never call `script.on_event` from inside one
+- **Never delete `loader-1x2-stub`** — Tycoon's loaders are all `loader-1x1`, which leaves the `loader` type with nothing in it, and the engine refuses to load: `'entity' prototype type 'loader' requires at least 1 prototype be defined so save files can be loaded`. The same rule that keeps the enemies hidden rather than deleted. The stub in `services/loaders.lua` is that one prototype: hidden in both senses, with its minable result, upgrade target and fast-replace group stripped so nothing can reach it. It looks like dead code and is not
 - **Never toll a smelting recipe** — every furnace has `source_inventory_size = 1`, so a smelting recipe cannot take a second ingredient. Adding one raises no error; it just makes the item uncraftable in every furnace in the game. `services/tolls.lua` guards this, and the guard must stay
 - **Never gate the penny band behind a technology** — its delivery recipes ship `enabled = true` because every technology in the game is downstream of a lab, a lab needs copper, and copper costs Silver that only the penny band can pay. Gating it deadlocks a new game in the first minute
 - **The penny band's hard order must keep its Silver bridge** — it is the only source of the first Silver Coin, and without it the `electronics` trigger can never fire and no research is ever possible

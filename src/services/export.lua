@@ -104,8 +104,10 @@ local function payout_of(order, band)
 
     pay(band.currency, order.profit)
 
-    -- The bridge: the hard order of a band pays a little of the band above.
-    if order.grade == 3 then
+    -- The bridge: the TOP order of a band pays a little of the band above --
+    -- whichever grade that is, so a band with four orders still bridges from its
+    -- fourth and not from a hard-coded third.
+    if order.is_top then
         local above = customers.bands[order.band + 1]
         if above then
             pay(above.currency, 1)
@@ -195,7 +197,10 @@ for _, order in ipairs(customers.orders) do
             categories = { "export" },
             energy_required = 1,
             subgroup = "customer-deliver",
-            order = string.char(string.byte("a") + order.band - 1) .. order.grade .. "[" .. order.item .. "]",
+            -- Zero-padded so the GUI still sorts a band with ten or more grades:
+            -- these strings compare as text, and "10" sorts before "2".
+            order = string.char(string.byte("a") + order.band - 1)
+                .. string.format("%02d", order.grade) .. "[" .. order.item .. "]",
         }
     })
 

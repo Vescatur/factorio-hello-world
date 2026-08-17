@@ -112,8 +112,15 @@ for recipe_name, recipe in pairs(data.raw.recipe) do
 end
 
 -- Drop the recipes nothing can ever unlock: disabled, and named by no
--- technology. The three loaders are the vanilla example -- pricing an item
--- through one would be pricing a route the player has no access to.
+-- technology. Pricing an item through one would be pricing a route the player
+-- has no access to, and the cheapest route is usually exactly the unreachable
+-- one, so the solver would quietly understate what an order really costs.
+--
+-- The three loaders used to be the vanilla example of this, until
+-- services/loaders.lua hung them off the logistics technologies. Nothing in the
+-- current data set trips the guard any more -- the pistol, the only other one,
+-- goes with remove_military.lua. Keep it: it is what makes adding a disabled
+-- recipe safe.
 local unlockable = {}
 for _, tech in pairs(data.raw.technology) do
     for _, effect in pairs(tech.effects or {}) do
