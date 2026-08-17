@@ -73,6 +73,45 @@ fails on any broken internal link.
 
 ## Key Conventions
 
+### Comments
+
+**A comment earns its place by saying something the code cannot.** Everything else is noise that
+buries the comments that matter — and when every line is annotated at the same intensity, nothing
+is emphasised and the file stops being skimmable.
+
+Write one:
+
+- **An engine constraint that fails silently or reports something misleading.** These are the
+  reason the convention exists. Tolling a smelting recipe raises no error, it just makes the item
+  uncraftable in every furnace; `belt_length = 0` crashes at `TransportLine.cpp:891`; a second
+  `script.on_event` silently replaces the first. Say what breaks and how it presents. If a
+  plausible "fix" is what causes the failure, say that too.
+- **A deliberate absence.** A missing field, a guard that looks removable, a prototype that looks
+  like dead code (`loader-1x2-stub`). Without a note these read as oversights and get "tidied".
+- **A non-obvious "why" next to the code it explains**, in one to three lines.
+- **A short header** — one line, three at the outside — saying what the file does.
+
+Do not write one for:
+
+- **Design rationale, alternatives considered, or comparisons.** That belongs in this file or in
+  `docs/`. A source file that argues its design is a design doc with code attached.
+- **History.** "This used to live in X", "this no longer does Y". Git knows.
+- **Anything already in `CLAUDE.md` or `docs/`.** Three drifting copies is worse than one.
+- **A restatement of the next line**, or a `STEP 1` / `====` banner used as decoration.
+
+Two habits that keep it honest:
+
+- **Put the note next to the code it guards, not in the file header.** The smelting warning belongs
+  on the `if category == "smelting"` line in `services/tolls.lua`, where someone editing the
+  exemption list will actually meet it.
+- **Prefer a good assertion message to a comment.** An `assert` that names the offending prototype
+  and says what was expected documents the constraint *and* enforces it. Much of this codebase
+  already does this well; reach for it first.
+
+`runtime/loader_assist.lua` is the reference for the target style: short notes sitting directly
+above the function each explains. Current whole-repo ratio is ~15% comment lines; treat a file
+drifting past ~20%, or any block over ~20 lines, as a prompt to re-read this section.
+
 ### Adding or Changing a Customer Order
 
 Orders live in the `orders` table in `services/customers.lua`, currently three per band, and each
@@ -185,6 +224,7 @@ still resolve. Radar is deliberately kept craftable: `satellite` needs five of t
 - **Target Factorio version: 2.1** — uses features not available in earlier versions
 - **Never depend on Space Age** — base game only; don't reference Space Age prototypes or add it to `dependencies`
 - **Never add mod-compatibility code** — no soft dependencies, no `if mods["..."]` branches, no shims for other mods
+- **Comments say what the code cannot** — engine constraints that fail silently, deliberate absences, and short local "why" notes. Never design rationale (that lives here or in `docs/`), never history, never a restatement of the next line. Put the note beside the code it guards rather than in the file header, and prefer an assertion message that both documents and enforces. See [Comments](#comments)
 - **Always validate after changes** — run `.\tools\run-headless.ps1` after any mod file change to catch prototype errors before committing, and `python tools\find-missing-locale.py` after adding or renaming any prototype
 - **Leave the locale report empty** — `find-missing-locale.py` must print only its `OK:` line, advisories included. Clear every entry one of two ways: write the description in `src/locale/en/hello-world.cfg`, or, when the name already says everything, paste the reported line into `INTENTIONALLY_UNDESCRIBED` in `tools/find-missing-locale.py` under the comment group that explains why (`*` globs, for prototypes generated in a loop). Never suppress a missing *name* — those render as `Unknown key` in game. See [docs/dev-setup.md](docs/dev-setup.md#the-report-must-come-back-empty)
 - **Leave the VSCode Problems panel empty** — zero entries, so the next one that appears is worth reading. Fix the code, or, when the bundled Factorio type definitions are wrong (they mark optional fields required — check `factorio-docs/markdown/types/` and vanilla's own usage before believing a warning), suppress that one line with `---@diagnostic disable-next-line: <code>` and a comment saying why. Never disable a rule file-wide or workspace-wide. See [docs/dev-setup.md](docs/dev-setup.md#the-problems-panel-must-stay-empty)
