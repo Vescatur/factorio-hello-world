@@ -1,36 +1,18 @@
--- shop.lua -- one buy recipe per resource, crafted by the Import machine.
+-- shop.lua -- one buy recipe per resource, crafted by the Import machine. The only
+-- way raw material enters the factory, now that nothing can be mined.
 --
--- The only way raw materials enter the factory, now that nothing can be mined.
--- The shop stocks raw material only: ore, not plates. Smelting them is the
--- player's job, which is what gives the furnace a reason to exist and what makes
--- the finished-goods orders worth serving rather than reselling.
+-- Raw material only: ore, not plates, so smelting stays the player's job. Each good
+-- is priced in the denomination of the era that needs it, which makes a resource
+-- unbuyable before its era rather than merely expensive. Copper is the load-bearing
+-- one: circuits need copper, a lab needs circuits, so the whole tech tree sits behind
+-- the first Silver Coin.
 --
--- ============================================================
--- EACH GOOD IS PRICED IN THE DENOMINATION OF THE ERA THAT NEEDS IT
+-- The lot size grows with the denomination so unit prices stay in the same range
+-- across the ladder -- you buy coal by the hundred, not by the ten.
 --
--- Wood, iron and stone are penny goods: they are what the opening band of
--- customers wants, and they are all a new game can afford. Copper costs Silver,
--- and coal and crude oil cost Banknotes -- so a resource is not merely
--- expensive before its era, it is unbuyable.
---
--- Copper is the load-bearing one. Electronic circuits need copper, a lab needs
--- circuits, and every technology needs a lab -- so the whole tech tree now sits
--- behind earning the first Silver Coin, and the only thing that mints one is the
--- penny band's hard order. The opening of the game reads: chop wood, serve
--- wooden chests, buy stone and iron, serve belts and iron chests, earn a Silver,
--- buy copper, build a lab.
---
--- The lot size grows with the denomination so the unit prices stay in the same
--- range across the whole ladder -- you buy coal by the hundred, not by the ten.
---
--- WHY THIS RUNS IN data-updates AND NOT data: crude oil arrives barrelled, and
--- base generates every barrel item and its fill/empty recipes in its OWN
--- data-updates.lua. During the data stage `crude-oil-barrel` does not exist yet,
--- so a shop that stocks it cannot be built until a stage later. The Import
--- machine itself stays in services/import.lua at the data stage; only the price
--- list moved.
--- ============================================================
-
+-- Runs in data-updates because crude oil arrives barrelled and base generates every
+-- barrel item in its OWN data-updates. The Import machine itself stays in import.lua
+-- at the data stage; only the price list moved.
 local prototypes = require("lib.prototypes")
 local currency = require("services.currency")
 
@@ -66,8 +48,8 @@ local resources = {
         currency = currency.banknote
     },
     {
-        -- Unbarrelling hands back a reusable empty barrel, so the only ongoing
-        -- cost is the oil itself.
+        -- Unbarrelling hands back a reusable empty barrel, so the only ongoing cost
+        -- is the oil itself.
         item = "crude-oil-barrel",
         amount = 10,
         price = 1,
@@ -87,7 +69,6 @@ for _, resource in ipairs(resources) do
             results = {
                 { type = "item", name = resource.item, amount = resource.amount }
             },
-            -- The buy recipe wears the icon of what it sells.
             icons = prototypes.icons_of(resource.item),
             categories = { "import" },
             energy_required = 1,

@@ -1,29 +1,19 @@
 -- cost.lua -- the load-time check that the authored refunds still cover the bill.
+-- Emits no prototypes; it is a smoke alarm.
 --
--- The refund numbers in services/customers.lua are authored, not solved: they
--- are literal, diffable, and tunable without reasoning about a solver. The
--- danger of authored numbers is that they rot. Change a shop price, move a toll,
--- take a Factorio update that re-costs a vanilla recipe, and the refund quietly
--- stops covering what the order actually costs -- an invisible leak, not a
--- crash.
+-- The refunds in customers.lua are authored, and authored numbers rot: change a shop
+-- price, move a toll, take a Factorio update that re-costs a vanilla recipe, and the
+-- refund quietly stops covering the order. That is a leak, not a crash. So this
+-- re-solves the recipe graph on every load and asserts nothing has fallen behind.
 --
--- So this module re-solves the recipe graph on every load and asserts that no
--- refund has fallen behind. It emits no prototypes. It is a smoke alarm.
+-- Per ordered item it computes the cost of one unit as a vector over the six
+-- denominations: raw materials at shop prices, plus one coin per toll anywhere in
+-- the tree. Water is free. Where an item has several producing recipes the cheapest
+-- wins, since that is the route a player takes.
 --
--- WHAT IT SOLVES. For every ordered item, the cost of one unit expressed as a
--- vector over the six denominations: the raw materials at the shop's prices,
--- plus one coin for every toll anywhere in the recipe tree. Water is free (an
--- offshore pump is not a recipe). Where an item has several producing recipes
--- the cheapest wins, since that is the route a player takes.
---
--- WHAT IT DOES NOT DO. It does not credit byproducts -- each output of a
--- multi-output recipe is priced as if the whole recipe ran for it, which
--- overprices in the player's favour and cannot mislead. And it does not fix
--- anything: when it fires, the fix is to re-run tools/solve-economy and paste
--- the new numbers in.
---
--- Runs in data-updates, after shop.lua has set the prices and tolls.lua has
--- charged them.
+-- It does NOT credit byproducts -- each output of a multi-output recipe is priced as
+-- if the whole recipe ran for it, which overprices in the player's favour and cannot
+-- mislead. Runs in data-updates, after shop.lua priced and tolls.lua charged.
 
 local customers = require("services.customers")
 local currency = require("services.currency")
@@ -35,9 +25,8 @@ local rank = tolls.rank
 
 -- Comparing two cost vectors needs a scalar, and any scalar is a design-time
 -- comparator rather than an exchange rate: nothing in the game converts one
--- denomination into another, and nothing here does either. Weighting each rung
--- far above the one below means "cheapest" prefers the route that needs the
--- lowest licence, which is the route a player actually takes.
+-- denomination into another. Weighting each rung far above the one below means
+-- "cheapest" prefers the route needing the lowest licence.
 local function scalarise(vector)
     local total = 0
     for at = 1, #ladder do
@@ -51,9 +40,7 @@ local function key_of(ingredient_type, name)
 end
 
 
--- ============================================================
--- Seeds -- everything the factory cannot make for itself
--- ============================================================
+-- Seeds: everything the factory cannot make for itself.
 local seeds = {}
 
 for _, resource in ipairs(resources) do
@@ -65,11 +52,9 @@ for _, resource in ipairs(resources) do
     seeds[key_of("item", resource.item)] = vector
 end
 
--- Water is free and unlimited: an offshore pump draws it straight off the map,
--- so the recipe graph has no producer for it and anything downstream of a
--- chemical plant would price as unreachable. In 2.1 the pump has no fluid of its
--- own -- it takes whatever the tile under it holds -- so read the tiles, and any
--- future free-at-the-tap fluid is picked up the same way.
+-- Water is free and unlimited, so the graph has no producer for it and anything past
+-- a chemical plant would price as unreachable. In 2.1 the offshore pump has no fluid
+-- of its own -- it takes whatever the tile holds -- so read the tiles.
 local free_fluids = {}
 for _, tile in pairs(data.raw.tile or {}) do
     if tile.fluid then
@@ -81,9 +66,6 @@ for fluid in pairs(free_fluids) do
 end
 
 
--- ============================================================
--- Producers
--- ============================================================
 local own_categories = { entrance = true, import = true, export = true, parameters = true }
 
 local producers = {}
@@ -111,16 +93,10 @@ for recipe_name, recipe in pairs(data.raw.recipe) do
     end
 end
 
--- Drop the recipes nothing can ever unlock: disabled, and named by no
--- technology. Pricing an item through one would be pricing a route the player
--- has no access to, and the cheapest route is usually exactly the unreachable
--- one, so the solver would quietly understate what an order really costs.
---
--- The three loaders used to be the vanilla example of this, until
--- services/loaders.lua hung them off the logistics technologies. Nothing in the
--- current data set trips the guard any more -- the pistol, the only other one,
--- goes with remove_military.lua. Keep it: it is what makes adding a disabled
--- recipe safe.
+-- Drop recipes nothing can ever unlock: disabled, and named by no technology.
+-- Pricing through one would price a route the player has no access to, and the
+-- cheapest route is usually exactly the unreachable one. Nothing in the current data
+-- set trips this; keep it, because it is what makes adding a disabled recipe safe.
 local unlockable = {}
 for _, tech in pairs(data.raw.technology) do
     for _, effect in pairs(tech.effects or {}) do
@@ -142,9 +118,6 @@ for key, list in pairs(producers) do
 end
 
 
--- ============================================================
--- The solve
--- ============================================================
 local money = {}
 for _, name in ipairs(ladder) do
     money[name] = true
@@ -173,8 +146,8 @@ local function cost_of(key, visiting)
 
         for _, ingredient in pairs(producer.recipe.ingredients or {}) do
             if money[ingredient.name] then
-                -- The toll. Money is never bought, only earned, so it is priced
-                -- at face value rather than resolved any further.
+                -- The toll. Money is never bought, only earned, so it is priced at
+                -- face value rather than resolved any further.
                 local at = rank[ingredient.name]
                 accumulated[at] = (accumulated[at] or 0) + (ingredient.amount or 1)
             else
@@ -211,18 +184,6 @@ local function cost_of(key, visiting)
 end
 
 
--- ============================================================
--- The assertion
--- ============================================================
-local denomination_of_key = {
-    penny = currency.penny,
-    silver_coin = currency.silver_coin,
-    banknote = currency.banknote,
-    bond = currency.bond,
-    gold_bar = currency.gold_bar,
-    diamond = currency.diamond,
-}
-
 local function describe(vector)
     local parts = {}
     for at = 1, #ladder do
@@ -239,7 +200,6 @@ for _, order in ipairs(customers.orders) do
     local unit = cost_of(key_of("item", order.item), {})
     assert(unit, "cost: '" .. order.item .. "' cannot be made from anything the shop sells")
 
-    -- What the order costs in total, and what the authored table pays back.
     local owed = {}
     for at = 1, #ladder do
         owed[at] = (unit[at] or 0) * order.amount
@@ -247,7 +207,7 @@ for _, order in ipairs(customers.orders) do
 
     local refunded = {}
     for denomination, amount in pairs(order.refund) do
-        local name = denomination_of_key[denomination]
+        local name = currency[denomination]
         assert(name, "cost: '" .. order.item .. "' refunds '" .. denomination
             .. "', which is not a denomination")
         refunded[rank[name]] = amount

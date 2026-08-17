@@ -1,51 +1,9 @@
--- tolls.lua -- money is an ingredient, not just a research cost.
+-- tolls.lua -- money is an ingredient, not just a research cost. Making a thing
+-- costs a coin, and which coin is DERIVED from the technology that unlocks the
+-- recipe: the highest denomination on that technology's invoice.
 --
--- Making a thing costs a coin. Which coin is not a hand-written list: it is
--- DERIVED from the technology that unlocks the recipe. A recipe unlocked by a
--- technology that charges Pennies and Silver takes a Silver Coin, because Silver
--- is the highest denomination on that technology's invoice, and owning that
--- licence is what let you build the thing at all.
---
--- The effect is that every assembler needs a money input line. The bus stops
--- being a material bus and becomes a material bus plus a money bus, and the coin
--- comes back in the refund of whatever you eventually deliver -- so what the
--- toll really costs is working capital: a float big enough to keep the machines
--- running between deliveries.
---
--- ============================================================
--- WHAT IS EXEMPT, AND WHY
---
--- The rule is: you pay a toll to make a THING, not to move a fluid around.
---
---   * no item result -- oil processing, both crackings, sulfuric acid,
---     lubricant, solid fuel. These are continuous fluid conversions running
---     thousands of crafts, and an inserter feeding coins into a building that
---     otherwise takes only pipes is neither playable nor sensible. Plastic,
---     sulfur, batteries and explosives all still pay: they yield items.
---
---   * the `smelting` category -- this one is not taste, it is the engine. Every
---     furnace has `source_inventory_size = 1`, so a smelting recipe physically
---     cannot have a second ingredient. Tolling `steel-plate` would not raise an
---     error; it would quietly make steel uncraftable in every furnace in the
---     game, and with it the entire mid-game. Never remove this guard.
---
---   * barrel fill and empty recipes -- a coin every time you unbarrel oil is a
---     tax on logistics rather than on production, and it can strand the oil
---     chain outright.
---
---   * recipes with no unlocking technology, and recipes unlocked only by a
---     trigger technology (which has no `unit`, so there is no invoice to read a
---     denomination off) -- this is what keeps the bootstrap alive. A new game
---     has no money at all, so the wooden chest, the transport belt, the stone
---     furnace and the smelting recipes have to stay free. That falls out of the
---     rule rather than being special-cased.
---
---   * the mod's own categories -- money can never be an ingredient of a recipe
---     that produces money. The ordering in data-updates.lua already guarantees
---     it; the guard is here so a future reordering fails loudly instead of
---     charging the player a coin to spend a coin.
--- ============================================================
-
+-- So every assembler needs a money input line, and what the toll really costs is
+-- working capital -- the coin comes back in the refund of whatever you deliver.
 local currency = require("services.currency")
 
 -- Cheapest denomination first. A technology's toll is the last of these that
@@ -67,8 +25,7 @@ end
 local own_categories = { entrance = true, import = true, export = true }
 
 
--- The highest denomination on a technology's invoice, or nil for a trigger
--- technology, which has no invoice at all.
+-- nil for a trigger technology, which has no invoice at all.
 local function invoice_rank(tech)
     if not tech.unit then
         return nil
@@ -86,8 +43,8 @@ local function invoice_rank(tech)
 end
 
 
--- The cheapest licence that unlocks this recipe. `min`, not `max`: the player
--- only ever needed one of them, so the cheapest is what they actually paid.
+-- The cheapest licence that unlocks this recipe. `min`, not `max`: the player only
+-- ever needed one of them, so the cheapest is what they actually paid.
 local toll_rank = {}
 
 for _, tech in pairs(data.raw.technology) do
@@ -120,18 +77,32 @@ local function is_barrel_recipe(recipe_name)
 end
 
 
+-- You pay a toll to make a THING, not to move a fluid around. Recipes with no
+-- unlocking technology, and those unlocked only by a trigger technology, fall out
+-- exempt on their own -- which is what keeps a new game craftable with no money.
 local function exemption_for(recipe_name, recipe)
     for _, category in pairs(recipe.categories or { "crafting" }) do
+        -- NEVER remove this guard. Every furnace has `source_inventory_size = 1`, so
+        -- a smelting recipe cannot take a second ingredient. Tolling one raises no
+        -- error; it silently makes the item uncraftable in every furnace in the game.
         if category == "smelting" then
             return "smelting"
         end
+        -- Money can never be an ingredient of a recipe that produces money. The
+        -- ordering in data-updates.lua already guarantees it; this makes a future
+        -- reordering fail loudly instead.
         if own_categories[category] then
             return "own-category"
         end
     end
+    -- A coin per unbarrelling taxes logistics rather than production, and can strand
+    -- the oil chain outright.
     if is_barrel_recipe(recipe_name) then
         return "barrel"
     end
+    -- Continuous fluid conversions run thousands of crafts, and an inserter feeding
+    -- coins into a building that otherwise takes only pipes is not playable. Plastic,
+    -- sulfur, batteries and explosives still pay: they yield items.
     if not produces_an_item(recipe) then
         return "fluid-only"
     end
@@ -139,7 +110,6 @@ local function exemption_for(recipe_name, recipe)
 end
 
 
-local applied = {}
 local histogram = {}
 local exempted = {}
 
@@ -161,7 +131,6 @@ for recipe_name, recipe in pairs(data.raw.recipe) do
             if not already then
                 recipe.ingredients = recipe.ingredients or {}
                 table.insert(recipe.ingredients, { type = "item", name = ladder[at], amount = 1 })
-                applied[recipe_name] = ladder[at]
                 histogram[at] = (histogram[at] or 0) + 1
             end
         end
@@ -169,18 +138,10 @@ for recipe_name, recipe in pairs(data.raw.recipe) do
 end
 
 
--- ============================================================
--- The rocket client
---
--- The satellite is what a Diamond customer wants: build one around them, launch
--- it, and the vanilla rocket_launch_products pay out 1000 Diamonds. This is the
--- only source of the top denomination, and the only place a customer leaves the
--- population other than by becoming a ghost.
---
--- It lives here rather than in customers.lua because the satellite recipe has
--- just been tolled, and adding the client afterwards keeps the two edits to that
+-- The rocket client. A Diamond customer wants a satellite built around them; the
+-- launch pays the vanilla 1000 space-science-pack, which is 1000 Diamonds. It lives
+-- here because the satellite recipe has just been tolled, keeping both edits to that
 -- recipe in one place.
--- ============================================================
 local customers = require("services.customers")
 local satellite = data.raw.recipe["satellite"]
 assert(satellite, "tolls: the satellite recipe is missing; the Diamond has no source")
@@ -206,5 +167,4 @@ log("[tolls] Charged " .. table.concat(summary, ", ") .. "; exempted "
 return {
     ladder = ladder,
     rank = rank,
-    applied = applied,
 }

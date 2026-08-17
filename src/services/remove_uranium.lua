@@ -1,31 +1,12 @@
--- remove_uranium.lua
+-- remove_uranium.lua -- uranium's three vanilla jobs are all gone: nuclear power
+-- (no electricity), uranium ammunition (no combat), nuclear fuel (nothing burns
+-- fuel). Nothing on the rocket path touches it either, so the whole chain goes.
 --
--- Uranium had three jobs in vanilla and Tycoon has removed the ground under all
--- of them:
---
---   * nuclear power -- there is no electricity (remove_electricity.lua)
---   * uranium ammunition -- there is no combat (remove_military.lua)
---   * nuclear fuel for trains -- nothing burns fuel; every energy source is void
---
--- Nothing on the rocket path needs uranium either: the satellite wants low
--- density structure, solar panels, accumulators, radars, processing units and
--- rocket fuel, and not one of them touches it. So the whole chain goes, from the
--- ore through the centrifuge to the reactor and its heat network.
---
--- WHAT SURVIVES, AND WHY:
---
---   * fission-reactor-equipment -- it is a power source for the armour grid,
---     which stays in scope, and it is not a weapon. Its recipe asks for four
---     uranium fuel cells, so it is re-costed below rather than deleted.
+-- fission-reactor-equipment survives -- armour-grid power, not a weapon -- and is
+-- re-costed below off the four uranium fuel cells it asked for.
 local prototypes = require("lib.prototypes")
 
--- ============================================================
--- STEP 1: Delete the recipes and hide the items
---
--- Recipe name == item name for the first block. The second block is recipes
--- with no item of their own: they process fluids and ore into the intermediates
--- above, so they have to be named separately.
--- ============================================================
+-- Recipe name == item name here.
 local uranium_items = {
     "uranium-ore",
     "uranium-235",
@@ -39,6 +20,8 @@ local uranium_items = {
     "heat-exchanger",
 }
 
+-- Recipes with no item of their own: they process fluids and ore into the
+-- intermediates above, so they are named separately.
 local uranium_processes = {
     "uranium-processing",
     "kovarex-enrichment-process",
@@ -56,12 +39,8 @@ end
 local removed_recipe_names, removed_recipe_count = prototypes.delete_recipes(recipes_to_delete)
 local hidden_item_count = prototypes.hide_items(uranium_items)
 
--- ============================================================
--- STEP 2: Delete the technologies
---
--- `uranium-mining` is the mining-with-fluid bonus, which is doubly dead: there
--- are no ore patches and no mining drills (remove_ore.lua).
--- ============================================================
+-- `uranium-mining` is the mining-with-fluid bonus, doubly dead: no ore patches and
+-- no mining drills.
 local uranium_technologies = {
     "uranium-mining",
     "uranium-processing",
@@ -78,14 +57,8 @@ local deleted_dependents =
 -- technology's own prerequisites instead and stays reachable.
 local relinked_technologies = prototypes.relink_prerequisites(deleted_technologies)
 
--- ============================================================
--- STEP 3: Re-cost the fission reactor off uranium
---
--- Four uranium fuel cells were the only uranium in it. What is left --
--- processing units and low density structure -- is on the rocket path anyway,
--- so the armour power source stays buildable without a fuel supply that no
--- longer exists.
--- ============================================================
+-- What is left in it -- processing units and low density structure -- is on the
+-- rocket path anyway, so the armour power source stays buildable.
 local fission_reactor = data.raw.recipe["fission-reactor-equipment"]
 local recosted = false
 

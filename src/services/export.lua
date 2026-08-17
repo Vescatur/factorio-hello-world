@@ -67,21 +67,12 @@ data:extend({
 })
 
 
--- ==== One delivery recipe per order ====
---
--- This is where money enters the game. Hand a customer the goods they asked for
--- and you get back everything the goods cost you -- raw materials in whichever
--- denomination the shop charges for them, plus every crafting toll embedded in
--- the recipe tree -- and then profit on top, in the band's own currency. The
--- hard order of each band pays a little of the next denomination as well; that
--- drip is the only way up the ladder.
---
--- The same results list also carries the customer who arrives behind this one,
--- as contiguous shared_probability bands so exactly one successor turns up.
+-- One delivery recipe per order: where money enters the game. The results list also
+-- carries the customer who arrives behind this one, as contiguous shared_probability
+-- bands so exactly one successor turns up.
 
--- The refund and the profit are frequently the same denomination -- a penny-band
--- order refunds Pennies and profits in Pennies -- and a recipe may not name the
--- same item in two results. Accumulate by item name first, emit once.
+-- A recipe may not name the same item in two results, and the refund and profit are
+-- frequently the same denomination. Accumulate by item name first, emit once.
 local function payout_of(order, band)
     local totals = {}
     local order_of_appearance = {}
@@ -104,9 +95,7 @@ local function payout_of(order, band)
 
     pay(band.currency, order.profit)
 
-    -- The bridge: the TOP order of a band pays a little of the band above --
-    -- whichever grade that is, so a band with four orders still bridges from its
-    -- fourth and not from a hard-coded third.
+    -- The bridge upward, from whichever grade is top rather than a hard-coded third.
     if order.is_top then
         local above = customers.bands[order.band + 1]
         if above then
@@ -126,17 +115,14 @@ local function payout_of(order, band)
 end
 
 
--- The successors, as contiguous bands over 0..1. Built from cumulative integer
--- weights so band k+1's `min` is the same arithmetic as band k's `max` and no
--- gap can open between them -- a gap is a delivery that produces no customer at
--- all, which would quietly drain the population.
+-- Contiguous bands over 0..1, built from cumulative integer weights so band k+1's
+-- `min` is the same arithmetic as band k's `max` and no gap can open between them. A
+-- gap is a delivery that produces no customer at all.
 local function append_successors(results, order)
     local cumulative = 0
     for _, successor in ipairs(order.successors) do
-        -- What arrives is the next CUSTOMER, never the goods they want. Emitting
-        -- the vanilla item here would hand the player free goods and drain the
-        -- population in the same craft, so the name is checked rather than
-        -- trusted.
+        -- What arrives is the next CUSTOMER, never the goods they want: emitting the
+        -- vanilla item would hand out free goods and drain the population at once.
         assert(customers.is_customer[successor.customer],
             "export: '" .. order.item .. "' would emit '" .. tostring(successor.customer)
                 .. "', which is not a customer item")
@@ -164,8 +150,8 @@ for _, order in ipairs(customers.orders) do
     local results = payout_of(order, band)
     append_successors(results, order)
 
-    -- The recipe wears the denomination it pays in, with the goods it wants
-    -- overlaid -- so the crafting menu reads as a price list.
+    -- The denomination it pays in, with the goods overlaid, so the crafting menu
+    -- reads as a price list.
     local icons = prototypes.icons_of(order.item)
     table.insert(icons, 1, {
         icon = "__tycoon__/graphics/icons/" .. band.icon .. ".png",
@@ -183,10 +169,9 @@ for _, order in ipairs(customers.orders) do
         {
             type = "recipe",
             name = recipe_name,
-            -- A band you have no licence for still gets customers; you simply
-            -- cannot serve them, and they decay back down a band. The penny
-            -- band has no licence and ships enabled, because every technology in
-            -- the game is downstream of the first delivery.
+            -- An unlicensed band still gets customers; you just cannot serve them,
+            -- and they decay back down. The penny band ships enabled because every
+            -- technology in the game is downstream of the first delivery.
             enabled = band.licence == nil,
             ingredients = {
                 { type = "item", name = customers.item[order.item], amount = 1 },
@@ -204,9 +189,8 @@ for _, order in ipairs(customers.orders) do
         }
     })
 
-    -- The licence. These four technologies were left effect-less when their
-    -- science pack recipes were deleted; dealing in a denomination is what they
-    -- unlock now, which is what their names in the locale file already claimed.
+    -- These technologies were left effect-less when their science pack recipes were
+    -- deleted; dealing in a denomination is what they unlock now.
     if band.licence then
         local tech = data.raw.technology[band.licence]
         assert(tech, "export: licence technology '" .. band.licence .. "' is missing")

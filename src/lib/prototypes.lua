@@ -1,31 +1,18 @@
--- prototypes.lua
+-- prototypes.lua -- the four moves every removal service makes, in the order they
+-- have to happen: delete the recipes, hide the items they built, delete the
+-- technologies that unlocked them, re-link what pointed at any of it.
 --
--- The four moves every removal service makes, in the order they have to happen:
--- delete the recipes, hide the items they built, delete the technologies that
--- unlocked them, and re-link everything that pointed at what is now gone.
+-- Two have an inverse here too -- add_unlock and unhide_item -- because loaders.lua
+-- puts back something base ships hidden.
 --
--- These started life inside remove_military.lua, which is still the fullest
--- worked example of using them. They moved here when remove_ore.lua,
--- remove_electricity.lua and remove_uranium.lua all needed the same four steps
--- and the prerequisite re-link in particular is too subtle to write twice.
---
--- Two of those moves have an inverse here as well -- add_unlock and unhide_item
--- -- because loaders.lua puts back something base ships hidden. Each sits beside
--- the move it undoes rather than in a section of its own.
---
--- Everything here is data-stage only and mutates `data.raw` in place.
+-- Data-stage only; mutates `data.raw` in place.
 
 local prototypes = {}
 
 
--- ============================================================
--- Recipes
--- ============================================================
-
--- Delete recipes and strip every technology effect that unlocked one, because
--- an unlock-recipe effect naming a recipe that no longer exists is a load
--- error. Returns the set actually removed, which the technology and dependent
--- sweeps below both take as input.
+-- Also strips every technology effect that unlocked one: an unlock-recipe effect
+-- naming a recipe that no longer exists is a load error. Returns the set actually
+-- removed, which the technology and dependent sweeps below take as input.
 function prototypes.delete_recipes(recipe_names)
     local removed = {}
     local count = 0
@@ -54,34 +41,9 @@ function prototypes.delete_recipes(recipe_names)
 end
 
 
--- Drop a single unlock-recipe effect from one technology, leaving the recipe
--- itself alone. For the case where a technology unlocks several things and only
--- some of them are going.
-function prototypes.drop_unlock(technology_name, recipe_name)
-    local tech = data.raw.technology[technology_name]
-    if not tech or not tech.effects then
-        return false
-    end
-
-    local kept = {}
-    local dropped = false
-    for _, effect in pairs(tech.effects) do
-        if effect.type == "unlock-recipe" and effect.recipe == recipe_name then
-            dropped = true
-        else
-            table.insert(kept, effect)
-        end
-    end
-    tech.effects = kept
-    return dropped
-end
-
-
--- Hang a recipe off a technology that does not name it yet. The inverse of
--- drop_unlock, and the way a recipe base ships disabled and unlocks from nowhere
--- gets a route to the player. Idempotent: a second call is a no-op rather than a
--- duplicate effect, which the engine tolerates but which shows twice in the
--- technology screen.
+-- Hang a recipe off a technology that does not name it yet. Idempotent: a second
+-- call is a no-op rather than a duplicate effect, which the engine tolerates but
+-- which shows twice in the technology screen.
 function prototypes.add_unlock(technology_name, recipe_name)
     local tech = data.raw.technology[technology_name]
     assert(tech, "prototypes: no technology named '" .. technology_name .. "'")
@@ -98,21 +60,14 @@ function prototypes.add_unlock(technology_name, recipe_name)
 end
 
 
--- ============================================================
--- Items
--- ============================================================
-
--- Find an item prototype by name, whatever kind of item it is.
+-- Find an item prototype by name, whatever kind of item it is. Items are spread
+-- over a dozen categories -- gun, ammo, capsule, armor, module, rail-planner,
+-- item-with-entity-data -- so this looks for a prototype carrying a `stack_size`,
+-- which every item has and no entity does.
 --
--- Items are spread over a dozen categories: plain "item", but also gun, ammo,
--- capsule, armor, module, rail-planner, item-with-entity-data and more. Rather
--- than list them, this looks for a prototype of that name carrying a
--- `stack_size`, which every item has and no entity does.
---
--- Reach for this instead of `data.raw.item[name]` anywhere the name comes from
--- a table someone might extend. `data.raw.item.car` is nil (it is
--- item-with-entity-data), and so is `data.raw.item["power-armor-mk2"]` (armor)
--- and `data.raw.item.rail` (rail-planner).
+-- Use this instead of `data.raw.item[name]` wherever the name comes from a table
+-- someone might extend: `data.raw.item.car` is nil (item-with-entity-data), and so
+-- are `power-armor-mk2` (armor) and `rail` (rail-planner).
 function prototypes.find_item(item_name)
     for _, category in pairs(data.raw) do
         local prototype = type(category) == "table" and category[item_name]
@@ -124,11 +79,9 @@ function prototypes.find_item(item_name)
 end
 
 
--- The icons of an item, in the `icons` array form, ready to be copied into
--- another prototype. Read them off the prototype rather than assembling a path
--- into __base__/graphics/icons/: a barrel has no file of its own, it is a
--- three-layer composite, and plenty of items are named differently from their
--- sprite.
+-- Read off the prototype rather than assembling a path into __base__/graphics/icons/:
+-- a barrel has no file of its own (it is a three-layer composite) and plenty of items
+-- are named differently from their sprite.
 function prototypes.icons_of(item_name)
     local item = prototypes.find_item(item_name)
     assert(item, "prototypes: no item prototype named '" .. item_name .. "'")
@@ -140,18 +93,10 @@ function prototypes.icons_of(item_name)
 end
 
 
--- ============================================================
--- Machine graphics
--- ============================================================
-
 -- A tinted copy of another assembling machine's graphics, for the three Tycoon
--- machines that are recoloured assembling-machine-1s. Shadows are left alone --
--- tinting them turns the shadow into a coloured smear.
---
--- `animation` is optional on the graphics set (a machine can be drawn entirely
--- through `working_visualisations` instead), so it is asserted rather than
--- assumed: if a future Factorio version restructures assembling-machine-1, this
--- says so instead of failing somewhere less obvious.
+-- machines. Shadows are left alone -- tinting them turns the shadow into a coloured
+-- smear. `animation` is optional on a graphics set, so it is asserted: if a future
+-- Factorio restructures assembling-machine-1, this says so.
 function prototypes.tinted_machine_graphics(source_name, tint)
     local source = data.raw["assembling-machine"][source_name]
     assert(source, "prototypes: no assembling machine named '" .. source_name .. "'")
@@ -169,17 +114,13 @@ function prototypes.tinted_machine_graphics(source_name, tint)
 end
 
 
--- The circuit-network wiring of another assembling machine: the connector
--- definitions -- one per direction, which is why it is a four-tuple -- and the
--- reach, for a machine that reuses that machine's sprite and so wants the wire
--- to land in the same spot on it.
+-- The connector definitions (one per direction, hence a four-tuple) and the reach,
+-- for a machine reusing that machine's sprite. Returned as a pair because both are
+-- needed: a connector without a `circuit_wire_max_distance` leaves a connection point
+-- no wire can reach, and the engine reports nothing.
 --
--- Returned as a pair because both fields are needed: a connector without a
--- `circuit_wire_max_distance` leaves the entity with a connection point no wire
--- can reach, and the engine reports nothing.
---
--- The tables are shared rather than copied, the way vanilla shares one
--- connector definition across assembling-machine 1, 2 and 3.
+-- Shared rather than copied, the way vanilla shares one connector definition across
+-- assembling-machine 1, 2 and 3.
 function prototypes.machine_circuit_connection(source_name)
     local source = data.raw["assembling-machine"][source_name]
     assert(source, "prototypes: no assembling machine named '" .. source_name .. "'")
@@ -190,11 +131,9 @@ function prototypes.machine_circuit_connection(source_name)
 end
 
 
--- Hide an item without deleting it. The prototype stays because other
--- prototypes reference it by name -- `lab.inputs`, `car.guns`, tips-and-tricks
--- triggers -- but it leaves the crafting menu and Factoriopedia so there is no
--- uncraftable clutter. The entity keeps its Factoriopedia entry; only the item
--- disappears from the crafting menu.
+-- Hide an item without deleting it. The prototype stays because others reference it
+-- by name -- `lab.inputs`, `car.guns`, tips-and-tricks triggers -- but it leaves the
+-- crafting menu and Factoriopedia so there is no uncraftable clutter.
 function prototypes.hide_item(item_name)
     local prototype = prototypes.find_item(item_name)
     if not prototype then
@@ -217,9 +156,8 @@ function prototypes.hide_items(item_names)
 end
 
 
--- The inverse: bring an item base ships hidden back into the crafting menu and
--- Factoriopedia. Cleared to nil rather than set to false, so the prototype looks
--- exactly like one that was never hidden in the first place.
+-- Cleared to nil rather than set to false, so the prototype looks exactly like one
+-- that was never hidden.
 function prototypes.unhide_item(item_name)
     local prototype = prototypes.find_item(item_name)
     if not prototype then
@@ -231,23 +169,8 @@ function prototypes.unhide_item(item_name)
 end
 
 
-function prototypes.unhide_items(item_names)
-    local count = 0
-    for _, item_name in ipairs(item_names) do
-        if prototypes.unhide_item(item_name) then
-            count = count + 1
-        end
-    end
-    return count
-end
-
-
--- ============================================================
--- Technologies
--- ============================================================
-
--- Delete technologies, remembering what each one depended on so
--- relink_prerequisites can walk through it afterwards. Returns that map.
+-- Delete technologies, remembering what each depended on so relink_prerequisites can
+-- walk through it afterwards.
 function prototypes.delete_technologies(technology_names)
     local deleted = {}
     local count = 0
@@ -265,14 +188,13 @@ function prototypes.delete_technologies(technology_names)
 end
 
 
--- A surviving technology that required a deleted one inherits that technology's
--- own prerequisites instead, repeatedly, until nothing deleted is left.
+-- A surviving technology that required a deleted one inherits that technology's own
+-- prerequisites instead, repeatedly, until nothing deleted is left.
 --
--- Inheriting wholesale drags in ancestors the surviving prerequisites already
--- imply, and every redundant entry is another arrow drawn across the technology
--- screen. So a re-linked list is reduced afterwards: a prerequisite is dropped
--- if another prerequisite already depends on it. Only re-linked technologies are
--- touched; vanilla's own arrows, redundant or not, are deliberate.
+-- Inheriting wholesale drags in ancestors the surviving prerequisites already imply,
+-- and every redundant entry is another arrow across the technology screen. So a
+-- re-linked list is reduced afterwards. Only re-linked technologies are touched;
+-- vanilla's own arrows, redundant or not, are deliberate.
 function prototypes.relink_prerequisites(deleted)
     local function resolve(prerequisites)
         local resolved = {}
@@ -299,9 +221,9 @@ function prototypes.relink_prerequisites(deleted)
         return resolved
     end
 
-    -- Every technology `name` depends on, directly or transitively. Deleted
-    -- names are walked through the same way resolve does, so an ancestor
-    -- reached only via a dead technology still counts as implied.
+    -- Everything `name` depends on, directly or transitively. Deleted names are
+    -- walked through the same way, so an ancestor reached only via a dead technology
+    -- still counts as implied.
     local function collect_ancestors(name, found, depth)
         if depth > 64 then
             return found
@@ -353,24 +275,18 @@ function prototypes.relink_prerequisites(deleted)
 end
 
 
--- ============================================================
--- Everything else that pointed at what we removed
--- ============================================================
-
 -- Two kinds of dangling reference, both hard load errors:
 --
---   * `technology_to_unlock` -- the quick-bar shortcuts. Clearing the field
---     instead of deleting the prototype would be wrong: an unlock-less shortcut
---     is available from the start, the opposite of what we want for a shortcut
---     to something that can no longer be built.
---
+--   * `technology_to_unlock` -- the quick-bar shortcuts. Clearing the field instead
+--     of deleting the prototype would be wrong: an unlock-less shortcut is available
+--     from the start, the opposite of what we want.
 --   * a nested trigger tree naming a deleted technology or recipe -- the
 --     tips-and-tricks entries and the achievements.
 --
--- Swept by field rather than by name so entries added by a future Factorio
--- version are caught too. Only the prototype families that exist to describe a
--- trigger are swept: a blanket pass over data.raw would risk deleting something
--- whose recipe reference is incidental rather than the point of it.
+-- Swept by field rather than by name so a future Factorio version's entries are
+-- caught too, but only over prototype families that exist to describe a trigger: a
+-- blanket pass over data.raw could delete something whose recipe reference is
+-- incidental rather than the point of it.
 function prototypes.delete_dangling_dependents(deleted_technologies, removed_recipes)
     local function references_removed(value, depth)
         if type(value) ~= "table" or depth > 8 then
@@ -413,11 +329,10 @@ function prototypes.delete_dangling_dependents(deleted_technologies, removed_rec
         end
     end
 
-    -- A tip can name another tip in `dependencies`, and the engine refuses to
-    -- load one that points at a tip which no longer exists. Cascade until
-    -- stable: deleting the electric-network tip takes connect-switch,
-    -- electric-pole-connections, low-power and steam-power with it, which is
-    -- right -- they are all about a mechanic that no longer exists.
+    -- A tip can name another tip in `dependencies`, and the engine refuses to load one
+    -- pointing at a tip that no longer exists. Cascade until stable: deleting the
+    -- electric-network tip takes connect-switch, electric-pole-connections, low-power
+    -- and steam-power with it, which is right.
     local tips = data.raw["tips-and-tricks-item"] or {}
     local removed_a_tip = true
 

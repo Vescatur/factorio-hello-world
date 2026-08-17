@@ -1,51 +1,15 @@
--- remove_military.lua
+-- remove_military.lua -- with no enemies there is nothing to defend, so the combat
+-- tree has no purpose. Recipe deleted, item hidden, item and entity prototypes
+-- kept, so `car.guns`, `lab.inputs` and the spidertron tips still resolve.
 --
--- With no enemies (see remove_enemies.lua) the combat tree has no purpose. This
--- is about saying so plainly instead of leaving a dead branch for the player to
--- discover by trial.
---
--- APPROACH -- the four moves every removal service makes, all of which live in
--- lib/prototypes.lua now:
---
---   1. Combat recipes are deleted and the matching items hidden. The item and
---      entity prototypes stay, exactly the trade-off remove_electricity.lua
---      documents: `car.guns` still names "vehicle-machine-gun", `lab.inputs`
---      still names "military-science-pack", and the spidertron
---      tips-and-tricks entries still resolve. Only the recipe is gone, so
---      nothing can be built and nothing dangles.
---
---   2. Technology effects that unlocked one of those recipes are stripped.
---
---   3. The combat technologies are deleted, and everything that pointed at one
---      -- quick-bar shortcuts, tips-and-tricks entries, achievements -- goes
---      with them. Four surviving technologies list a deleted one as a
---      prerequisite and are re-linked so they stay reachable.
---
---   4. Anything still priced in military-science-pack is re-priced, because the
---      War Chest denomination retires with this change (see currency.lua).
---
--- WHAT SURVIVES, AND WHY:
---
---   * radar -- `satellite` needs 5 of them, so removing it would break the
---     rocket launch. Here it is map-reveal infrastructure, not a defence.
---   * modular-armor / power-armor / power-armor-mk2 -- these carry the
---     equipment grid that exoskeletons, personal roboports, night vision and
---     batteries plug into. light-armor and heavy-armor have no grid and no
---     inventory bonus, so protection is all they ever did and they go.
---   * exoskeleton, personal roboport, night vision, belt immunity, batteries,
---     solar panel and fission reactor equipment -- none of them are weapons.
---     (The fission reactor is re-costed off uranium fuel in remove_uranium.lua.)
---   * explosives and flammables -- intermediate chemistry, not weapons.
---   * car -- transport. Its weapon slot is emptied below; the tank, spidertron
---     and artillery wagon are weapon platforms and go.
+-- Kept on purpose and not combat content: radar (`satellite` needs 5),
+-- modular/power armor (they carry the equipment grid), the car, explosives and
+-- flammables. light-armor and heavy-armor have no grid, so protection was all they
+-- ever did and they go.
 local prototypes = require("lib.prototypes")
 
--- ============================================================
--- STEP 1: Delete the combat recipes
---
--- Grouped the way the crafting menu groups them. Recipe name == item name for
--- all of these in vanilla, so the same list hides the items in STEP 2.
--- ============================================================
+-- Grouped the way the crafting menu groups them. Recipe name == item name for all
+-- of these, so the same list hides the items below.
 local combat_recipes = {
     -- Guns
     "pistol",
@@ -107,22 +71,17 @@ local combat_recipes = {
     "artillery-targeting-remote",
     "spidertron-remote",
 
-    -- The War Chest retires with this change, so currency.lua no longer deletes
-    -- this recipe as one of its denominations. It belongs here on its own
-    -- merits: it is built from piercing rounds, a grenade and two walls.
+    -- Built from piercing rounds, a grenade and two walls. The War Chest retires
+    -- with this change, so currency.lua no longer handles it.
     "military-science-pack",
 }
 
--- Deletes the recipes and strips the unlock-recipe effects that named them.
 local removed_recipe_names, removed_recipe_count = prototypes.delete_recipes(combat_recipes)
 
--- ============================================================
--- STEP 2: Hide the items
--- ============================================================
 local hidden_item_count = prototypes.hide_items(combat_recipes)
 
--- The guns the deleted vehicles carried, plus the car's. These have no recipes
--- in vanilla -- they arrive with the vehicle -- so STEP 1 never saw them.
+-- The guns the deleted vehicles carried, plus the car's. These have no recipes in
+-- vanilla -- they arrive with the vehicle -- so the sweep above never saw them.
 hidden_item_count = hidden_item_count + prototypes.hide_items({
     "vehicle-machine-gun",
     "tank-machine-gun",
@@ -138,11 +97,9 @@ hidden_item_count = hidden_item_count + prototypes.hide_items({
 -- The car stays as transport, so it should not turn up with a weapon slot.
 data.raw.car.car.guns = {}
 
--- Cliff explosives are demolition, not a weapon: cliffs still generate and still
--- block building, so the recipe stays. It asks for one grenade, though, and the
--- grenade recipe is deleted above -- which would leave the only way to clear a
--- cliff permanently uncraftable. Drop the grenade; the ten explosives were
--- always what did the work.
+-- Cliffs still generate and still block building, so cliff-explosives is
+-- demolition rather than a weapon and stays. It asks for a grenade, whose recipe is
+-- deleted above, which would leave cliff clearing permanently uncraftable.
 local cliff_explosives = data.raw.recipe["cliff-explosives"]
 local recosted_cliff_explosives = false
 
@@ -158,12 +115,8 @@ if cliff_explosives and cliff_explosives.ingredients then
     cliff_explosives.ingredients = kept
 end
 
--- ============================================================
--- STEP 3: Delete the combat technologies
---
--- The finite ones are listed by hand; the upgrade ladders are generated, since
--- vanilla generates them too.
--- ============================================================
+-- The finite ones by hand; the upgrade ladders are generated, as vanilla generates
+-- them too.
 local combat_technologies = {
     "military",
     "military-2",
@@ -218,30 +171,18 @@ end
 local deleted_technologies, deleted_technology_count =
     prototypes.delete_technologies(combat_technologies)
 
--- Vanilla has quick-bar shortcuts for the spidertron, artillery targeting and
--- discharge defence remotes, and a tip about running rail through a gate. They
--- go with what they point at.
+-- Vanilla's quick-bar shortcuts for the spidertron, artillery targeting and
+-- discharge defence remotes, and the tip about rail through a gate.
 local deleted_dependents =
     prototypes.delete_dangling_dependents(deleted_technologies, removed_recipe_names)
 
--- In vanilla this rescues exactly four technologies that would otherwise be
--- unreachable:
---
---   cliff-explosives          military-2            -> explosives
---   modular-armor             heavy-armor           -> steel-processing
---   power-armor-mk2           military-4            -> (dropped)
---   fission-reactor-equipment military-science-pack -> (dropped)
+-- Rescues cliff-explosives, modular-armor, power-armor-mk2 and
+-- fission-reactor-equipment, which each listed a deleted technology.
 local relinked_technologies = prototypes.relink_prerequisites(deleted_technologies)
 
--- ============================================================
--- STEP 4: Re-price anything still asking for a War Chest
---
--- military-science-pack stops being a denomination with this change, so a
--- technology that still lists it would cost a currency no customer pays out and
--- could never be researched. After STEP 3 that is just
--- fission-reactor-equipment, which is a power source for armor rather than a
--- weapon and is worth keeping.
--- ============================================================
+-- military-science-pack stops being a denomination here, so a technology still
+-- listing it would cost a currency no customer pays out. After the sweep above that
+-- is just fission-reactor-equipment, kept as armour power rather than a weapon.
 local retired_currency = "military-science-pack"
 local repriced_technologies = 0
 
@@ -264,9 +205,8 @@ for _, tech in pairs(data.raw.technology) do
     end
 end
 
--- The pack itself keeps its prototype -- `lab.inputs` names it -- but it is no
--- longer money and no longer craftable, so it is hidden the way currency.lua
--- hides the base game coin.
+-- The pack keeps its prototype -- `lab.inputs` names it -- but is no longer money
+-- and no longer craftable, so it is hidden like the base game coin.
 data.raw.item[retired_currency].hidden = true
 data.raw.item[retired_currency].hidden_in_factoriopedia = true
 

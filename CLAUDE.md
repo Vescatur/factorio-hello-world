@@ -96,9 +96,9 @@ fails the load naming the order, the band and both lengths, so this cannot rot s
 a whole-band edit, not a one-row one.
 
 Like `currency.lua`, this module owns its prototype names: `require("services.customers")` returns
-`{ bands, orders, top_grade, item = { ["wooden-chest"] = "customer_wooden-chest", ... }, entry, weight_total }`.
-Ask it for a name rather than concatenating the `customer_` prefix somewhere else, and ask
-`top_grade[band]` (or an order's `is_top`) rather than assuming a band ends at grade 3.
+`{ bands, orders, item = { ["wooden-chest"] = "customer_wooden-chest", ... }, is_customer, entry, weight_total }`.
+Ask it for a name rather than concatenating the `customer_` prefix somewhere else, and ask an
+order's `is_top` rather than assuming a band ends at grade 3.
 
 Nothing generates locale, so add `item-name.customer_<item>`,
 `item-description.customer_<item>` and `recipe-name.customer_<item>_deliver` to

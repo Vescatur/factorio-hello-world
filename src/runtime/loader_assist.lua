@@ -1,33 +1,22 @@
 -- loader_assist.lua -- put a hand-placed loader into the mode the player meant.
 --
--- A loader is a pipe with a container on one side and a belt on the other, and
--- which side is which is not a thing you set. It falls out of the mode: `input`
--- binds the container to the tile the arrow points AT, `output` to the tile
--- behind. A freshly built loader is always `output`, so the intuitive placement
--- -- aim at the thing you want filled -- binds the belt instead, and belts are
--- not containers, so the loader does nothing at all.
+-- Which side a loader binds to is not a thing you set: it falls out of the mode.
+-- `input` binds the tile the arrow points AT, `output` the tile behind. A fresh
+-- loader is always `output`, so aiming at the thing you want filled binds the belt
+-- instead and the loader does nothing. Vanilla's 1x2 loader behaves the same way; it
+-- is worth fixing because R cannot undo it -- both states R cycles between keep the
+-- same bound side, so a wrongly bound loader must be mined and rebuilt.
 --
--- None of that is Tycoon's doing; the vanilla 1x2 loader behaves identically.
--- What makes it worth fixing is that the mistake cannot be undone in place: the
--- two states R cycles between BOTH keep the same bound side, so a loader bound to
--- the wrong neighbour has to be mined and rebuilt facing the other way.
---
--- So on hand placement, answer one question -- does the container belong on the
--- side this loader faces? -- and switch to `input` when it does.
---
--- SETTING THE MODE TAKES TWO WRITES
---
--- Assigning `loader_type` does not move the bound side. It PRESERVES it, by
--- swinging the arrow 180 degrees to compensate. Measured, from south/output,
--- which is bound to the tile behind it (north):
+-- SETTING THE MODE TAKES TWO WRITES. Assigning `loader_type` does not move the bound
+-- side, it PRESERVES it by swinging the arrow 180 degrees. Measured, from
+-- south/output (bound north):
 --
 --   loader_type = "input"                     -> north/input, STILL bound north
 --   loader_type = "input"; direction = south  -> south/input, bound south
 --
--- Writing `direction` is the only lever that moves the binding, so the mode is
--- set and then the aimed direction is written back. Note what this does to
--- testing: read `loader_type` back and a broken loader looks correct. Only item
--- counts prove anything.
+-- Writing `direction` is the only lever that moves the binding. So verify a change
+-- here by asserting items MOVED: read `loader_type` back and a broken loader looks
+-- correct.
 
 local assist = {}
 
