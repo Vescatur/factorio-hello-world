@@ -80,6 +80,9 @@ log("[currency] Re-skinned " .. #denominations .. " science packs into currency 
 -- science pack backs which coin. `technology` holds the same strings again:
 -- vanilla names each pack's technology after the pack, and a band's licence is a
 -- technology rather than an item, so the two roles are named separately.
+-- A denomination key maps to a pack name, but `technology` maps to a nested table,
+-- so the value type is only as narrow as `any`.
+---@type table<string, any>
 local currency = { technology = {} }
 for _, denomination in ipairs(denominations) do
     currency[denomination.key] = denomination.pack

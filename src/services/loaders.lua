@@ -77,14 +77,16 @@ for index, tier in ipairs(tiers) do
     entity.hidden = nil
     entity.hidden_in_factoriopedia = nil
 
-    -- Entity names are unique across every type, so empty the old slot first.
+    -- Entity names are unique across every type, so empty the old slot first. The
+    -- cast below is this retype told to the language server: `type` is a plain string
+    -- field, so the inferred prototype class does not follow it.
     entity.type = "loader-1x1"
     for field, value in pairs(footprint) do
         entity[field] = value
     end
     fit_structure_to_one_tile(entity)
     data.raw["loader"][tier.name] = nil
-    data.raw["loader-1x1"][tier.name] = entity
+    data.raw["loader-1x1"][tier.name] = entity --[[@as Loader1x1Prototype]]
 
     local recipe = data.raw.recipe[tier.name]
     assert(recipe, "loaders: no recipe named '" .. tier.name .. "'")

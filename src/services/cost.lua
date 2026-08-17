@@ -70,7 +70,7 @@ local own_categories = { entrance = true, import = true, export = true, paramete
 
 local producers = {}
 
-for recipe_name, recipe in pairs(data.raw.recipe) do
+for _, recipe in pairs(data.raw.recipe) do
     local skip = false
     for _, category in pairs(recipe.categories or { "crafting" }) do
         if own_categories[category] then
@@ -83,7 +83,16 @@ for recipe_name, recipe in pairs(data.raw.recipe) do
             if not amount then
                 amount = ((result.amount_min or 1) + (result.amount_max or 1)) / 2
             end
-            amount = amount * (result.probability or 1)
+            -- 2.1 has no single `probability` on a product: the odds are the
+            -- independent roll times the width of the shared band, which is what the
+            -- recipe tooltip shows. Reading `result.probability` costs nothing and
+            -- always yields nil, so a probabilistic recipe would price as certain.
+            local chance = result.independent_probability or 1
+            local shared = result.shared_probability
+            if shared then
+                chance = chance * (shared.max - shared.min)
+            end
+            amount = amount * chance
             if amount > 0 then
                 local key = key_of(result.type, result.name)
                 producers[key] = producers[key] or {}

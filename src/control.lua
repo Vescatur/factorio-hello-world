@@ -83,13 +83,15 @@ local function adopt()
         end
     end
     if removed > 0 then
-        -- tostring because the bundled type definitions only admit strings, gui
-        -- elements and item stacks as LocalisedString parameters -- a number is
-        -- actually legal, but the conversion is cheaper than a suppression.
+        -- The bundled definitions type a localised string as a tuple ending in a
+        -- LocalisedString vararg, and the language server resolves nothing for that
+        -- vararg: every parameter after the key mismatches whatever its type is, so
+        -- there is no spelling of this call that satisfies it. A number is legal here.
         --
         -- Never quote an example localised string in a comment: find-missing-locale.py
         -- greps the source for that idiom and reports the example as a missing key.
-        game.print({ "tycoon.entrance-removed", tostring(removed) })
+        ---@diagnostic disable-next-line: assign-type-mismatch
+        game.print({ "tycoon.entrance-removed", removed })
     end
 end
 
