@@ -44,6 +44,7 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
   - `locale/en/` — Translations
 - `art/icons/` — Editable SVG sources for the custom sprites. Kept out of `src/` so only shipped assets are symlinked into the mods folder
 - `tools/` — Dev scripts: `creat-link.ps1` (symlink), `run-dev.ps1` (launch), `run-headless.ps1` (headless validation), `find-missing-locale.py` (untranslated prototypes), `factorio-docs-to-md.py` (API docs → markdown), `svg-to-png.py` (icon SVG → PNG)
+- `.claude/skills/verify-in-engine/` — Skill: verify runtime behaviour by driving the real engine (`tools/rcon-server.ps1` + `factorio_rcon.py` for headless, `tools/run-scenario.ps1` for anything needing a player or a screenshot). Assert items moved, never an API readback
 - `factorio-data/` — Base game prototype data. **Read-only reference. Do not modify.**
 - `factorio-docs/markdown/` — Factorio 2.1.14 API reference in markdown. **Generated. Do not edit by hand.**
 - `docs/` — Detailed documentation

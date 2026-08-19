@@ -110,7 +110,28 @@ see [game-design.md](game-design.md#scope-and-non-goals).
 3. Run `.\tools\run-headless.ps1` to validate mod loading (catches prototype errors without launching the GUI)
 4. Run `python tools\find-missing-locale.py` to catch prototypes with no translation — it must come back empty (see [below](#the-report-must-come-back-empty))
 5. Run `.\tools\run-dev.ps1` to playtest in-game
-6. For runtime/control stage changes (if added later), use `/c` console commands or restart the save
+6. For runtime/control-stage behaviour, drive the real engine — see [Verifying behaviour](#verifying-behaviour)
+
+### Verifying behaviour
+
+Steps 3 and 4 prove the mod *loads*. They say nothing about whether it *works*, and
+`src/control.lua` and `src/runtime/` are behaviour with no load-time signal at all.
+
+The `verify-in-engine` skill (`.claude/skills/verify-in-engine/`) covers that, with two
+harnesses behind it:
+
+- `tools/rcon-server.ps1` + `tools/factorio_rcon.py` — a headless server on a **copy** of
+  a save, driven with arbitrary Lua over RCON. Fastest way to probe state, run a
+  simulation, count items, or inspect a save a bug was reported against.
+- `tools/run-scenario.ps1` — the same idea in the real client, for the two things headless
+  cannot do: anything needing a player (`build_from_cursor`, cursor stack, reach) and
+  anything needing pixels (screenshots).
+
+The rule the skill exists to enforce: **assert the observable effect, not the API
+readback.** Loaders once shipped past a suite scoring 10/10 on `loader_type` while moving
+zero items. Count what arrives.
+
+Optional, not a gate — steps 2 to 4 are the required ones.
 
 ### Headless Validation
 

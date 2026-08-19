@@ -1,0 +1,10 @@
+{
+  "name": "tycoon-verify",
+  "description": "Throwaway server for tools/rcon-server.ps1. Not for play.",
+  "tags": [],
+  "visibility": { "public": false, "lan": false },
+  "require_user_verification": false,
+  "auto_pause": false,
+  "autosave_interval": 1000000,
+  "autosave_slots": 1
+}
