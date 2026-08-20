@@ -26,19 +26,19 @@ local resources = {
     {
         item = "iron-ore",
         amount = 10,
-        price = 6,
+        price = 5,
         currency = currency.penny
     },
     {
         item = "stone",
         amount = 10,
-        price = 4,
+        price = 1,
         currency = currency.penny
     },
     {
         item = "copper-ore",
         amount = 10,
-        price = 1,
+        price = 5,
         currency = currency.penny
     },
     {
@@ -71,7 +71,7 @@ for _, resource in ipairs(resources) do
             },
             icons = prototypes.icons_of(resource.item),
             categories = { "import" },
-            energy_required = 1,
+            energy_required = 0.1,
             subgroup = "currency-buy",
             order = "a[" .. resource.item .. "]",
         }

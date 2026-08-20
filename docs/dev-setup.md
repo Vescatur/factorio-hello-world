@@ -20,6 +20,12 @@ This creates: `%APPDATA%\Factorio\mods\profitorio_1.0.0` → `./src`
 
 Changes in `src/` are immediately visible to Factorio — no copy step needed.
 
+It also deletes any `profitorio_*.zip` that `create_zip.py` left in the mods folder. The two scripts
+are a toggle: `create_zip.py` removes the junction and leaves the zip, this script removes the zip
+and puts the junction back. Only one copy of the mod is ever installed, and a folder and a zip of the
+same mod are two copies under one name — with both present the folder wins and the zip is ignored,
+which silently makes a release build untested.
+
 ### 2. Launch for Development
 
 Run `tools/run-dev.ps1` to start Factorio via Steam with the dev save:
@@ -196,3 +202,27 @@ python tools\find-missing-locale.py --strict    # also fail on missing descripti
 - **Exit 2** — the check could not run (Factorio or the API docs not found)
 
 Stdlib only, no `pip install` needed. Override the executable with `--factorio` or `FACTORIO_EXE`.
+
+## Releasing
+
+`tools/publish_mod.py update` is the whole release: it bumps the version in `src/info.json`, builds
+the zip through `create_zip.py`, and uploads it to the portal.
+
+```powershell
+python tools\publish_mod.py update                 # patch bump, build, upload
+python tools\publish_mod.py update --bump minor     # or major, or none to re-use this version
+python tools\publish_mod.py update --version 2.0.0  # set the version outright
+python tools\publish_mod.py update --zip export\profitorio_1.4.2.zip   # upload as-is
+```
+
+`publish` creates the mod page and is run once, ever; it builds the zip too but never bumps, since
+there is no earlier release to move past. Without `--yes` it prints what it would do and builds
+nothing.
+
+Two consequences worth knowing:
+
+- **The bump is a working-tree edit.** `src/info.json` is left at the new version — commit and tag it
+  yourself. A failed upload keeps the bump rather than rolling it back, because a failure after the
+  portal accepted the release is indistinguishable from one before it; retry with `--bump none`.
+- **Building uninstalls the dev junction** (see [Create Symlink](#1-create-symlink)). Run
+  `.\tools\creat-link.ps1` to get back to dev mode.
