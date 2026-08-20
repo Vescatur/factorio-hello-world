@@ -38,8 +38,8 @@ local resources = {
     {
         item = "copper-ore",
         amount = 10,
-        price = 5,
-        currency = currency.penny
+        price = 1,
+        currency = currency.silver_coin
     },
     {
         item = "coal",
