@@ -7,8 +7,15 @@
 local prototypes = require("lib.prototypes")
 
 -- Cheapest first; `next_upgrade` points at the entry after it.
+--
+-- `ingredients`, where present, replaces vanilla's: the first loader asks for
+-- inserters and circuits, which puts copper -- a Silver purchase -- behind a
+-- Penny-priced technology. The tiers above are built from the tier below.
 local tiers = {
-    { name = "loader",         technology = "logistics"   },
+    { name = "loader",         technology = "logistics",   ingredients = {
+        { type = "item", name = "iron-gear-wheel", amount = 10 },
+        { type = "item", name = "iron-plate",      amount = 10 },
+    } },
     { name = "fast-loader",    technology = "logistics-2" },
     { name = "express-loader", technology = "logistics-3" },
 }
@@ -93,6 +100,9 @@ for index, tier in ipairs(tiers) do
     -- `enabled` stays false: the technology is what turns it on, and having one is
     -- what makes tolls.lua charge for it.
     recipe.hidden = nil
+    if tier.ingredients then
+        recipe.ingredients = tier.ingredients
+    end
 
     assert(prototypes.unhide_item(tier.name),
         "loaders: no item prototype named '" .. tier.name .. "'")

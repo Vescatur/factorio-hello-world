@@ -62,35 +62,35 @@ local orders = {
       spawn = { 60, 20, 0, up = 20 } },
 
     -- Silver -- the first copper, and the first machines built out of it.
-    { band = 2, grade = 1, item = "inserter",               amount = 10,  refund = { penny = 28 },  profit = 1,
+    { band = 2, grade = 1, item = "inserter",               amount = 10,  refund = { penny = 20, silver_coin = 2 }, profit = 1,
       spawn = { 25, 50, 25 } },
-    { band = 2, grade = 2, item = "splitter",               amount = 10,  refund = { penny = 128 }, profit = 1,
+    { band = 2, grade = 2, item = "splitter",               amount = 10,  refund = { penny = 90, silver_coin = 8 }, profit = 2,
       spawn = { 25, 25, 50 } },
-    { band = 2, grade = 3, item = "assembling-machine-2",   amount = 5,   refund = { penny = 77, silver_coin = 5 }, profit = 1,
+    { band = 2, grade = 3, item = "assembling-machine-2",   amount = 5,   refund = { penny = 65, silver_coin = 8 }, profit = 2,
       spawn = { 25, 25, 25, up = 25 } },
 
     -- Banknote -- nothing here exists without coal and crude oil.
-    { band = 3, grade = 1, item = "bulk-inserter",          amount = 5,   refund = { penny = 223, silver_coin = 15,  banknote = 1 }, profit = 1,
+    { band = 3, grade = 1, item = "bulk-inserter",          amount = 5,   refund = { penny = 143, silver_coin = 31,  banknote = 1 }, profit = 1,
       spawn = { 25, 50, 25 } },
-    { band = 3, grade = 2, item = "electric-furnace",       amount = 5,   refund = { penny = 223, silver_coin = 50,  banknote = 8 }, profit = 2,
+    { band = 3, grade = 2, item = "electric-furnace",       amount = 5,   refund = { penny = 160, silver_coin = 63,  banknote = 8 }, profit = 2,
       spawn = { 25, 25, 50 } },
-    { band = 3, grade = 3, item = "productivity-module",    amount = 10,  refund = { penny = 238, silver_coin = 110, banknote = 5 }, profit = 1,
+    { band = 3, grade = 3, item = "productivity-module",    amount = 10,  refund = { penny = 75,  silver_coin = 143, banknote = 5 }, profit = 1,
       spawn = { 25, 25, 25, up = 25 } },
 
     -- Bond -- the robot era.
-    { band = 4, grade = 1, item = "construction-robot",     amount = 10,  refund = { penny = 182, silver_coin = 50,  banknote = 34 }, profit = 1,
+    { band = 4, grade = 1, item = "construction-robot",     amount = 10,  refund = { penny = 119, silver_coin = 63,  banknote = 34 }, profit = 1,
       spawn = { 25, 50, 25 } },
-    { band = 4, grade = 2, item = "logistic-robot",         amount = 10,  refund = { penny = 227, silver_coin = 90,  banknote = 36 }, profit = 1,
+    { band = 4, grade = 2, item = "logistic-robot",         amount = 10,  refund = { penny = 129, silver_coin = 110, banknote = 36 }, profit = 1,
       spawn = { 25, 25, 50 } },
-    { band = 4, grade = 3, item = "roboport",               amount = 2,   refund = { penny = 630, silver_coin = 180, banknote = 10 }, profit = 1,
+    { band = 4, grade = 3, item = "roboport",               amount = 2,   refund = { penny = 405, silver_coin = 225, banknote = 10 }, profit = 1,
       spawn = { 25, 25, 25, up = 25 } },
 
     -- Gold -- everything here pays a Bond toll of its own to be built at all.
-    { band = 5, grade = 1, item = "express-transport-belt", amount = 20,  refund = { penny = 315,  silver_coin = 20,  banknote = 4,  bond = 20 }, profit = 1,
+    { band = 5, grade = 1, item = "express-transport-belt", amount = 20,  refund = { penny = 315, silver_coin = 20,  banknote = 4,  bond = 20 }, profit = 1,
       spawn = { 25, 50, 25 } },
-    { band = 5, grade = 2, item = "beacon",                 amount = 5,   refund = { penny = 613,  silver_coin = 200, banknote = 9,  bond = 5 },  profit = 1,
+    { band = 5, grade = 2, item = "beacon",                 amount = 5,   refund = { penny = 275, silver_coin = 268, banknote = 9,  bond = 5 },  profit = 1,
       spawn = { 25, 25, 50 } },
-    { band = 5, grade = 3, item = "productivity-module-3",  amount = 2,   refund = { penny = 2538, silver_coin = 665, banknote = 86, bond = 2 },  profit = 1,
+    { band = 5, grade = 3, item = "productivity-module-3",  amount = 2,   refund = { penny = 893, silver_coin = 994, banknote = 86, bond = 2 },  profit = 1,
       spawn = { 25, 25, 25, up = 25 } },
 }
 
