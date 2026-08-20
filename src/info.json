@@ -1,9 +1,9 @@
 {
-  "name": "tycoon",
+  "name": "profitorio",
   "version": "1.0.0",
-  "title": "Tycoon",
+  "title": "Profitorio",
   "author": "Vescator",
-  "description": "A simple Tycoon mod",
+  "description": "A simple Profitorio mod",
   "factorio_version": "2.1",
   "spoiling_required": true,
   "dependencies": ["base >= 2.1.0"]

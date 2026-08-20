@@ -152,7 +152,7 @@ def post_multipart(url: str, fields: dict, zip_path: Path) -> dict:
     single-use and pre-authorised, so this request carries no Authorization
     header, and the URL must never be printed or logged.
     """
-    boundary = "----tycoon" + secrets.token_hex(16)
+    boundary = "----factorio-mod-portal" + secrets.token_hex(16)
     parts = []
     for name, value in fields.items():
         parts.append(

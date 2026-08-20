@@ -44,7 +44,7 @@
       "Running this project's tooling: tools/*.ps1 and tools/*.py — headless validation, locale checking, icon generation, symlink setup",
       "Launching factorio.exe for headless validation or --dump-data",
       "Read-only shell inspection: Get-*, Measure-Object, Test-Path pipelines, and parsing the JSON under %APPDATA%/Factorio/script-output",
-      "Deleting or regenerating build output: src/graphics/icons, tools/tycoon_*.zip, factorio-docs/html, and the scratchpad directory",
+      "Deleting or regenerating build output: src/graphics/icons, tools/profitorio_*.zip, factorio-docs/html, and the scratchpad directory",
       "Fetching Factorio documentation and mod-portal pages",
       "Local git operations in this repository: status, diff, log, add, commit, branch, checkout"
     ]

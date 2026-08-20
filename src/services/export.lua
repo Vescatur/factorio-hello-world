@@ -154,7 +154,7 @@ for _, order in ipairs(customers.orders) do
     -- reads as a price list.
     local icons = prototypes.icons_of(order.item)
     table.insert(icons, 1, {
-        icon = "__tycoon__/graphics/icons/" .. band.icon .. ".png",
+        icon = "__profitorio__/graphics/icons/" .. band.icon .. ".png",
         icon_size = 64,
         icon_mipmaps = 4
     })

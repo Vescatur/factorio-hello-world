@@ -93,7 +93,7 @@ function prototypes.icons_of(item_name)
 end
 
 
--- A tinted copy of another assembling machine's graphics, for the three Tycoon
+-- A tinted copy of another assembling machine's graphics, for the three Profitorio
 -- machines. Shadows are left alone -- tinting them turns the shadow into a coloured
 -- smear. `animation` is optional on a graphics set, so it is asserted: if a future
 -- Factorio restructures assembling-machine-1, this says so.

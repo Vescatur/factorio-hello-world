@@ -255,7 +255,7 @@ data:extend({
     {
         type = "item",
         name = item_by_key.ghost,
-        icon = "__tycoon__/graphics/icons/ghost.png",
+        icon = "__profitorio__/graphics/icons/ghost.png",
         icon_size = 64,
         stack_size = 1,
     },
@@ -264,12 +264,12 @@ data:extend({
         name = item_by_key.diamond,
         icons = {
             {
-                icon = "__tycoon__/graphics/icons/customer.png",
+                icon = "__profitorio__/graphics/icons/customer.png",
                 icon_size = 64,
                 icon_mipmaps = 4
             },
             {
-                icon = "__tycoon__/graphics/icons/diamond.png",
+                icon = "__profitorio__/graphics/icons/diamond.png",
                 icon_size = 64,
                 icon_mipmaps = 4,
                 scale = 0.3,
@@ -298,7 +298,7 @@ for _, order in ipairs(orders) do
             name = item_by_key[order.item],
             icons = {
                 {
-                    icon = "__tycoon__/graphics/icons/customer.png",
+                    icon = "__profitorio__/graphics/icons/customer.png",
                     icon_size = 64,
                     icon_mipmaps = 4
                 },

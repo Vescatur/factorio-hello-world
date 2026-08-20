@@ -1,6 +1,6 @@
 ---
 name: verify-in-engine
-description: Verify Tycoon's runtime or data-stage behaviour by driving the real Factorio engine and asserting observable effects — items delivered, products crafted, entities bound — rather than API readbacks. Use when asked to verify, test, or prove that a change works in game; when a runtime/control-stage change needs checking beyond "does it load"; when the user reports "it doesn't work for me" and the claim needs reproducing on their save; when a Factorio API's real behaviour is unclear and the docs are ambiguous or suspect; or when a disputed claim needs visual evidence.
+description: Verify Profitorio's runtime or data-stage behaviour by driving the real Factorio engine and asserting observable effects — items delivered, products crafted, entities bound — rather than API readbacks. Use when asked to verify, test, or prove that a change works in game; when a runtime/control-stage change needs checking beyond "does it load"; when the user reports "it doesn't work for me" and the claim needs reproducing on their save; when a Factorio API's real behaviour is unclear and the docs are ambiguous or suspect; or when a disputed claim needs visual evidence.
 ---
 
 # Verify in-engine

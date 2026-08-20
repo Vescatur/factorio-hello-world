@@ -21,7 +21,7 @@
 local assist = {}
 
 -- Inventories a loader can insert into. Probed on the entity rather than matched
--- against a list of prototype types, so Tycoon's own entrance/import/export --
+-- against a list of prototype types, so Profitorio's own entrance/import/export --
 -- which are assembling machines -- and anything a later Factorio version adds are
 -- covered for free. `character_main` is pointedly absent: the player is usually
 -- standing next to what they just built, and a character is not a target.

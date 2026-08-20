@@ -33,7 +33,7 @@ end
 local function refund(entity, event)
     local player = event.player_index and game.get_player(event.player_index)
     if player then
-        player.create_local_flying_text({ text = { "tycoon.entrance-limit" }, create_at_cursor = true })
+        player.create_local_flying_text({ text = { "profitorio.entrance-limit" }, create_at_cursor = true })
         player.play_sound({ path = "utility/cannot_build" })
         if player.mine_entity(entity, true) then
             return
@@ -91,7 +91,7 @@ local function adopt()
         -- Never quote an example localised string in a comment: find-missing-locale.py
         -- greps the source for that idiom and reports the example as a missing key.
         ---@diagnostic disable-next-line: assign-type-mismatch
-        game.print({ "tycoon.entrance-removed", removed })
+        game.print({ "profitorio.entrance-removed", removed })
     end
 end
 

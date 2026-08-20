@@ -16,7 +16,7 @@ Run `tools/creat-link.ps1` to create a junction from the Factorio mods folder to
 .\tools\creat-link.ps1
 ```
 
-This creates: `%APPDATA%\Factorio\mods\tycoon_1.0.0` → `./src`
+This creates: `%APPDATA%\Factorio\mods\profitorio_1.0.0` → `./src`
 
 Changes in `src/` are immediately visible to Factorio — no copy step needed.
 
@@ -37,13 +37,13 @@ This launches Factorio with:
 ```
 factorio-hello-world/
 ├── src/                    # The mod (deployed via symlink)
-│   ├── info.json           # Mod metadata (name: "tycoon", version, dependencies)
+│   ├── info.json           # Mod metadata (name: "profitorio", version, dependencies)
 │   ├── data.lua            # Entry point — requires all services
 │   ├── control.lua         # Runtime — single-Entrance limit, starter inventory
 │   ├── services/
 │   │   ├── customers.lua   # Customer tiers, their items and spoil chain (the core)
 │   │   ├── currency.lua    # Re-skins six science packs into currency denominations
-│   │   ├── item_groups.lua # The Tycoon tab and its subgroups
+│   │   ├── item_groups.lua # The Profitorio tab and its subgroups
 │   │   ├── entrance.lua    # The building customers arrive from + customer-new
 │   │   ├── import.lua      # Buy goods with currency + the buy_* price list
 │   │   ├── export.lua      # Deliver to a customer for currency + the payouts
@@ -101,7 +101,7 @@ Settings changes need **`Lua: Restart Server`** from the command palette before 
 
 ## Testing Changes
 
-Always test with **only `base` and `tycoon` enabled**. The mod does not support other mods or the
+Always test with **only `base` and `profitorio` enabled**. The mod does not support other mods or the
 Space Age expansion, so any issue that only reproduces with extra mods enabled is out of scope —
 see [game-design.md](game-design.md#scope-and-non-goals).
 
@@ -151,7 +151,7 @@ notice when a new one ships without a translation.
 
 It also dumps a base-only baseline, so base game internals that have no locale on purpose (projectiles,
 explosions, stickers) stay out of the report, and runs three static checks over `src/locale/`: stale
-keys naming a prototype that no longer exists, `{"tycoon.foo"}` strings in Lua that no `.cfg` defines,
+keys naming a prototype that no longer exists, `{"profitorio.foo"}` strings in Lua that no `.cfg` defines,
 and keys the reference language has but another language is missing.
 
 #### The report must come back empty

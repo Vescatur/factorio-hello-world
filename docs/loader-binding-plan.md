@@ -111,7 +111,7 @@ rots. Lift it verbatim, with the message as a parameter:
 - `refuse.spill(entity)` — spill then destroy, for the sweep and the watch.
 
 Then rewrite `control.lua`'s Entrance path to call `refuse.build(entity, event,
-{"tycoon.entrance-limit"})` and confirm it is behaviourally unchanged **before** touching
+{"profitorio.entrance-limit"})` and confirm it is behaviourally unchanged **before** touching
 anything loader-related.
 
 ## Step 2 — `src/runtime/loader_binding.lua` (replaces `loader_assist.lua`)
@@ -136,7 +136,7 @@ Exports:
   force's ghost validates your loader), matching `name` first and only then `ghost_name`.
 - `bound_direction`, `opposite`, `bind` as above.
 - `binding.on_built(event)` — `bind`, else `refuse.build` with
-  `{"tycoon.loader-needs-machine"}`.
+  `{"profitorio.loader-needs-machine"}`.
 - `binding.on_rebound(event)` — rotate and blueprint-paste. `bind`; if it fails and the
   event carries `previous_direction`, restore that and `bind` again; refuse only if that
   also fails. **Reverting a rotation is a far smaller surprise than confiscating a
@@ -194,16 +194,16 @@ the bound tile cannot move).
 
 `src/locale/en/hello-world.cfg`:
 
-- Add `tycoon.loader-needs-machine` (the refusal flying text) and a sweep summary key.
-- **Delete `tycoon.loader-switched-to-input`** — an orphan referenced nowhere.
+- Add `profitorio.loader-needs-machine` (the refusal flying text) and a sweep summary key.
+- **Delete `profitorio.loader-switched-to-input`** — an orphan referenced nowhere.
   `find-missing-locale.py`'s stale check only inspects `*-name`/`*-description` sections and
-  skips `[tycoon]`, so nothing will ever report it.
+  skips `[profitorio]`, so nothing will ever report it.
 - **Rewrite the three `[entity-description]` lines** for `loader`, `fast-loader` and
   `express-loader`. They currently promise "Loads and unloads a machine continuously"; after
   this change that is false for every machine but two, and a player pays a **Bond** for
   `express-loader` before discovering it by refusal.
 
-Never quote an example `tycoon.*` string inside a comment — `find-missing-locale.py` greps
+Never quote an example `profitorio.*` string inside a comment — `find-missing-locale.py` greps
 for that idiom and reports the example as a missing key.
 
 ## Step 5 — documentation

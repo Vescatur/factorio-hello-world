@@ -22,7 +22,7 @@ for index, denomination in ipairs(denominations) do
     local item = data.raw.item[denomination.pack]
     assert(item, "currency: base game item '" .. denomination.pack .. "' is missing")
 
-    item.icon = "__tycoon__/graphics/icons/" .. denomination.icon .. ".png"
+    item.icon = "__profitorio__/graphics/icons/" .. denomination.icon .. ".png"
     item.icon_size = 64
     item.icons = nil
 
@@ -62,7 +62,7 @@ local _, removed_recipe_count = prototypes.delete_recipes(pack_names)
 for _, denomination in ipairs(denominations) do
     local tech = data.raw.technology[denomination.pack]
     if tech then
-        tech.icon = "__tycoon__/graphics/icons/" .. denomination.icon .. ".png"
+        tech.icon = "__profitorio__/graphics/icons/" .. denomination.icon .. ".png"
         tech.icon_size = 64
         tech.icons = nil
     end

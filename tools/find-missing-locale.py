@@ -18,7 +18,7 @@ only prototypes the mod itself adds. Pass --all to see the base gaps too.
 On top of the prototype check it runs three static checks over src/locale/:
 
   * stale keys      -- locale keys naming a prototype that no longer exists
-  * runtime keys    -- {"tycoon.foo"} strings in Lua with no locale entry
+  * runtime keys    -- {"profitorio.foo"} strings in Lua with no locale entry
   * language parity -- keys present in the reference language, missing in another
 
 Descriptions are optional in Factorio, and several of ours are deliberately
@@ -51,7 +51,7 @@ import tempfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-MOD_NAME = "tycoon"
+MOD_NAME = "profitorio"
 DEFAULT_FACTORIO = r"C:\Program Files (x86)\Steam\steamapps\common\Factorio\bin\x64\factorio.exe"
 REFERENCE_LANGUAGE = "en"
 

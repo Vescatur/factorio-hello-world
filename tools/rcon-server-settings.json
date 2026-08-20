@@ -1,5 +1,5 @@
 {
-  "name": "tycoon-verify",
+  "name": "profitorio-verify",
   "description": "Throwaway server for tools/rcon-server.ps1. Not for play.",
   "tags": [],
   "visibility": { "public": false, "lan": false },

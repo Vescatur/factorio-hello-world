@@ -1,4 +1,4 @@
--- The Tycoon tab and the four subgroups that order its contents.
+-- The Profitorio tab and the four subgroups that order its contents.
 --
 -- These stay together rather than moving next to the module that fills each
 -- one, because the `order` letters only make sense read side by side: the
@@ -9,7 +9,7 @@ data:extend({
         type = "item-group",
         name = "customer-group",
         order = "z",
-        icon = "__tycoon__/graphics/icons/penny.png",
+        icon = "__profitorio__/graphics/icons/penny.png",
         icon_size = 64
     },
     {

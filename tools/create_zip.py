@@ -20,10 +20,10 @@ ZIP_CREATE_SYSTEM = 3  # Unix
 COMPRESS_LEVEL = 9
 
 
-def get_mod_version(base_dir: Path) -> str:
+def get_mod_info(base_dir: Path) -> dict:
     info_path = base_dir / "src" / "info.json"
     with info_path.open("r", encoding="utf-8") as f:
-        return json.load(f)["version"]
+        return json.load(f)
 
 
 def is_binary(blob: bytes) -> bool:
@@ -73,15 +73,18 @@ def create_release_zip():
     export_dir = base_dir / "export"
     export_dir.mkdir(parents=True, exist_ok=True)
 
-    version = get_mod_version(base_dir)
-    zip_filename = f"tycoon_{version}.zip"
+    # The portal and the game both key off info.json: the zip must be named
+    # {name}_{version}, while the folder inside it is unconstrained.
+    mod_info = get_mod_info(base_dir)
+    name, version = mod_info["name"], mod_info["version"]
+    zip_filename = f"{name}_{version}.zip"
     zip_path = export_dir / zip_filename
 
     # Sorted on the archive name, so the entry order comes from the paths alone
     # and not from the order the filesystem happens to hand them back.
     entries = sorted(
         (
-            (Path("tycoon") / p.relative_to(src_dir)).as_posix(),
+            (Path(name) / p.relative_to(src_dir)).as_posix(),
             p.read_bytes(),
         )
         for p in src_dir.rglob("*")
