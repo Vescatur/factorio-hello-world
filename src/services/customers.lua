@@ -9,9 +9,10 @@
 -- See docs/customer-system.md for the ladder and the probability trees.
 local currency = require("services.currency")
 
--- One entry per BAND, not per order; every grade in a band shares a timer. The
--- assertion below the bands table is what catches this list falling behind.
-local spoil_seconds = { 5*60, 4*60, 3*60, 2*60, 60 }
+-- Timers for the two terminal tokens, which are not orders and so carry no
+-- `spoil_seconds` of their own.
+local diamond_spoil_seconds = 60
+local angry_wooden_chest_spoil_seconds = 5 * 60
 
 -- Integers over this total, never decimal chances. 0.1 + 0.2 + 0.7 is
 -- 1.0000000000000002 in IEEE doubles, which fails the sum assertion and, worse,
@@ -33,13 +34,11 @@ local bands = {
     { key = "gold",     currency = currency.gold_bar,    icon = "gold-bar",    licence = currency.technology.gold_bar },
 }
 
-assert(#spoil_seconds >= #bands,
-    "customers: " .. #bands .. " bands but only " .. #spoil_seconds
-        .. " spoil timer(s); every band needs one")
-
 
 -- `band` and `grade` place the order on the ladder; `refund` is a map of
 -- denomination key -> amount and `profit` a plain number in the band's currency.
+-- `spoil_seconds` is this order's own spoil timer, authored per order rather than
+-- shared by band.
 --
 -- `spawn` is whole percent, indexed BY GRADE: `spawn[g]` is the chance a delivery
 -- brings back a grade-`g` customer of the same band, so a row has exactly as many
@@ -55,43 +54,43 @@ assert(#spoil_seconds >= #bands,
 local orders = {
     -- Penny -- wood, stone and iron, all hand-craftable, no research at all.
     { band = 1, grade = 1, item = "burner-inserter",        amount = 2,   refund = { penny = 2 },  profit = 1,
-      spawn = { 80, 20, 0 } },
+      spawn = { 80, 20, 0 }, spoil_seconds = 5 * 60 },
     { band = 1, grade = 2, item = "assembling-machine-1",   amount = 20,  refund = { penny = 30 }, profit = 6,
-      spawn = { 40, 40, 20 } },
+      spawn = { 40, 40, 20 }, spoil_seconds = 30 },
     { band = 1, grade = 3, item = "transport-belt",         amount = 100, refund = { penny = 75 }, profit = 15,
-      spawn = { 60, 20, 0, up = 20 } },
+      spawn = { 60, 20, 0, up = 20 }, spoil_seconds = 30 },
 
     -- Silver -- the first copper, and the first machines built out of it.
     { band = 2, grade = 1, item = "inserter",               amount = 10,  refund = { penny = 20, silver_coin = 2 }, profit = 1,
-      spawn = { 25, 50, 25 } },
+      spawn = { 25, 50, 25 }, spoil_seconds = 30 },
     { band = 2, grade = 2, item = "splitter",               amount = 10,  refund = { penny = 90, silver_coin = 8 }, profit = 2,
-      spawn = { 25, 25, 50 } },
+      spawn = { 25, 25, 50 }, spoil_seconds = 30 },
     { band = 2, grade = 3, item = "assembling-machine-2",   amount = 5,   refund = { penny = 65, silver_coin = 8 }, profit = 2,
-      spawn = { 25, 25, 25, up = 25 } },
+      spawn = { 25, 25, 25, up = 25 }, spoil_seconds = 30 },
 
     -- Banknote -- nothing here exists without coal and crude oil.
     { band = 3, grade = 1, item = "bulk-inserter",          amount = 5,   refund = { penny = 143, silver_coin = 31,  banknote = 1 }, profit = 1,
-      spawn = { 25, 50, 25 } },
+      spawn = { 25, 50, 25 }, spoil_seconds = 30 },
     { band = 3, grade = 2, item = "electric-furnace",       amount = 5,   refund = { penny = 160, silver_coin = 63,  banknote = 8 }, profit = 2,
-      spawn = { 25, 25, 50 } },
+      spawn = { 25, 25, 50 }, spoil_seconds = 30 },
     { band = 3, grade = 3, item = "productivity-module",    amount = 10,  refund = { penny = 75,  silver_coin = 143, banknote = 5 }, profit = 1,
-      spawn = { 25, 25, 25, up = 25 } },
+      spawn = { 25, 25, 25, up = 25 }, spoil_seconds = 30 },
 
     -- Bond -- the robot era.
     { band = 4, grade = 1, item = "construction-robot",     amount = 10,  refund = { penny = 119, silver_coin = 63,  banknote = 34 }, profit = 1,
-      spawn = { 25, 50, 25 } },
+      spawn = { 25, 50, 25 }, spoil_seconds = 30 },
     { band = 4, grade = 2, item = "logistic-robot",         amount = 10,  refund = { penny = 129, silver_coin = 110, banknote = 36 }, profit = 1,
-      spawn = { 25, 25, 50 } },
+      spawn = { 25, 25, 50 }, spoil_seconds = 30 },
     { band = 4, grade = 3, item = "roboport",               amount = 2,   refund = { penny = 405, silver_coin = 225, banknote = 10 }, profit = 1,
-      spawn = { 25, 25, 25, up = 25 } },
+      spawn = { 25, 25, 25, up = 25 }, spoil_seconds = 30 },
 
     -- Gold -- everything here pays a Bond toll of its own to be built at all.
     { band = 5, grade = 1, item = "express-transport-belt", amount = 20,  refund = { penny = 315, silver_coin = 20,  banknote = 4,  bond = 20 }, profit = 1,
-      spawn = { 25, 50, 25 } },
+      spawn = { 25, 50, 25 }, spoil_seconds = 30 },
     { band = 5, grade = 2, item = "beacon",                 amount = 5,   refund = { penny = 275, silver_coin = 268, banknote = 9,  bond = 5 },  profit = 1,
-      spawn = { 25, 25, 50 } },
+      spawn = { 25, 25, 50 }, spoil_seconds = 30 },
     { band = 5, grade = 3, item = "productivity-module-3",  amount = 2,   refund = { penny = 893, silver_coin = 994, banknote = 86, bond = 2 },  profit = 1,
-      spawn = { 25, 25, 25, up = 25 } },
+      spawn = { 25, 25, 25, up = 25 }, spoil_seconds = 30 },
 }
 
 
@@ -284,7 +283,7 @@ data:extend({
             }
         },
         stack_size = 1,
-        spoil_ticks = spoil_seconds[#bands] * 60,
+        spoil_ticks = diamond_spoil_seconds * 60,
         -- By position, not the last row of the table, so reordering rows cannot
         -- silently re-point it.
         spoil_result = item_by_key[at(#bands, top_grade[#bands]).item],
@@ -310,7 +309,7 @@ data:extend({
             }
         },
         stack_size = 1,
-        spoil_ticks = spoil_seconds[1] * 60,
+        spoil_ticks = angry_wooden_chest_spoil_seconds * 60,
         spoil_result = item_by_key.ghost,
     }
 })
@@ -322,6 +321,8 @@ for _, order in ipairs(orders) do
     assert(item_by_key[order.spoils_into],
         "customers: '" .. order.item .. "' spoils into '" .. tostring(order.spoils_into)
             .. "', which is neither an order nor a terminal token")
+    assert(type(order.spoil_seconds) == "number" and order.spoil_seconds > 0,
+        "customers: '" .. order.item .. "' has no positive spoil_seconds")
 
     data:extend({
         {
@@ -342,7 +343,7 @@ for _, order in ipairs(orders) do
                 }
             },
             stack_size = 1,
-            spoil_ticks = spoil_seconds[order.band] * 60,
+            spoil_ticks = order.spoil_seconds * 60,
             spoil_result = item_by_key[order.spoils_into],
         }
     })
