@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 tools/.audit-dumps/
 tools/.verify/
+tools/.secrets/
