@@ -23,4 +23,15 @@ if (Test-Path $link) {
     cmd /c "rmdir `"$link`""
 }
 
+# tools/create_zip.py copies its build in here too. While both exist the folder
+# wins and the zip does nothing -- until the junction goes, and Factorio loads
+# that frozen copy instead without saying so, so edits to src stop taking effect.
+if (Test-Path $mods) {
+    Get-ChildItem -Path $mods -Filter "$($info.name)_*.zip" -File |
+        ForEach-Object {
+            Write-Host "Removing built zip: $($_.Name)"
+            Remove-Item $_.FullName -Force
+        }
+}
+
 cmd /c "mklink /J `"$link`" `"$src`""

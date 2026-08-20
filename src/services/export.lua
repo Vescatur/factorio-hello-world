@@ -180,7 +180,7 @@ for _, order in ipairs(customers.orders) do
             results = results,
             icons = icons,
             categories = { "export" },
-            energy_required = 1,
+            energy_required = 0.1,
             subgroup = "customer-deliver",
             -- Zero-padded so the GUI still sorts a band with ten or more grades:
             -- these strings compare as text, and "10" sorts before "2".

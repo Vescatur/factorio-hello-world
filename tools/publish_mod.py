@@ -6,12 +6,16 @@ at https://factorio.com/profile, and a key holding only one of the two answers
 the other endpoint with Forbidden rather than anything more specific.
 
   python tools/publish_mod.py publish --yes    # create the mod page (once, ever)
-  python tools/publish_mod.py update           # add the current version as a release
+  python tools/publish_mod.py update           # bump the patch version, build, upload
+  python tools/publish_mod.py update --bump minor
+  python tools/publish_mod.py update --version 2.0.0
+  python tools/publish_mod.py update --zip export/profitorio_1.4.2.zip   # as-is
 """
 
 import argparse
 import json
 import os
+import re
 import secrets
 import subprocess
 import sys
@@ -20,6 +24,8 @@ import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
+
+from create_zip import create_release_zip
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 KEY_FILE = BASE_DIR / "tools" / ".secrets" / "mod-portal-api-key"
@@ -55,6 +61,16 @@ DEFAULT_CATEGORY = "overhaul"
 INIT_TIMEOUT = 60
 UPLOAD_TIMEOUT = 600
 
+INFO_PATH = BASE_DIR / "src" / "info.json"
+
+# Factorio's version grammar: exactly three numbers. A two-part or four-part
+# version is refused at load with "Invalid version string", and the portal
+# rejects the release before that.
+VERSION_PATTERN = r"\d+\.\d+\.\d+"
+VERSION_LINE = re.compile(
+    rf'(?P<head>"version"\s*:\s*")(?P<version>{VERSION_PATTERN})(?P<tail>")'
+)
+
 
 def read_api_key() -> str:
     key = os.environ.get(KEY_ENV, "").strip()
@@ -74,8 +90,52 @@ def read_api_key() -> str:
 
 
 def read_info() -> dict:
-    with (BASE_DIR / "src" / "info.json").open(encoding="utf-8") as f:
+    with INFO_PATH.open(encoding="utf-8") as f:
         return json.load(f)
+
+
+def next_version(current: str, part: str) -> str:
+    if not re.fullmatch(VERSION_PATTERN, current):
+        raise SystemExit(
+            f'src/info.json has version "{current}"; expected major.minor.patch.'
+        )
+    major, minor, patch = (int(n) for n in current.split("."))
+    if part == "major":
+        return f"{major + 1}.0.0"
+    if part == "minor":
+        return f"{major}.{minor + 1}.0"
+    return f"{major}.{minor}.{patch + 1}"
+
+
+def write_version(version: str) -> None:
+    """Rewrite just the version string in src/info.json.
+
+    A substitution rather than json.dump: re-serialising reformats the whole
+    file, so every release would carry a diff of unrelated churn. newline="\\n"
+    is what keeps it out of the CRLF trap create_zip.py refuses to build from --
+    on Windows the default would translate every line ending in the file.
+    """
+    text = INFO_PATH.read_text(encoding="utf-8")
+    new_text, count = VERSION_LINE.subn(rf'\g<head>{version}\g<tail>', text, count=1)
+    if count != 1:
+        raise SystemExit(f"No version field found in {INFO_PATH}")
+    INFO_PATH.write_text(new_text, encoding="utf-8", newline="\n")
+
+
+def prepare_release(args: argparse.Namespace) -> dict:
+    """Bump the version if asked, build the zip, and return the fresh info.json."""
+    info = read_info()
+    target = args.version or (
+        None if args.bump == "none" else next_version(info["version"], args.bump)
+    )
+    if target and target != info["version"]:
+        if not re.fullmatch(VERSION_PATTERN, target):
+            raise SystemExit(f"--version must be major.minor.patch, not {target!r}")
+        write_version(target)
+        print(f"Version: {info['version']} -> {target}")
+
+    create_release_zip()
+    return read_info()
 
 
 def git_origin_url() -> str | None:
@@ -188,7 +248,8 @@ def resolve_zip(info: dict, override: str | None) -> Path:
     )
     if not zip_path.exists():
         raise SystemExit(
-            f"No zip at {zip_path}\nBuild it first:  python tools/create_zip.py"
+            f"No zip at {zip_path}\n"
+            "Drop --zip to build one, or point it at an existing archive."
         )
 
     # A zip left from an earlier version uploads without complaint and lands on
@@ -212,7 +273,6 @@ def resolve_zip(info: dict, override: str | None) -> Path:
 
 def cmd_publish(args: argparse.Namespace) -> None:
     info = read_info()
-    zip_path = resolve_zip(info, args.zip)
 
     if args.category not in CATEGORIES:
         raise SystemExit(f"--category must be one of: {', '.join(CATEGORIES[1:])}")
@@ -228,15 +288,21 @@ def cmd_publish(args: argparse.Namespace) -> None:
     if args.description_file:
         fields["description"] = Path(args.description_file).read_text(encoding="utf-8")
 
+    # Gate before prepare_release: without --yes this is a dry run, and building
+    # would uninstall the dev junction for a command that then does nothing.
     if not args.yes:
         raise SystemExit(
             f"This creates the public mod page for '{info['name']}' and cannot be undone.\n"
-            f"  zip:      {zip_path.name}\n"
+            f"  version:  {info['version']}\n"
             f"  category: {fields['category']}\n"
             f"  license:  {fields.get('license', '(unset)')}\n"
             f"  source:   {fields.get('source_url', '(unset)')}\n"
             "Re-run with --yes to go ahead."
         )
+
+    if not args.zip:
+        info = prepare_release(args)
+    zip_path = resolve_zip(info, args.zip)
 
     api_key = read_api_key()
     print(f"Publishing {info['name']} {info['version']} ...")
@@ -248,14 +314,29 @@ def cmd_publish(args: argparse.Namespace) -> None:
 
 
 def cmd_update(args: argparse.Namespace) -> None:
-    info = read_info()
+    api_key = read_api_key()  # before the bump, so a missing key costs nothing
+    info = read_info() if args.zip else prepare_release(args)
     zip_path = resolve_zip(info, args.zip)
-    api_key = read_api_key()
 
     print(f"Uploading {zip_path.name} as a release of {info['name']} ...")
-    init = post_form(INIT_UPLOAD_URL, {"mod": info["name"]}, api_key)
-    post_multipart(init["upload_url"], {}, zip_path)
+    try:
+        init = post_form(INIT_UPLOAD_URL, {"mod": info["name"]}, api_key)
+        post_multipart(init["upload_url"], {}, zip_path)
+    except SystemExit:
+        # The bump is deliberately not rolled back: a failure after the portal
+        # accepted the release looks the same from here, and re-using the version
+        # would then collide. Retrying the same version is the explicit choice.
+        if not args.zip:
+            print(
+                f"src/info.json is at {info['version']} and the zip is built.\n"
+                "Retry that same version with:  --bump none",
+                file=sys.stderr,
+            )
+        raise
+
     print(f"Released {info['version']}: https://mods.factorio.com/mod/{info['name']}")
+    if not args.zip:
+        print("Mods folder now holds the zip -- run tools/creat-link.ps1 for dev mode.")
 
 
 def main() -> None:
@@ -274,13 +355,23 @@ def main() -> None:
     publish.add_argument(
         "--description-file", help="markdown file for the portal description"
     )
-    publish.add_argument("--zip", help="default: export/<name>_<version>.zip")
-    publish.set_defaults(func=cmd_publish)
+    publish.add_argument("--zip", help="upload this zip as-is instead of building")
+    # Creating the page publishes whatever version src/info.json is at; there is
+    # nothing on the portal yet to bump past.
+    publish.set_defaults(func=cmd_publish, bump="none", version=None)
 
     update = subparsers.add_parser(
-        "update", help="upload the current version as a release"
+        "update", help="bump the version, build the zip, upload it as a release"
     )
-    update.add_argument("--zip", help="default: export/<name>_<version>.zip")
+    release = update.add_mutually_exclusive_group()
+    release.add_argument(
+        "--bump",
+        choices=("major", "minor", "patch", "none"),
+        default="patch",
+        help="version part to increment before building (default: patch)",
+    )
+    release.add_argument("--version", help="build this exact version instead of bumping")
+    release.add_argument("--zip", help="upload this zip as-is; no bump, no build")
     update.set_defaults(func=cmd_update)
 
     args = parser.parse_args()

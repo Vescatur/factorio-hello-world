@@ -6,8 +6,9 @@ require("services.remove_electricity")
 require("services.remove_enemies")
 require("services.remove_military")
 require("services.remove_uranium")
--- The one service that puts vanilla content back rather than taking it away.
+-- The two services that put vanilla content back rather than taking it away.
 require("services.loaders")
+require("services.starter_recipes")
 require("services.item_groups")
 require("services.currency")
 require("services.customers")

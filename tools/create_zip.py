@@ -66,8 +66,30 @@ def assert_lf_only(entries):
     )
 
 
+def remove_dev_link(mods_dir: Path, name: str) -> None:
+    """Delete the junction tools/creat-link.ps1 leaves in the mods folder.
+
+    A folder and a zip of the same mod are two copies under one name, and the
+    folder wins: leave the junction there and Factorio ignores the zip, so the
+    release you are about to publish is never the thing that got loaded.
+
+    os.rmdir, never shutil.rmtree -- the junction points at src/, and rmtree
+    follows it and deletes the working tree. A broken junction has no target to
+    stat, so link-ness is checked before anything asks whether it is a directory.
+    """
+    for path in mods_dir.glob(f"{name}_*"):
+        if not (path.is_symlink() or os.path.isjunction(path)):
+            if path.is_dir():
+                print(f"Warning: {path.name} is a real folder, not a link -- "
+                      "Factorio will load it instead of the zip")
+            continue
+
+        os.rmdir(path)
+        print(f"Removed dev link from mods folder: {path.name}")
+
+
 def create_release_zip():
-    """Create a zip file for the mod and copy it into the user's Factorio mods folder."""
+    """Create a zip, copy it into the mods folder, and drop the dev junction there."""
     base_dir = Path(__file__).resolve().parent.parent
     src_dir = base_dir / "src"
     export_dir = base_dir / "export"
@@ -116,6 +138,7 @@ def create_release_zip():
 
     target_path = mods_dir / zip_filename
     shutil.copy2(zip_path, target_path)
+    remove_dev_link(mods_dir, name)
 
     print(f"Successfully created {zip_filename} at {zip_path}")
     print(f"Copied to Factorio mods folder: {target_path}")

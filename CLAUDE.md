@@ -35,6 +35,7 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
   - `services/cost.lua` — Emits no prototypes. Re-solves the recipe graph and asserts the authored refunds still cover what each order costs, so the numbers in `customers.lua` cannot rot silently
   - `services/item_groups.lua` — The Profitorio tab and its subgroup ordering
   - `services/loaders.lua` — The one service that adds rather than removes. Un-hides the three vanilla loaders — entity, item and recipe are all `hidden` in base and no technology names them — **retypes them from `loader` to `loader-1x1`** so they take one tile, and hangs each off the logistics technology that unlocks its belt tier. Attaching them to a technology rather than setting `enabled = true` is what prices them: `tolls.lua` reads the denomination off the unlocking technology, so they cost a Penny, a Silver and a Bond without a line of pricing code. The retype is why there are no new prototypes here — `place_result` and `minable.result` name a prototype, not a type, so the items, recipes and icons carry over untouched
+  - `services/starter_recipes.lua` — Re-costs the penny band's goods onto one bought raw material each: `burner-inserter` onto 10 wood, `assembling-machine-1` onto 5 stone. Both ship `enabled = true`, because a penny order cannot wait on research — every technology sits behind a lab, a lab behind copper, and copper behind the Silver Coin only the penny band mints. `automation` keeps its unlock effect for `assembling-machine-1`: that is where `tolls.lua` reads its Penny toll from
   - `services/remove_ore.lua` — Strips ore/resource generation, deletes the mining drills and pumpjack, stops rocks dropping coal, and prices `oil-processing` in money since its "mine crude oil" trigger can never fire
   - `services/remove_electricity.lua` — Removes electric infrastructure, converts every electric *and burner* energy source to void
   - `services/remove_enemies.lua` — Stops enemies generating and hides them
@@ -43,7 +44,7 @@ See [docs/game-design.md](docs/game-design.md) for full design rationale and Ult
   - `graphics/icons/` — Custom sprites. **Generated from `art/icons/` — edit the SVG, not the PNG.**
   - `locale/en/` — Translations
 - `art/icons/` — Editable SVG sources for the custom sprites. Kept out of `src/` so only shipped assets are symlinked into the mods folder
-- `tools/` — Dev scripts: `creat-link.ps1` (symlink), `run-dev.ps1` (launch), `run-headless.ps1` (headless validation), `find-missing-locale.py` (untranslated prototypes), `factorio-docs-to-md.py` (API docs → markdown), `svg-to-png.py` (icon SVG → PNG), `create_zip.py` (reproducible release zip), `publish_mod.py` (mod portal publish/update — reads the API key from the gitignored `tools/.secrets/mod-portal-api-key`)
+- `tools/` — Dev scripts: `creat-link.ps1` (symlink; also clears any built zip out of the mods folder), `run-dev.ps1` (launch), `run-headless.ps1` (headless validation), `find-missing-locale.py` (untranslated prototypes), `factorio-docs-to-md.py` (API docs → markdown), `svg-to-png.py` (icon SVG → PNG), `create_zip.py` (reproducible release zip; installs it in place of the dev junction), `publish_mod.py` (mod portal publish/update — `update` bumps the version in `src/info.json`, builds the zip and uploads it; reads the API key from the gitignored `tools/.secrets/mod-portal-api-key`)
 - `.claude/skills/verify-in-engine/` — Skill: verify runtime behaviour by driving the real engine (`tools/rcon-server.ps1` + `factorio_rcon.py` for headless, `tools/run-scenario.ps1` for anything needing a player or a screenshot). Assert items moved, never an API readback
 - `factorio-data/` — Base game prototype data. **Read-only reference. Do not modify.**
 - `factorio-docs/markdown/` — Factorio 2.1.14 API reference in markdown. **Generated. Do not edit by hand.**
@@ -122,7 +123,7 @@ entry needs:
 - `item` — the vanilla item ordered. Finished goods only: never ore, plates, gears or circuits
 - `amount` — how many to deliver
 - `refund` — a map of denomination key to amount, e.g. `{ penny = 48, silver_coin = 2 }`. This must cover the **full embedded cost** of `amount × item`, tolls included
-- `profit` — a plain number, paid in the band's own currency
+- `profit` — a plain number, paid in the band's own currency. A design knob like `spawn`, not a consequence of the refund: nothing enforces it. The current table pays a fifth of the refund's line in the band's **own denomination**, rounded up and floored at one coin, so a refund edit is a prompt to re-read this number — but it stays whatever you type
 - `spawn` — who walks in when this order is served, as whole percent **indexed by grade**: `spawn[g]` is the chance of a grade-`g` customer of the same band, plus the named key `up` for the drip to the band above. One number per grade the band has, `0` included, summing to `weight_total` (100)
 
 The spoil chain, the successor list and the band's licence are all **generated** from `band` and
@@ -130,6 +131,12 @@ The spoil chain, the successor list and the band's licence are all **generated**
 order, because they are a design choice rather than a consequence of position. Neither is the refund
 solved at load: author it, and let `cost.lua` tell you if it is short. To get the number, read the
 `[cost]` lines the previous load already logged and round up.
+
+Holding the profit to a fifth of the refund is what makes bands 2, 4 and 5 pay a single coin: their
+goods embed **no coin of their own denomination** at all — nothing on the robot path pays a Bond
+toll — so a fifth of nothing floors at 1. Giving those bands a real margin means either typing a
+bigger number here or tolling something in their recipe tree, which is the choice that ladder is
+still waiting on.
 
 Adding or removing a grade means **every `spawn` row in that band changes length**. A stale row
 fails the load naming the order, the band and both lengths, so this cannot rot silently — but it is

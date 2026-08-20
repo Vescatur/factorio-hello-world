@@ -57,7 +57,7 @@ recipe when money stopped being craftable; dealing in that denomination is what 
 
 ### 1. Customer creation
 
-The `customer-new` recipe produces the entry order — a wooden chest customer — from no ingredients.
+The `customer-new` recipe produces the entry order — a burner inserter customer — from no ingredients.
 It is the seed of the economy, and it only runs in an **Entrance** building.
 
 ### 1a. The Entrance cap
@@ -110,7 +110,7 @@ deliberately a dead end:
 - **no recipe of any kind** — it cannot be served, sold, or voided.
 
 So ghosts only ever accumulate, one stack slot each, for the rest of the save. Failing to serve a
-wooden chest order is not a wash; it leaves permanent litter you have to store or route around.
+burner inserter order is not a wash; it leaves permanent litter you have to store or route around.
 
 A ghost that appears inside a machine's ingredient slot **jams that machine for good**, since no
 recipe will consume it. That is intended, not a bug. Do not "fix" it by giving ghosts a spoil timer
@@ -144,6 +144,12 @@ A delivery hands back the **full embedded cost** of what was delivered: the raw 
 shop's prices, in whichever denomination the shop charges for them, plus every crafting toll buried
 anywhere in the item's recipe tree. Then it pays profit on top, as a separate item. Serving is
 break-even plus margin, never a loss — what an order really costs you is time and floor space.
+
+The margin is authored too, and unlike the refund nothing solves or checks it — it is a tuning
+number, in the same class as the spawn weights. The current table pays a fifth of the refund's line
+**in the band's own denomination**, floored at one coin, which is why a band whose goods embed none
+of its own coin pays that floor: the Bond band pays one Bond, because nothing on the robot path
+carries a Bond toll.
 
 Those numbers are **authored**, not solved at load: literal, diffable, tunable. The risk with
 authored numbers is that they rot, so [`src/services/cost.lua`](../src/services/cost.lua) re-solves
@@ -182,7 +188,7 @@ Four things are exempt, on the principle that you pay to make a *thing*, not to 
   and can strand the oil chain.
 - **recipes with no unlocking technology, or unlocked only by a trigger technology** — which have no
   invoice to read a denomination off. This is what keeps the bootstrap alive: a new game has no money
-  at all, so the wooden chest, the transport belt, the stone furnace and the smelting recipes stay
+  at all, so the burner inserter, the transport belt, the stone furnace and the smelting recipes stay
   free. It falls out of the rule rather than being special-cased.
 
 ## The bootstrap
@@ -191,9 +197,10 @@ This sequence is what every constraint above exists to protect. Verify it after 
 penny band, the shop, or the toll exemptions:
 
 ```
-hand-mined trees (free, finite, not automatable)
-  → wooden chests → serve the entry order → Pennies
-  → buy stone and iron ore → smelt → transport belts, iron chests
+hand-mined trees (free, finite, not automatable), plus 10 burner inserters in the starter kit
+  → burner inserters (10 wood each) → serve the entry order → Pennies
+  → buy wood, and stone for assembling machines → serve the penny middle order → Pennies
+  → buy iron ore → smelt → transport belts
   → serve the penny hard order → Pennies + the first SILVER COIN
   → buy copper ore with Silver → craft 10 copper plate
   → the `electronics` trigger fires → circuits, lab, inserter
