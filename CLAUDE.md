@@ -36,7 +36,7 @@ everything about it — data stage and control stage side by side. `control.lua`
     - `verify_orders.lua` — Emits no prototypes. Re-solves the recipe graph and asserts the authored refunds still cover what each order costs, so the numbers in `orders.lua` cannot rot silently. Runs in `data-updates.lua`, after `prices.lua` and `tolls.lua`
   - `services/economy/money/` — The denomination ladder, and what everything costs
     - `currency.lua` — Re-skins six science packs into currency denominations; also the module the rest of the mod asks for currency item names
-    - `tolls.lua` — Charges a coin to craft. Derives each recipe's denomination from the technology that unlocks it, and owns the exemption list (fluid-only, smelting, barrels, start-enabled). Also puts the Diamond client into the `satellite` recipe
+    - `tolls.lua` — Charges a coin to craft. One row per **vanilla recipe** — every one of them — naming the denomination and how many coins it costs, or `toll = false` for free, grouped by the technology that unlocks it and ordered by the licence that technology invoices. The list must stay complete: a vanilla recipe with no row fails the load by name, so no Factorio update can slip one past the toll booth. It also re-solves the cheapest licence per recipe and logs any row that has drifted off it. Also puts the Diamond client into the `satellite` recipe
   - `services/economy/shop/` — Buying goods, and what a new game opens with
     - `prices.lua` — The `buy_*` price list the Import machine crafts, each good priced in the denomination of the era that needs it. Separate from `import.lua` because it runs a stage later. Returns its `resources` table, which `verify_orders.lua` uses as the solver's seeds
     - `import.lua` — The machine that crafts those `buy_*` recipes, turning currency into goods
@@ -222,6 +222,37 @@ Add an entry to the `resources` table in `services/economy/shop/prices.lua` with
 of the era that needs it, and grow the lot size with the denomination so unit prices stay in the same
 range across the ladder. Changing any price invalidates the authored refunds — `verify_orders.lua` will say
 so at the next load.
+
+### Changing What a Recipe Costs to Craft
+
+Every vanilla recipe has a row in the `tolls` table in `services/economy/money/tolls.lua`, and each row
+states:
+
+- `recipe` — the vanilla recipe name
+- `toll` — the denomination a craft costs (a field from the `currency` module), or `false` for
+  free. Omitting it fails the load; there is no default
+- `amount` — how many of that coin one craft costs, a whole number of at least one. Written out on
+  every tolled row even though every one of them is currently `1`, because it is the knob that
+  makes a recipe expensive without moving it up the ladder. A free row carries no `amount`, and one
+  that does fails the load — that is what a half-finished edit looks like
+
+Rows are grouped by the technology that unlocks the recipe and ordered by the licence that
+technology invoices, so the toll column reads down the file in ladder order. Put a new row in its
+technology's group. A recipe unlocked by several technologies is charged the cheapest of them,
+because that is the one the player actually paid for.
+
+Two load-time checks keep the table honest, and neither replaces the authored value: any vanilla
+recipe with no row fails the load naming it, and every row whose toll no longer matches the licence
+it sits behind is logged as a `[tolls] DRIFT:` line. Nothing solves the `amount` — it is a design
+knob like `profit` in `orders.lua`. Charging a coin, or charging more of one, invalidates the
+authored refunds: `verify_orders.lua` prices the toll at its real amount and fails the load naming
+every order that no longer covers it.
+
+Free is a real answer, not an oversight, so say why beside the row. The four reasons already in the
+table: smelting (a furnace has one ingredient slot, so tolling one makes the item uncraftable
+everywhere — there is an assertion), fluid-only recipes (nowhere to hand a coin to), barrel filling
+and emptying (that taxes logistics, not production), and anything no technology unlocks (the player
+bought no licence, which is what keeps a new game craftable with no money).
 
 ### Currency
 
