@@ -11,7 +11,7 @@
   Palette taken from the same decode:
     fill #F0A63C   outline #2B1A0D   highlight #F2B673   shade #946526
 
-  Rendered by tools/svg-to-png.py at 64x64.
+  Rendered by tools/generate/icons.py at 64x64.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <g stroke="#2B1A0D" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">

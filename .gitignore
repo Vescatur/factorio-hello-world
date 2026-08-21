@@ -3,6 +3,5 @@ tools/profitorio_*.zip
 export/*
 __pycache__/
 *.pyc
-tools/.audit-dumps/
-tools/.verify/
+tools/check/.verify/
 tools/.secrets/

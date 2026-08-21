@@ -7,7 +7,7 @@ generated from. Only the 14 prose pages under `auxiliary/` have no JSON
 representation, so those are converted from HTML.
 
 Usage:
-    python tools/factorio-docs-to-md.py [--src factorio-docs/html] [--out factorio-docs/markdown]
+    python tools/generate/api_docs.py [--src factorio-docs/html] [--out factorio-docs/markdown]
 
 Stdlib only, deterministic, idempotent.
 """
@@ -813,7 +813,7 @@ def write(path: Path, text: str) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    root = Path(__file__).resolve().parent.parent
+    root = Path(__file__).resolve().parents[2]
     ap.add_argument("--src", type=Path, default=root / "factorio-docs" / "html")
     ap.add_argument("--out", type=Path, default=root / "factorio-docs" / "markdown")
     ap.add_argument("--clean", action="store_true", help="wipe the output dir first")
@@ -879,7 +879,7 @@ def main() -> int:
     d.add(f"# Factorio API reference (markdown) — {version}")
     d.add()
     d.add(
-        "Generated from the official API dump by `tools/factorio-docs-to-md.py`. "
+        "Generated from the official API dump by `tools/generate/api_docs.py`. "
         "Do not edit by hand; rerun the script instead."
     )
     d.add()

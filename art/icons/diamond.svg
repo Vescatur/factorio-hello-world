@@ -9,7 +9,7 @@
   Palette:  table #E4F7FD  crown #9FE3F5  pavilion-left #6EC6E0  pavilion-right #4AA6C6
             outline #10323F
 
-  Rendered by tools/svg-to-png.py at 64x64.
+  Rendered by tools/generate/icons.py at 64x64.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <!-- Facets, drawn first; the outline below re-draws the silhouette on top. -->

@@ -8,7 +8,7 @@
 
   Palette:  paper #EDE7F6  ink #6C3FA8  rule #A98FD1  seal #8E2F6B  outline #2A1740
 
-  Rendered by tools/svg-to-png.py at 64x64.
+  Rendered by tools/generate/icons.py at 64x64.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <rect fill="#EDE7F6" stroke="#2A1740" stroke-width="3" x="13" y="8" width="38" height="48" rx="2" />

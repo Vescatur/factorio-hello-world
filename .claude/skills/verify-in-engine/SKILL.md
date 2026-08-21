@@ -5,7 +5,7 @@ description: Verify Profitorio's runtime or data-stage behaviour by driving the 
 
 # Verify in-engine
 
-`tools/run-headless.ps1` answers one question: does the data stage load. It cannot
+`tools/check/prototypes.ps1` answers one question: does the data stage load. It cannot
 tell you whether anything *works*. This skill is for behaviour.
 
 ## The rule
@@ -30,9 +30,9 @@ and guessing wrong costs a round trip through the user.
 
 | What you need | Use |
 | --- | --- |
-| Does the data stage load, no behaviour | `tools/run-headless.ps1` — not this skill |
-| Probe state, run a simulation, count items, inspect a save | **RCON** — `tools/rcon-server.ps1` + `tools/factorio_rcon.py` |
-| A real player: `build_from_cursor`, cursor stack, reach, rotate-by-player | **Scenario** — `tools/run-scenario.ps1` |
+| Does the data stage load, no behaviour | `tools/check/prototypes.ps1` — not this skill |
+| Probe state, run a simulation, count items, inspect a save | **RCON** — `tools/check/probe.ps1` + `tools/check/probe_client.py` |
+| A real player: `build_from_cursor`, cursor stack, reach, rotate-by-player | **Scenario** — `tools/check/player.ps1` |
 | Pixels: screenshots as evidence | **Scenario** — headless renders nothing |
 
 Prefer RCON. It needs no window, starts in ~10s, and takes ad-hoc queries. Reach for
@@ -47,10 +47,10 @@ character."* That is the whole reason the scenario path exists.
 ## RCON
 
 ```
-powershell tools/rcon-server.ps1 -Action start          # serves a COPY of dev.zip
-echo '/silent-command rcon.print(game.tick)' | python tools/factorio_rcon.py
-python tools/factorio_rcon.py < probe.lua              # blocks split on a --- line
-powershell tools/rcon-server.ps1 -Action stop          # not optional; see traps
+powershell tools/check/probe.ps1 -Action start   # serves a COPY of dev.zip
+echo '/silent-command rcon.print(game.tick)' | python tools/check/probe_client.py
+python tools/check/probe_client.py < probe.lua   # blocks split on a --- line
+powershell tools/check/probe.ps1 -Action stop    # not optional; see traps
 ```
 
 Start from `templates/probe.lua` for "how does this actually behave". Measure first,
@@ -59,7 +59,7 @@ then write code against what you measured.
 ## Scenario
 
 ```
-powershell tools/run-scenario.ps1 -Lua <scratchpad>/harness.lua -Scenario verify
+powershell tools/check/player.ps1 -Lua <scratchpad>/harness.lua -Scenario verify
 ```
 
 Start from `templates/harness.lua`. It is phased **build → settle → assert**, and
@@ -99,7 +99,7 @@ Render objects survive save/load, so a demo save keeps its labels.
 
 Reproduce before theorising. Three wrong theories died to one query here:
 
-1. Copy their save, serve the copy: `tools/rcon-server.ps1 -Action start -Save dev.zip`
+1. Copy their save, serve the copy: `tools/check/probe.ps1 -Action start -Save dev.zip`
 2. Enumerate the entities in question **with their real state** — position, direction,
    mode, what they are bound to, what is in each neighbouring tile
 3. Only then explain
@@ -113,19 +113,19 @@ Each of these cost a round trip:
 
 - **One line per command.** The console splits the command name on the first
   whitespace, and a newline counts: multi-line Lua returns `Unknown command
-  "silent-command`. `factorio_rcon.py` flattens blocks for you — so a `--` comment
+  "silent-command`. `probe_client.py` flattens blocks for you — so a `--` comment
   inside one swallows the rest of it.
 - **`--no-auto-pause` is not a flag.** It is `auto_pause: false` in a server-settings
   file. Without it a server with no players never advances a tick, and a harness waits
-  forever for items that cannot move. `tools/rcon-server-settings.json` handles it.
-- **A running server holds the lock file.** `run-headless.ps1` then fails with
+  forever for items that cannot move. `tools/check/probe-settings.json` handles it.
+- **A running server holds the lock file.** `prototypes.ps1` then fails with
   `Couldn't create lock file`, which reads exactly like a mod error. Always stop.
 - **Headless renders nothing.** `take_screenshot` silently does nothing there.
 - **Launch the client through Steam, never `factorio.exe` directly.** Direct launch
   raises a confirmation dialog no script can answer, and the run then comes up unable
   to see its own scenario — `Scenario ... not found` for a directory that is plainly
-  on disk. Hours can go into that false trail. `tools/run-scenario.ps1` and
-  `tools/run-dev.ps1` both go through `steam.exe -applaunch 427520`, which passes
+  on disk. Hours can go into that false trail. `tools/check/player.ps1` and
+  `tools/run/playtest.ps1` both go through `steam.exe -applaunch 427520`, which passes
   trailing arguments through without asking. Headless (`--start-server`) is fine
   launched directly — no dialog, and it needs stdout redirection Steam cannot give.
 - **Steam gives you no process handle.** Clean up by killing only the `factorio`
@@ -146,6 +146,6 @@ Each of these cost a round trip:
 
 ## Clean up
 
-Delete the scenario directory (`run-scenario.ps1` does unless `-Keep`), the
+Delete the scenario directory (`player.ps1` does unless `-Keep`), the
 `script-output/<scenario>` artefacts, and any save copy (`-Action stop` does).
 Nothing of yours stays in the user's saves folder.

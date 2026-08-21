@@ -7,7 +7,7 @@
   the same family in an item list. Only the silhouette (dome head, wavy hem) and
   the pale spectral fill say "this one is gone".
 
-  Rendered by tools/svg-to-png.py at 64x64.
+  Rendered by tools/generate/icons.py at 64x64.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <path fill="#DCE6EC" stroke="#2B1A0D" stroke-width="3" stroke-linejoin="round"

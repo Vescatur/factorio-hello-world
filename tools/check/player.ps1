@@ -3,7 +3,7 @@
 # Takes parameters, unlike the other scripts here, because it is a runner rather
 # than a single fixed job.
 #
-# The headless server (tools/rcon-server.ps1) is the cheaper way to ask the game
+# The headless server (tools/check/probe.ps1) is the cheaper way to ask the game
 # questions and should be preferred. This exists for the two things it cannot do:
 #
 #   * a real player. build_from_cursor, the cursor stack, build/reach distance and
@@ -16,7 +16,7 @@
 #   * rendering. game.take_screenshot silently does nothing headless, so visual
 #     evidence has to come from the client.
 #
-# Launch goes through STEAM, exactly like tools/run-dev.ps1. Running factorio.exe
+# Launch goes through STEAM, exactly like tools/run/playtest.ps1. Running factorio.exe
 # directly raises a confirmation dialog no script can answer, and the run then
 # comes up unable to see the scenario at all -- "Scenario ... not found" for a
 # directory that is plainly on disk, which sends you hunting the wrong bug. Steam
@@ -47,7 +47,7 @@ if (-not (Test-Path $Lua)) { Write-Error "Harness not found at: $Lua"; exit 1 }
 # Both processes want the same user data directory, and the loser reports a lock
 # file problem rather than a conflict.
 if (Test-Path $stateFile) {
-    Write-Error "A verification server is running. Run tools/rcon-server.ps1 -Action stop first."
+    Write-Error "A verification server is running. Run tools/check/probe.ps1 -Action stop first."
     exit 1
 }
 

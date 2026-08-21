@@ -4,16 +4,16 @@
         {
             "type": "PowerShell",
             "request": "launch",
-            "name": "Run Factorio",
-            "script": "${workspaceFolder}/tools/run-dev.ps1",
+            "name": "Playtest",
+            "script": "${workspaceFolder}/tools/run/playtest.ps1",
             "args": [],
             "cwd": "${workspaceFolder}"
         },
         {
             "type": "PowerShell",
             "request": "launch",
-            "name": "Run Headless Factorio",
-            "script": "${workspaceFolder}/tools/run-headless.ps1",
+            "name": "Check prototypes",
+            "script": "${workspaceFolder}/tools/check/prototypes.ps1",
             "args": [],
             "cwd": "${workspaceFolder}"
         }

@@ -6,11 +6,11 @@ which is what gets symlinked into the Factorio mods folder. Every icon the mod
 declares at `icon_size = 64` is produced here, so re-run after editing any SVG.
 
 Usage:
-    python tools/svg-to-png.py --all
-    python tools/svg-to-png.py art/icons/ghost.svg
-    python tools/svg-to-png.py art/icons/ghost.svg --out /tmp/preview.png --size 128
+    python tools/generate/icons.py --all
+    python tools/generate/icons.py art/icons/ghost.svg
+    python tools/generate/icons.py art/icons/ghost.svg --out /tmp/preview.png --size 128
 
-Requires resvg-py (see tools/requirements.txt). Deterministic and idempotent.
+Requires resvg-py (see tools/setup/requirements.txt). Deterministic and idempotent.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ import struct
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SVG_DIR = REPO_ROOT / "art" / "icons"
 PNG_DIR = REPO_ROOT / "src" / "graphics" / "icons"
 
@@ -34,7 +34,7 @@ def load_renderer():
     except ImportError:
         sys.exit(
             "resvg-py is not installed. Run:\n"
-            "    pip install -r tools/requirements.txt"
+            "    pip install -r tools/setup/requirements.txt"
         )
     return resvg_py
 

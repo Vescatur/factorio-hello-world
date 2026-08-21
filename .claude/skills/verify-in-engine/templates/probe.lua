@@ -7,12 +7,12 @@
 -- documented 0 crashes the game at TransportLine.cpp:891.
 --
 -- Run over RCON -- no player and no rendering needed:
---   powershell tools/rcon-server.ps1 -Action start
---   python tools/factorio_rcon.py < probe.lua
---   powershell tools/rcon-server.ps1 -Action stop
+--   powershell tools/check/probe.ps1 -Action start
+--   python tools/check/probe_client.py < probe.lua
+--   powershell tools/check/probe.ps1 -Action stop
 --
 -- ONE LINE ONLY. The console splits the command name on the first whitespace, so
--- factorio_rcon.py flattens this whole block into one line before sending it. It
+-- probe_client.py flattens this whole block into one line before sending it. It
 -- drops whole-line comments on the way -- these ones included -- so comment freely,
 -- but never TRAILING a statement: that would comment out everything after it, and
 -- no statement may depend on a line break.

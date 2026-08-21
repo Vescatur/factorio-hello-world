@@ -5,11 +5,11 @@ Two separate APIs behind two separate key scopes: `publish` needs a key with
 at https://factorio.com/profile, and a key holding only one of the two answers
 the other endpoint with Forbidden rather than anything more specific.
 
-  python tools/publish_mod.py publish --yes    # create the mod page (once, ever)
-  python tools/publish_mod.py update           # bump the patch version, build, upload
-  python tools/publish_mod.py update --bump minor
-  python tools/publish_mod.py update --version 2.0.0
-  python tools/publish_mod.py update --zip export/profitorio_1.4.2.zip   # as-is
+  python tools/release/publish.py publish --yes    # create the mod page (once, ever)
+  python tools/release/publish.py update           # bump the patch version, build, upload
+  python tools/release/publish.py update --bump minor
+  python tools/release/publish.py update --version 2.0.0
+  python tools/release/publish.py update --zip export/profitorio_1.4.2.zip   # as-is
 """
 
 import argparse
@@ -25,9 +25,9 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from create_zip import create_release_zip
+from zip import create_release_zip
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 KEY_FILE = BASE_DIR / "tools" / ".secrets" / "mod-portal-api-key"
 KEY_ENV = "FACTORIO_API_KEY"
 
@@ -112,7 +112,7 @@ def write_version(version: str) -> None:
 
     A substitution rather than json.dump: re-serialising reformats the whole
     file, so every release would carry a diff of unrelated churn. newline="\\n"
-    is what keeps it out of the CRLF trap create_zip.py refuses to build from --
+    is what keeps it out of the CRLF trap zip.py refuses to build from --
     on Windows the default would translate every line ending in the file.
     """
     text = INFO_PATH.read_text(encoding="utf-8")
@@ -266,7 +266,7 @@ def resolve_zip(info: dict, override: str | None) -> Path:
         raise SystemExit(
             f"{zip_path.name} contains {packed['name']} {packed['version']}, "
             f"but src/info.json says {name} {version}.\n"
-            "Rebuild it:  python tools/create_zip.py"
+            "Rebuild it:  python tools/release/zip.py"
         )
     return zip_path
 
@@ -336,7 +336,7 @@ def cmd_update(args: argparse.Namespace) -> None:
 
     print(f"Released {info['version']}: https://mods.factorio.com/mod/{info['name']}")
     if not args.zip:
-        print("Mods folder now holds the zip -- run tools/creat-link.ps1 for dev mode.")
+        print("Mods folder now holds the zip -- run tools/setup/dev-mode.ps1 for dev mode.")
 
 
 def main() -> None:

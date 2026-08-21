@@ -27,11 +27,11 @@ imports. Those live in INTENTIONALLY_UNDESCRIBED below and are filtered out, so
 the advisory list stays at zero and means something when it is not.
 
 Usage:
-    python tools/find-missing-locale.py             # full check, runs Factorio
-    python tools/find-missing-locale.py --skip-dump # reuse the cached dumps
-    python tools/find-missing-locale.py --all       # include base game gaps
-    python tools/find-missing-locale.py --show-suppressed  # list what is filtered
-    python tools/find-missing-locale.py --json      # machine-readable report
+    python tools/check/translations.py             # full check, runs Factorio
+    python tools/check/translations.py --skip-dump # reuse the cached dumps
+    python tools/check/translations.py --all       # include base game gaps
+    python tools/check/translations.py --show-suppressed  # list what is filtered
+    python tools/check/translations.py --json      # machine-readable report
 
 Exit codes: 0 clean, 1 missing translations found, 2 the check could not run.
 """
@@ -50,7 +50,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 MOD_NAME = "profitorio"
 DEFAULT_FACTORIO = r"C:\Program Files (x86)\Steam\steamapps\common\Factorio\bin\x64\factorio.exe"
 REFERENCE_LANGUAGE = "en"
@@ -213,7 +213,7 @@ def load_type_categories() -> dict[str, str | None]:
     if not docs.is_dir():
         raise CheckError(
             f"API docs not found at {docs}. Regenerate them with "
-            "python tools/factorio-docs-to-md.py --clean"
+            "python tools/generate/api_docs.py --clean"
         )
 
     parent: dict[str, str] = {}

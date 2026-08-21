@@ -1,7 +1,7 @@
 -- TEMPLATE: a phased harness that asserts items actually moved.
 --
 -- Copy to the scratchpad, fill in RIGS, run with:
---   powershell tools/run-scenario.ps1 -Lua <path> -Scenario verify
+--   powershell tools/check/player.ps1 -Lua <path> -Scenario verify
 --
 -- The phases are the point. A build and its verdict CANNOT share a tick: an
 -- entity resolves its connections on its first update, so loader_container, belt

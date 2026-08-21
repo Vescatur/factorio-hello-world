@@ -8,7 +8,7 @@
 
   Palette:  top #FFD764  front #E8A825  side #C4870F  outline #4A2E06
 
-  Rendered by tools/svg-to-png.py at 64x64.
+  Rendered by tools/generate/icons.py at 64x64.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <g stroke="#4A2E06" stroke-width="3" stroke-linejoin="round">

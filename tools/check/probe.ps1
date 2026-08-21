@@ -1,4 +1,4 @@
-# Start or stop a throwaway Factorio server with RCON open, for tools/factorio_rcon.py.
+# Start or stop a throwaway Factorio server with RCON open, for tools/check/probe_client.py.
 #
 # Takes parameters, unlike the other scripts here, because it is a runner rather
 # than a single fixed job.
@@ -11,16 +11,16 @@
 # when you get them wrong:
 #
 #   * `--no-auto-pause` is not a command-line flag. Auto-pause lives in a
-#     server-settings file (tools/rcon-server-settings.json), and without
+#     server-settings file (tools/check/probe-settings.json), and without
 #     `auto_pause: false` a server with no players connected never advances a
 #     tick -- a harness then builds its rig and waits forever for items that
 #     cannot move.
 #
-#   * a running server holds Factorio's lock file, so tools/run-headless.ps1
+#   * a running server holds Factorio's lock file, so tools/check/prototypes.ps1
 #     fails with "Couldn't create lock file" and reads exactly like a mod error.
 #     Always -Action stop when finished.
 
-# Unlike tools/run-scenario.ps1 this launches factorio.exe directly rather than
+# Unlike tools/check/player.ps1 this launches factorio.exe directly rather than
 # through Steam: --start-server raises no confirmation dialog, and stdout has to be
 # redirected to watch for the RCON port opening, which a Steam launch cannot do.
 
@@ -36,7 +36,7 @@ $savesDir    = Join-Path $env:APPDATA "Factorio\saves"
 $stateDir    = Join-Path $PSScriptRoot ".verify"
 $stateFile   = Join-Path $stateDir "rcon.json"
 $logFile     = Join-Path $stateDir "server-stdout.txt"
-$settings    = Join-Path $PSScriptRoot "rcon-server-settings.json"
+$settings    = Join-Path $PSScriptRoot "probe-settings.json"
 
 function Stop-Server {
     if (-not (Test-Path $stateFile)) {
@@ -115,5 +115,5 @@ if (-not $ready) {
     ConvertTo-Json | Set-Content $stateFile -Encoding utf8
 
 Write-Host "Server up on 127.0.0.1:$Port serving $copy (pid $($process.Id))."
-Write-Host "Drive it with: python tools/factorio_rcon.py"
-Write-Host "Stop it with:  powershell tools/rcon-server.ps1 -Action stop"
+Write-Host "Drive it with: python tools/check/probe_client.py"
+Write-Host "Stop it with:  powershell tools/check/probe.ps1 -Action stop"

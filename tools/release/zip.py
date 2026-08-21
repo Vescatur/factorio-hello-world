@@ -67,7 +67,7 @@ def assert_lf_only(entries):
 
 
 def remove_dev_link(mods_dir: Path, name: str) -> None:
-    """Delete the junction tools/creat-link.ps1 leaves in the mods folder.
+    """Delete the junction tools/setup/dev-mode.ps1 leaves in the mods folder.
 
     A folder and a zip of the same mod are two copies under one name, and the
     folder wins: leave the junction there and Factorio ignores the zip, so the
@@ -90,7 +90,7 @@ def remove_dev_link(mods_dir: Path, name: str) -> None:
 
 def create_release_zip():
     """Create a zip, copy it into the mods folder, and drop the dev junction there."""
-    base_dir = Path(__file__).resolve().parent.parent
+    base_dir = Path(__file__).resolve().parents[2]
     src_dir = base_dir / "src"
     export_dir = base_dir / "export"
     export_dir.mkdir(parents=True, exist_ok=True)

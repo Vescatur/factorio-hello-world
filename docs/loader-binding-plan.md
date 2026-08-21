@@ -68,7 +68,7 @@ a valid neighbour, or roughly half of all bot-built blueprints lose their loader
 ghosts is only safe if a ghost cannot quietly disappear from under the loader.
 
 Write one scenario harness (`.claude/skills/verify-in-engine/templates/harness.lua` as the
-base, run with `tools/run-scenario.ps1`) that measures five things and writes `probe.txt`.
+base, run with `tools/check/player.ps1`) that measures five things and writes `probe.txt`.
 A scenario rather than RCON because two of these need `script.on_event` and a real cursor:
 
 | | Question | Why it decides something |
@@ -196,14 +196,14 @@ the bound tile cannot move).
 
 - Add `profitorio.loader-needs-machine` (the refusal flying text) and a sweep summary key.
 - **Delete `profitorio.loader-switched-to-input`** — an orphan referenced nowhere.
-  `find-missing-locale.py`'s stale check only inspects `*-name`/`*-description` sections and
+  `translations.py`'s stale check only inspects `*-name`/`*-description` sections and
   skips `[profitorio]`, so nothing will ever report it.
 - **Rewrite the three `[entity-description]` lines** for `loader`, `fast-loader` and
   `express-loader`. They currently promise "Loads and unloads a machine continuously"; after
   this change that is false for every machine but two, and a player pays a **Bond** for
   `express-loader` before discovering it by refusal.
 
-Never quote an example `profitorio.*` string inside a comment — `find-missing-locale.py` greps
+Never quote an example `profitorio.*` string inside a comment — `translations.py` greps
 for that idiom and reports the example as a missing key.
 
 ## Step 5 — documentation
@@ -226,10 +226,10 @@ for that idiom and reports the example as a missing key.
 
 ## Verification
 
-`.\tools\run-headless.ps1` and `python tools\find-missing-locale.py` (must print only its
+`.\tools\check\prototypes.ps1` and `python tools\check\translations.py` (must print only its
 `OK:` line) prove it loads, not that it works. The Problems panel stays empty.
 
-Behaviour goes through `tools/run-scenario.ps1` with the phased build → settle → assert
+Behaviour goes through `tools/check/player.ps1` with the phased build → settle → assert
 harness, because a hand placement needs `build_from_cursor` and a binding reads nil on the
 tick it was created. Every rig returns **a count of items that moved or were refunded** —
 never a `loader_type` readback. Rigs, each `expect` the smallest count that means it works:
@@ -255,10 +255,10 @@ never a `loader_type` readback. Rigs, each `expect` the smallest count that mean
 11. Rotate a working loader with `rotate{by_player = player}`: assert items still move.
 12. Upgrade planner `loader` → `fast-loader`: assert items still move.
 
-Then run the whole thing once against a copy of `dev.zip` (`tools/rcon-server.ps1 -Action
+Then run the whole thing once against a copy of `dev.zip` (`tools/check/probe.ps1 -Action
 start -Save dev.zip`) so the Step 3 sweep is exercised on the real loaders-next-to-chests it
 exists for. Never inspect the save in place. Stop the server afterwards — a running one holds
-the lock file and `run-headless.ps1` then fails with something that reads like a mod error.
+the lock file and `prototypes.ps1` then fails with something that reads like a mod error.
 
 Note for whoever writes the rigs: `surface.create_entity` does **not** raise
 `script_raised_built` unless `raise_built = true`, so a rig that script-creates the loader

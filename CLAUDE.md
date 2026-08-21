@@ -55,8 +55,13 @@ everything about it — data stage and control stage side by side. `control.lua`
   - `graphics/icons/` — Custom sprites. **Generated from `art/icons/` — edit the SVG, not the PNG.**
   - `locale/en/` — Translations
 - `art/icons/` — Editable SVG sources for the custom sprites. Kept out of `src/` so only shipped assets are symlinked into the mods folder
-- `tools/` — Dev scripts: `creat-link.ps1` (symlink; also clears any built zip out of the mods folder), `run-dev.ps1` (launch), `run-headless.ps1` (headless validation), `find-missing-locale.py` (untranslated prototypes), `factorio-docs-to-md.py` (API docs → markdown), `svg-to-png.py` (icon SVG → PNG), `create_zip.py` (reproducible release zip; installs it in place of the dev junction), `publish_mod.py` (mod portal publish/update — `update` bumps the version in `src/info.json`, builds the zip and uploads it; reads the API key from the gitignored `tools/.secrets/mod-portal-api-key`)
-- `.claude/skills/verify-in-engine/` — Skill: verify runtime behaviour by driving the real engine (`tools/rcon-server.ps1` + `factorio_rcon.py` for headless, `tools/run-scenario.ps1` for anything needing a player or a screenshot). Assert items moved, never an API readback
+- `tools/` — Dev scripts, grouped by what you are trying to do rather than by what they use. Every folder carries a README
+  - `setup/` — `dev-mode.ps1` (junctions `src/` into the mods folder, and clears any built zip out of it), `requirements.txt` (the one pip dependency, needed by `generate/icons.py`)
+  - `run/` — `playtest.ps1`, the only script whose job is just to start the game
+  - `check/` — Every way of verifying the mod, cheapest first: `prototypes.ps1` (does the data stage load), `translations.py` (untranslated prototypes), then `probe.ps1` + `probe_client.py` (headless server on a **copy** of a save) and `player.ps1` (the real client, for anything needing a cursor or a screenshot). A running `probe.ps1` holds Factorio's lock file, so `prototypes.ps1` then fails with something that reads exactly like a mod error
+  - `generate/` — `icons.py` (icon SVG → PNG), `api_docs.py` (API docs → markdown)
+  - `release/` — `zip.py` (reproducible release zip; installs it in place of the dev junction, so `setup/dev-mode.ps1` is how you get back), `publish.py` (mod portal publish/update — `update` bumps the version in `src/info.json`, builds the zip and uploads it; reads the API key from the gitignored `tools/.secrets/mod-portal-api-key`)
+- `.claude/skills/verify-in-engine/` — Skill: verify runtime behaviour by driving the real engine (`tools/check/probe.ps1` + `probe_client.py` for headless, `tools/check/player.ps1` for anything needing a player or a screenshot). Assert items moved, never an API readback
 - `factorio-data/` — Base game prototype data. **Read-only reference. Do not modify.**
 - `factorio-docs/markdown/` — Factorio 2.1.14 API reference in markdown. **Generated. Do not edit by hand.**
 - `docs/` — Detailed documentation
@@ -64,7 +69,7 @@ everything about it — data stage and control stage side by side. `control.lua`
 ## API Reference
 
 `factorio-docs/markdown/` holds the full Factorio 2.1.14 API (1880 files, ~9 MB), generated from the
-official API dump by `tools/factorio-docs-to-md.py`.
+official API dump by `tools/generate/api_docs.py`.
 
 **It is far too large to read in full — navigate it, never load it:**
 
@@ -81,7 +86,7 @@ official API dump by `tools/factorio-docs-to-md.py`.
 | Prose guides (data lifecycle, mod structure, migrations) | `auxiliary/` |
 
 To regenerate (e.g. after a Factorio update), re-download the docs bundle into `factorio-docs/html/`
-(gitignored) and run `python tools/factorio-docs-to-md.py --clean`. It verifies its own output and
+(gitignored) and run `python tools/generate/api_docs.py --clean`. It verifies its own output and
 fails on any broken internal link.
 
 ## Key Conventions
@@ -160,7 +165,7 @@ order's `is_top` rather than assuming a band ends at grade 3.
 
 Nothing generates locale, so add `item-name.customer_<item>`,
 `item-description.customer_<item>` and `recipe-name.customer_<item>_deliver` to
-`src/locale/en/hello-world.cfg`, then run `python tools/find-missing-locale.py` to confirm nothing
+`src/locale/en/hello-world.cfg`, then run `python tools/check/translations.py` to confirm nothing
 else is untranslated.
 
 **The penny band is special.** Its orders must be craftable from recipes that are enabled at game
@@ -169,8 +174,8 @@ band's own hard order. Anything else deadlocks a new game.
 
 ### Adding or Editing an Icon
 
-Edit the SVG in `art/icons/`, then run `python tools/svg-to-png.py --all` to regenerate
-`src/graphics/icons/`. Needs `pip install -r tools/requirements.txt` once. Never hand-edit the PNGs —
+Edit the SVG in `art/icons/`, then run `python tools/generate/icons.py --all` to regenerate
+`src/graphics/icons/`. Needs `pip install -r tools/setup/requirements.txt` once. Never hand-edit the PNGs —
 they are build output and get overwritten.
 
 ### Adding a Purchasable Resource
@@ -239,20 +244,20 @@ still resolve. Radar is deliberately kept craftable: `satellite` needs five of t
 - **Only one Entrance may exist** — it's the sole source of customers, so its count is what bounds the whole economy. `services/economy/customers/entrance_limit.lua` refuses extra placements, registered from `src/control.lua`. Retune throughput via `energy_required` on `customer-new` or the Entrance's `crafting_speed` — both in `services/economy/customers/entrance.lua` — never by allowing more buildings. A satellite launch is the one other place a customer leaves the population: it consumes its Diamond client and emits no successor
 - **Money is earned, never crafted** — the science pack recipes are deleted, not hidden, because red and green are craftable from purchased plates and would let the factory print its own money. Never restore a recipe that produces a currency item, and never add an exchange recipe between denominations: what a customer pays is what gates the tier of research you can afford
 - **Ghosts are a permanent dead end** — `customer_ghost` has no spoil timer and no recipe, on purpose. It piles up forever, and one spoiling inside a machine's ingredient slot jams that machine for good. That hazard is the challenge; never add a spoil timer, disposal recipe, or any other way to get rid of ghosts
-- **Mod internal name is `profitorio`** — referenced in paths, icon prefixes (`__profitorio__`), the symlink, and the `[profitorio]` locale namespace. `creat-link.ps1` and `create_zip.py` read it from `src/info.json` rather than hardcoding it, so a rename follows that file
+- **Mod internal name is `profitorio`** — referenced in paths, icon prefixes (`__profitorio__`), the symlink, and the `[profitorio]` locale namespace. `dev-mode.ps1` and `zip.py` read it from `src/info.json` rather than hardcoding it, so a rename follows that file
 - **Target Factorio version: 2.1** — uses features not available in earlier versions
 - **Never depend on Space Age** — base game only; don't reference Space Age prototypes or add it to `dependencies`
 - **Never add mod-compatibility code** — no soft dependencies, no `if mods["..."]` branches, no shims for other mods
 - **Comments say what the code cannot** — engine constraints that fail silently, deliberate absences, and short local "why" notes. Never design rationale (that lives here or in `docs/`), never history, never a restatement of the next line. Put the note beside the code it guards rather than in the file header, and prefer an assertion message that both documents and enforces. See [Comments](#comments)
-- **Always validate after changes** — run `.\tools\run-headless.ps1` after any mod file change to catch prototype errors before committing, and `python tools\find-missing-locale.py` after adding or renaming any prototype
-- **Leave the locale report empty** — `find-missing-locale.py` must print only its `OK:` line, advisories included. Clear every entry one of two ways: write the description in `src/locale/en/hello-world.cfg`, or, when the name already says everything, paste the reported line into `INTENTIONALLY_UNDESCRIBED` in `tools/find-missing-locale.py` under the comment group that explains why (`*` globs, for prototypes generated in a loop). Never suppress a missing *name* — those render as `Unknown key` in game. See [docs/dev-setup.md](docs/dev-setup.md#the-report-must-come-back-empty)
+- **Always validate after changes** — run `.\tools\check\prototypes.ps1` after any mod file change to catch prototype errors before committing, and `python tools\check\translations.py` after adding or renaming any prototype
+- **Leave the locale report empty** — `translations.py` must print only its `OK:` line, advisories included. Clear every entry one of two ways: write the description in `src/locale/en/hello-world.cfg`, or, when the name already says everything, paste the reported line into `INTENTIONALLY_UNDESCRIBED` in `tools/check/translations.py` under the comment group that explains why (`*` globs, for prototypes generated in a loop). Never suppress a missing *name* — those render as `Unknown key` in game. See [docs/dev-setup.md](docs/dev-setup.md#the-report-must-come-back-empty)
 - **Leave the VSCode Problems panel empty** — zero entries, so the next one that appears is worth reading. Fix the code, or, when the bundled Factorio type definitions are wrong (they mark optional fields required — check `factorio-docs/markdown/types/` and vanilla's own usage before believing a warning), suppress that one line with `---@diagnostic disable-next-line: <code>` and a comment saying why. Never disable a rule file-wide or workspace-wide. See [docs/dev-setup.md](docs/dev-setup.md#the-problems-panel-must-stay-empty)
 
 ## Dev Setup
 
 See [docs/dev-setup.md](docs/dev-setup.md). Quick start:
-1. `.\tools\creat-link.ps1` — symlink `src/` into Factorio mods
-2. `.\tools\run-dev.ps1` — launch Factorio with dev save
+1. `.\tools\setup\dev-mode.ps1` — symlink `src/` into Factorio mods
+2. `.\tools\run\playtest.ps1` — launch Factorio with dev save
 
 ## Further Reading
 

@@ -7,10 +7,10 @@
       "PowerShell(git *)",
       "Bash(python *)",
       "PowerShell(python *)",
-      "Bash(./tools/*)",
+      "Bash(./tools/**)",
       "Bash(powershell *)",
-      "PowerShell(.\\tools\\*)",
-      "PowerShell(& .\\tools\\*)",
+      "PowerShell(.\\tools\\**)",
+      "PowerShell(& .\\tools\\**)",
       "PowerShell(Get-ChildItem *)",
       "PowerShell(Get-Process *)",
       "PowerShell(Get-CimInstance *)",
@@ -32,7 +32,6 @@
       "Bash(awk '/^### Empty gate/,0' docs/prototype-audit.md)",
       "Bash(grep -oP '^\\\\| `\\\\K[^`]+')",
       "Bash(python -c ' *)",
-      "Bash(cp audit3.py /c/Users/Ivan/Documents/Develop/factorio/factorio-hello-world/tools/build-prototype-audit.py)",
       "PowerShell(Get-Item *)"
     ],
     "defaultMode": "auto"
@@ -41,7 +40,7 @@
     "allow": [
       "$defaults",
       "Reading anything under the Steam Factorio install, factorio-data/, or factorio-docs/",
-      "Running this project's tooling: tools/*.ps1 and tools/*.py — headless validation, locale checking, icon generation, symlink setup",
+      "Running this project's tooling under tools/ — setup/ (dev-mode junction), run/ (playtest), check/ (prototypes, translations, probe, player), generate/ (icons, api_docs), release/ (zip, publish)",
       "Launching factorio.exe for headless validation or --dump-data",
       "Read-only shell inspection: Get-*, Measure-Object, Test-Path pipelines, and parsing the JSON under %APPDATA%/Factorio/script-output",
       "Deleting or regenerating build output: src/graphics/icons, tools/profitorio_*.zip, factorio-docs/html, and the scratchpad directory",

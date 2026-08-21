@@ -8,7 +8,7 @@
 
   Palette:  paper #4E8FC0  print #2C6289  panel #DCEAF5  outline #17364C
 
-  Rendered by tools/svg-to-png.py at 64x64.
+  Rendered by tools/generate/icons.py at 64x64.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <g transform="rotate(-9 32 32)">

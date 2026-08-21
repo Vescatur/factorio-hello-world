@@ -88,7 +88,7 @@ function limit.adopt()
         -- vararg: every parameter after the key mismatches whatever its type is, so
         -- there is no spelling of this call that satisfies it. A number is legal here.
         --
-        -- Never quote an example localised string in a comment: find-missing-locale.py
+        -- Never quote an example localised string in a comment: translations.py
         -- greps the source for that idiom and reports the example as a missing key.
         ---@diagnostic disable-next-line: assign-type-mismatch
         game.print({ "profitorio.entrance-removed", removed })

@@ -5,7 +5,7 @@
 # a folder that does not exist, and Factorio then loads without the mod at all,
 # which looks exactly like a clean run.
 
-$src = Join-Path (Split-Path $PSScriptRoot -Parent) "src"
+$src = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "src"
 
 if (-not (Test-Path $src)) {
     Write-Error "Mod source not found at: $src"
@@ -23,7 +23,7 @@ if (Test-Path $link) {
     cmd /c "rmdir `"$link`""
 }
 
-# tools/create_zip.py copies its build in here too. While both exist the folder
+# tools/release/zip.py copies its build in here too. While both exist the folder
 # wins and the zip does nothing -- until the junction goes, and Factorio loads
 # that frozen copy instead without saying so, so edits to src stop taking effect.
 if (Test-Path $mods) {

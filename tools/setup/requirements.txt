@@ -1,7 +1,7 @@
-# Dependencies for tools/svg-to-png.py.
-#   pip install -r tools/requirements.txt
+# Dependencies for tools/generate/icons.py.
+#   pip install -r tools/setup/requirements.txt
 #
 # resvg-py ships an abi3 wheel for every platform we care about (including
 # cp310-abi3-win_amd64, which works on 3.10 through 3.14) and needs no native
-# cairo/GTK libraries. tools/factorio-docs-to-md.py remains stdlib-only.
+# cairo/GTK libraries. tools/generate/api_docs.py remains stdlib-only.
 resvg-py>=0.4.0

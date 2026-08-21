@@ -4,7 +4,7 @@
 Verifying runtime behaviour means asking the live game, and RCON is the only way
 in without a GUI: `/silent-command` runs arbitrary Lua and `rcon.print` hands the
 answer back. Source-RCON is a four-field binary frame, so this is stdlib `socket`
-rather than a dependency -- tools/requirements.txt carries exactly one, and that
+rather than a dependency -- tools/setup/requirements.txt carries exactly one, and that
 one earns it.
 
 The console takes ONE line. It splits the command name on the first whitespace,
@@ -14,14 +14,14 @@ line. Whole-line `--` comments are dropped on the way, so a harness file can be
 commented normally; a TRAILING comment still swallows the rest of the block,
 because there is no way to tell one from a `--` inside a string.
 
-Connection details come from the state file `tools/rcon-server.ps1` writes, so
+Connection details come from the state file `tools/check/probe.ps1` writes, so
 neither has to be told the port twice.
 
 Usage:
-    powershell tools/rcon-server.ps1 -Action start
-    echo '/silent-command rcon.print(game.tick)' | python tools/factorio_rcon.py
-    python tools/factorio_rcon.py < harness.lua
-    powershell tools/rcon-server.ps1 -Action stop
+    powershell tools/check/probe.ps1 -Action start
+    echo '/silent-command rcon.print(game.tick)' | python tools/check/probe_client.py
+    python tools/check/probe_client.py < harness.lua
+    powershell tools/check/probe.ps1 -Action stop
 
 Blocks in stdin are separated by a line containing only `---`.
 
@@ -94,7 +94,7 @@ class Rcon:
 
 def load_state(path=STATE):
     if not path.exists():
-        raise RconError(f"No server state at {path}. Run tools/rcon-server.ps1 -Action start first.")
+        raise RconError(f"No server state at {path}. Run tools/check/probe.ps1 -Action start first.")
     # utf-8-sig, not utf-8: Windows PowerShell 5.1 writes a BOM whatever you ask
     # it for, and json.loads rejects one outright.
     return json.loads(path.read_text(encoding="utf-8-sig"))
