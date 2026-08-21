@@ -2,8 +2,8 @@
 
 > This document describes **mechanics only**. Every concrete number — order amounts, refunds,
 > profits, spoil durations, spawn weights, decay targets, resource prices — lives in the `bands` and
-> `orders` tables in [`src/services/customers.lua`](../src/services/customers.lua) and the
-> `resources` table in [`src/services/shop.lua`](../src/services/shop.lua), which are the single
+> `orders` tables in [`src/services/economy/customers/orders.lua`](../src/services/economy/customers/orders.lua) and the
+> `resources` table in [`src/services/economy/shop/prices.lua`](../src/services/economy/shop/prices.lua), which are the single
 > source of truth. Read the tables there for current values.
 
 ## Overview
@@ -103,7 +103,7 @@ gold hard → gold medium → gold easy → bond hard → … → penny medium �
 ### 2b. Ghosts
 
 `ghost` is a **terminal token**: a valid decay target that is not an order. It has no order to fill,
-so the generator skips it and `customer_ghost` is written by hand in `customers.lua`. It is
+so the generator skips it and `customer_ghost` is written by hand in `orders.lua`. It is
 deliberately a dead end:
 
 - **no spoil timer** — a ghost never decays into anything;
@@ -152,7 +152,7 @@ of its own coin pays that floor: the Bond band pays one Bond, because nothing on
 carries a Bond toll.
 
 Those numbers are **authored**, not solved at load: literal, diffable, tunable. The risk with
-authored numbers is that they rot, so [`src/services/cost.lua`](../src/services/cost.lua) re-solves
+authored numbers is that they rot, so [`src/services/economy/money/cost.lua`](../src/services/economy/money/cost.lua) re-solves
 the whole recipe graph on every load and asserts that no refund has fallen behind. Change a shop
 price or a toll and that assertion is what tells you.
 
@@ -169,7 +169,7 @@ unit prices stay in the same range across the ladder.
 Making a thing costs a coin. Which coin is **derived**, not listed: a recipe's toll is the highest
 denomination charged by the technology that unlocks it, because owning that licence is what let you
 build the thing at all. Flat one coin per craft, injected by
-[`src/services/tolls.lua`](../src/services/tolls.lua).
+[`src/services/economy/money/tolls.lua`](../src/services/economy/money/tolls.lua).
 
 The effect is that every assembler needs a money input line — the bus stops being a material bus and
 becomes a material bus plus a money bus. The coin comes back in the refund of whatever you
@@ -210,7 +210,7 @@ hand-mined trees (free, finite, not automatable), plus 10 burner inserters in th
 
 ## Currency
 
-There is no separate money item. [`src/services/currency.lua`](../src/services/currency.lua)
+There is no separate money item. [`src/services/economy/money/currency.lua`](../src/services/economy/money/currency.lua)
 **re-skins six of the vanilla science packs in place** into a ladder of denominations:
 
 | Prototype | Denomination |
@@ -226,7 +226,7 @@ Re-skinning rather than adding new items is what makes research cost money for f
 and every technology's `unit.ingredients` already name these prototypes, so **a technology's research
 cost is now its price**, at vanilla numbers — a technology that wanted 100 red packs wants 100
 Pennies. The lab is renamed the **Investment Office**; it already runs without power, since
-`remove_electricity.lua` voids its energy source.
+`removals/electricity.lua` voids its energy source.
 
 The Penny replaced the base game `coin`, which is hidden again.
 
@@ -237,7 +237,7 @@ any more. Every one of the 62 technologies that priced research in it was a comb
 and shooting-speed ladders, turrets, armor, artillery, the military tiers — so when combat left the
 mod (see [game-design.md](game-design.md#why-this-creates-a-new-factory-design)) the denomination had
 nothing left to buy. A currency the player can earn and never spend is worse than one tier fewer, so
-the ladder is six tiers and `remove_military.lua` hides the pack the way `coin` is hidden.
+the ladder is six tiers and `removals/military.lua` hides the pack the way `coin` is hidden.
 
 Restoring it would mean re-pricing existing non-combat technologies onto a seventh tier. That is an
 economy design decision, not a revert.

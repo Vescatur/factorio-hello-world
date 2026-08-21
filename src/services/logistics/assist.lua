@@ -1,4 +1,4 @@
--- loader_assist.lua -- put a hand-placed loader into the mode the player meant.
+-- assist.lua -- put a hand-placed loader into the mode the player meant.
 --
 -- Which side a loader binds to is not a thing you set: it falls out of the mode.
 -- `input` binds the tile the arrow points AT, `output` the tile behind. A fresh

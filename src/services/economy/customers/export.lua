@@ -1,8 +1,8 @@
--- The orders to fill and what they pay. See services/customers.lua for the band
--- table, and services/currency.lua for why the payout is really a science pack.
+-- The orders to fill and what they pay. See services/economy/customers/orders.lua for the band
+-- table, and services/economy/money/currency.lua for why the payout is really a science pack.
 local prototypes = require("lib.prototypes")
-local customers = require("services.customers")
-local currency = require("services.currency")
+local customers = require("services.economy.customers.orders")
+local currency = require("services.economy.money.currency")
 
 local export_tint = {r=0.6, g=0.7, b=1}
 local export_graphics = prototypes.tinted_machine_graphics("assembling-machine-1", export_tint)

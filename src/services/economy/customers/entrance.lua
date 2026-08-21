@@ -1,5 +1,5 @@
--- The customer item the Entrance spawns. See services/customers.lua.
-local customers = require("services.customers")
+-- The customer item the Entrance spawns. See services/economy/customers/orders.lua.
+local customers = require("services.economy.customers.orders")
 
 local prototypes = require("lib.prototypes")
 

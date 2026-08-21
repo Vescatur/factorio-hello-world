@@ -1,4 +1,4 @@
--- shop.lua -- one buy recipe per resource, crafted by the Import machine. The only
+-- prices.lua -- one buy recipe per resource, crafted by the Import machine. The only
 -- way raw material enters the factory, now that nothing can be mined.
 --
 -- Raw material only: ore, not plates, so smelting stays the player's job. Each good
@@ -14,7 +14,7 @@
 -- barrel item in its OWN data-updates. The Import machine itself stays in import.lua
 -- at the data stage; only the price list moved.
 local prototypes = require("lib.prototypes")
-local currency = require("services.currency")
+local currency = require("services.economy.money.currency")
 
 local resources = {
     {

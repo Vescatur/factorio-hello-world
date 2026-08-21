@@ -1,4 +1,4 @@
--- remove_military.lua -- with no enemies there is nothing to defend, so the combat
+-- military.lua -- with no enemies there is nothing to defend, so the combat
 -- tree has no purpose. Recipe deleted, item hidden, item and entity prototypes
 -- kept, so `car.guns`, `lab.inputs` and the spidertron tips still resolve.
 --

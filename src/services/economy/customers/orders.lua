@@ -1,4 +1,4 @@
--- customers.lua -- who walks in, what they order, and what they decay into.
+-- orders.lua -- who walks in, what they order, and what they decay into.
 --
 -- Owns the band table and the item prototype for each order. The recipes that
 -- consume them live with the machine that crafts them: `customer-new` in
@@ -7,7 +7,7 @@
 -- The `refund` numbers are authored, not solved. cost.lua re-solves the recipe
 -- graph on every load and asserts none has fallen behind what its order costs.
 -- See docs/customer-system.md for the ladder and the probability trees.
-local currency = require("services.currency")
+local currency = require("services.economy.money.currency")
 
 -- Timers for the two terminal tokens, which are not orders and so carry no
 -- `spoil_seconds` of their own.

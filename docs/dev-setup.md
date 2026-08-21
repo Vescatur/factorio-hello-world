@@ -44,19 +44,18 @@ This launches Factorio with:
 factorio-hello-world/
 ├── src/                    # The mod (deployed via symlink)
 │   ├── info.json           # Mod metadata (name: "profitorio", version, dependencies)
-│   ├── data.lua            # Entry point — requires all services
-│   ├── control.lua         # Runtime — single-Entrance limit, starter inventory
-│   ├── services/
-│   │   ├── customers.lua   # Customer tiers, their items and spoil chain (the core)
-│   │   ├── currency.lua    # Re-skins six science packs into currency denominations
-│   │   ├── item_groups.lua # The Profitorio tab and its subgroups
-│   │   ├── entrance.lua    # The building customers arrive from + customer-new
-│   │   ├── import.lua      # Buy goods with currency + the buy_* price list
-│   │   ├── export.lua      # Deliver to a customer for currency + the payouts
-│   │   ├── remove_ore.lua  # Strips all ore generation from the map
-│   │   ├── remove_electricity.lua  # Removes electric infrastructure
-│   │   ├── remove_enemies.lua      # Stops enemies generating, hides them
-│   │   └── remove_military.lua     # Deletes combat recipes and technologies
+│   ├── data.lua            # Data-stage entry point — requires all services
+│   ├── data-updates.lua    # prices → tolls → cost, in that order (correctness)
+│   ├── control.lua         # Runtime entry point — composition and event registration only
+│   ├── lib/prototypes.lua  # Shared prototype helpers (delete, hide, re-link)
+│   ├── services/           # Grouped by DOMAIN, not by stage
+│   │   ├── economy/
+│   │   │   ├── customers/  # orders, entrance, entrance_limit, export
+│   │   │   ├── money/      # currency, tolls, cost
+│   │   │   └── shop/       # prices, import, starter_recipes, starter_inventory
+│   │   ├── logistics/      # loaders (data) + assist (control) — one feature, both stages
+│   │   ├── removals/       # ore, electricity, enemies, military, uranium
+│   │   └── interface/      # item_groups — the Profitorio tab and its subgroups
 │   ├── graphics/icons/     # Custom sprites (generated from art/icons/)
 │   └── locale/en/          # English translations
 ├── tools/                  # Dev scripts (PowerShell)
@@ -121,7 +120,7 @@ see [game-design.md](game-design.md#scope-and-non-goals).
 ### Verifying behaviour
 
 Steps 3 and 4 prove the mod *loads*. They say nothing about whether it *works*, and
-`src/control.lua` and `src/runtime/` are behaviour with no load-time signal at all.
+`src/control.lua` and the control-stage modules under `src/services/` are behaviour with no load-time signal at all.
 
 The `verify-in-engine` skill (`.claude/skills/verify-in-engine/`) covers that, with two
 harnesses behind it:

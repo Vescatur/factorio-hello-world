@@ -15,10 +15,10 @@
 -- if the whole recipe ran for it, which overprices in the player's favour and cannot
 -- mislead. Runs in data-updates, after shop.lua priced and tolls.lua charged.
 
-local customers = require("services.customers")
-local currency = require("services.currency")
-local resources = require("services.shop")
-local tolls = require("services.tolls")
+local customers = require("services.economy.customers.orders")
+local currency = require("services.economy.money.currency")
+local resources = require("services.economy.shop.prices")
+local tolls = require("services.economy.money.tolls")
 
 local ladder = tolls.ladder
 local rank = tolls.rank
@@ -240,6 +240,6 @@ end
 
 assert(shortfalls == 0, "cost: " .. shortfalls
     .. " order(s) refund less than they cost -- see the [cost] SHORT lines above. "
-    .. "The authored refunds in services/customers.lua have gone stale.")
+    .. "The authored refunds in services/economy/customers/orders.lua have gone stale.")
 
 log("[cost] All " .. #customers.orders .. " refunds cover their order.")

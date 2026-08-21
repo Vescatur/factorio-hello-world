@@ -1,4 +1,4 @@
--- remove_electricity.lua -- nothing consumes energy: no power network to build and
+-- electricity.lua -- nothing consumes energy: no power network to build and
 -- no fuel to burn, so the factory is a routing puzzle rather than a power budget.
 --
 -- Recipe deleted, item and entity prototypes kept. Deleting the entities outright

@@ -4,7 +4,7 @@
 --
 -- So every assembler needs a money input line, and what the toll really costs is
 -- working capital -- the coin comes back in the refund of whatever you deliver.
-local currency = require("services.currency")
+local currency = require("services.economy.money.currency")
 
 -- Cheapest denomination first. A technology's toll is the last of these that
 -- appears on its invoice.
@@ -142,7 +142,7 @@ end
 -- launch pays the vanilla 1000 space-science-pack, which is 1000 Diamonds. It lives
 -- here because the satellite recipe has just been tolled, keeping both edits to that
 -- recipe in one place.
-local customers = require("services.customers")
+local customers = require("services.economy.customers.orders")
 local satellite = data.raw.recipe["satellite"]
 assert(satellite, "tolls: the satellite recipe is missing; the Diamond has no source")
 table.insert(satellite.ingredients,

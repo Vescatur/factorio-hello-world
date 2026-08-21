@@ -1,4 +1,4 @@
--- remove_uranium.lua -- uranium's three vanilla jobs are all gone: nuclear power
+-- uranium.lua -- uranium's three vanilla jobs are all gone: nuclear power
 -- (no electricity), uranium ammunition (no combat), nuclear fuel (nothing burns
 -- fuel). Nothing on the rocket path touches it either, so the whole chain goes.
 --

@@ -1,4 +1,4 @@
--- remove_enemies.lua -- nothing to contest and no territory to expand into, so
+-- enemies.lua -- nothing to contest and no territory to expand into, so
 -- biters, spitters, worms and nests are taken out of play.
 --
 -- ENGINE LIMIT: they are hidden and stripped of autoplace, never deleted. `unit`,
@@ -86,7 +86,7 @@ end
 local function delete_from_any_category(name)
     for category_name, category in pairs(data.raw) do
         -- Never touch item/recipe/technology: those are matched by name in
-        -- remove_military.lua, and an achievement name must not take an item with
+        -- removals/military.lua, and an achievement name must not take an item with
         -- it if the two ever collide.
         local is_off_limits = category_name == "item" or category_name == "recipe"
             or category_name == "technology"

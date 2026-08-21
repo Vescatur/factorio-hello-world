@@ -1,13 +1,13 @@
 # Restrict loaders to Import and Export — implementation plan
 
-**Status: planned, not implemented.** Written 2026-08-20. `src/runtime/loader_assist.lua` still
+**Status: planned, not implemented.** Written 2026-08-20. `src/services/logistics/assist.lua` still
 binds a loader to anything with an inventory. Nothing below is in the code yet.
 
 ## Context
 
-`src/services/loaders.lua` un-hides vanilla's three loaders, retypes them to `loader-1x1`
+`src/services/logistics/loaders.lua` un-hides vanilla's three loaders, retypes them to `loader-1x1`
 and prices them off the logistics technologies — a Penny, a Silver Coin and a Bond. Today
-they bind to *anything with an inventory*: `src/runtime/loader_assist.lua` probes a dozen
+they bind to *anything with an inventory*: `src/services/logistics/assist.lua` probes a dozen
 `defines.inventory.*` slots on whatever occupies the neighbouring tile, so a loader is a
 general-purpose chest-to-belt mover. That is more capability than the mod intends. Import
 and Export are the item-heavy machines — a shop lot and a customer order are both bulk
@@ -97,7 +97,7 @@ round trip:
   `on_pre_ghost_deconstructed` (filterable on `ghost_name`, ghost still valid). The residual
   path then needs bots, a race and a deliberate overbuild, and the load-time sweep cleans it.
 
-## Step 1 — `src/runtime/refuse.lua` (new, ~35 lines)
+## Step 1 — `src/services/logistics/refuse.lua` (new, ~35 lines)
 
 `control.lua` already owns the refund ladder — flying text, `cannot_build` sound,
 `player.mine_entity` → robot cargo → spill-and-destroy. The loader rule needs the same
@@ -114,7 +114,7 @@ Then rewrite `control.lua`'s Entrance path to call `refuse.build(entity, event,
 {"profitorio.entrance-limit"})` and confirm it is behaviourally unchanged **before** touching
 anything loader-related.
 
-## Step 2 — `src/runtime/loader_binding.lua` (replaces `loader_assist.lua`)
+## Step 2 — `src/services/logistics/loader_binding.lua` (replaces `assist.lua`)
 
 Deleted outright: `CONTAINER_INVENTORIES`, `has_container`, `BELT_TYPES`, `belt_at`,
 `feeds`, `wants_input`. Kept: `OFFSET`, `tile_area` (an inset box, not
@@ -210,7 +210,7 @@ for that idiom and reports the example as a missing key.
 
 `CLAUDE.md`, three existing places plus one new, same commit:
 
-- the project-structure bullet for `runtime/loader_assist.lua` — rename and rewrite for the
+- the project-structure bullet for `services/logistics/assist.lua` — rename and rewrite for the
   new job.
 - the Comments section, which names that file as the style exemplar.
 - the Rules bullet on the loader's intrinsic bound side — still true, still the file that

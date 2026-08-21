@@ -1,4 +1,4 @@
--- remove_ore.lua -- no ore on the map and nothing to extract it with. Raw material
+-- ore.lua -- no ore on the map and nothing to extract it with. Raw material
 -- enters one way: bought from the Import machine.
 --
 -- The plate smelting recipes are load-bearing and must stay -- the shop sells ore,
@@ -8,7 +8,7 @@
 -- the first Penny comes from serving a wood customer. Neither is automatable (a
 -- drill cannot target them) and both are finite.
 local prototypes = require("lib.prototypes")
-local currency = require("services.currency")
+local currency = require("services.economy.money.currency")
 
 local ores_to_remove = { "coal", "stone", "copper-ore", "iron-ore", "uranium-ore", "crude-oil" }
 
