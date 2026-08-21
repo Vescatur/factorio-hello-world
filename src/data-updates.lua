@@ -7,7 +7,8 @@
 --   prices defines the buy recipes and the price of every raw good
 --   tolls  needs every recipe to exist -- at the data stage the barrel recipes are
 --          still missing and would silently escape the exemption
---   cost   needs both the prices and the tolls, so it is last
+--   verify_orders
+--          needs both the prices and the tolls, so it is last
 require("services.economy.shop.prices")
 require("services.economy.money.tolls")
-require("services.economy.money.cost")
+require("services.economy.customers.verify_orders")

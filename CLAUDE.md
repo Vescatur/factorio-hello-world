@@ -26,19 +26,19 @@ everything about it — data stage and control stage side by side. `control.lua`
 
 - `src/` — The mod source (symlinked into Factorio mods folder)
   - `data.lua` — Entry point, requires all services
-  - `data-updates.lua` — Requires `prices.lua`, then `tolls.lua`, then `cost.lua`, **in that order** — the order is correctness, not readability, and the file says why. Exists because base generates the fluid barrel items in *its* data-updates, so neither the shop nor the toll injector can see a complete recipe list any earlier
+  - `data-updates.lua` — Requires `prices.lua`, then `tolls.lua`, then `verify_orders.lua`, **in that order** — the order is correctness, not readability, and the file says why. Exists because base generates the fluid barrel items in *its* data-updates, so neither the shop nor the toll injector can see a complete recipe list any earlier
   - `control.lua` — Runtime entry point, and **composition only**: it requires the runtime modules, dispatches `on_built_entity` between them by entity name, and owns every `script.on_event` call. It holds no domain logic of its own — the concerns live in `entrance_limit.lua`, `starter_inventory.lua` and `logistics/assist.lua`
   - `lib/prototypes.lua` — The four moves every removal service makes: delete recipes (and strip the unlock effects naming them), hide items, delete technologies, re-link the prerequisites and dependents left dangling. Also `find_item`/`icons_of`, the type-agnostic item lookup — reach for those instead of `data.raw.item[name]`, which is nil for armor, modules, rail planners and item-with-entity-data. Not a service; required by the ones below
   - `services/economy/customers/` — Who walks in, what they order, and the machines that make and pay them
     - `orders.lua` — Core: the band and order tables, the customer items, and the generated spoil chain and spawn weights. Returns the bands, the orders and each order's item name; the recipes that consume them live with the machine that crafts them
     - `entrance.lua`, `export.lua` — Two of the three machines the whole loop runs through (the third is `shop/import.lua`), plus the recipes they craft: `customer-new` and the `customer_*_deliver` payouts. `export.lua` also wires each band's licence onto its technology
     - `entrance_limit.lua` — Control stage. Refuses a second Entrance and hands the item back, and reconciles a save that already holds several. Owns `storage.entrance`; exports `name`, `on_built` and `adopt` for `control.lua` to register — it never registers an event itself
+    - `verify_orders.lua` — Emits no prototypes. Re-solves the recipe graph and asserts the authored refunds still cover what each order costs, so the numbers in `orders.lua` cannot rot silently. Runs in `data-updates.lua`, after `prices.lua` and `tolls.lua`
   - `services/economy/money/` — The denomination ladder, and what everything costs
     - `currency.lua` — Re-skins six science packs into currency denominations; also the module the rest of the mod asks for currency item names
     - `tolls.lua` — Charges a coin to craft. Derives each recipe's denomination from the technology that unlocks it, and owns the exemption list (fluid-only, smelting, barrels, start-enabled). Also puts the Diamond client into the `satellite` recipe
-    - `cost.lua` — Emits no prototypes. Re-solves the recipe graph and asserts the authored refunds still cover what each order costs, so the numbers in `orders.lua` cannot rot silently
   - `services/economy/shop/` — Buying goods, and what a new game opens with
-    - `prices.lua` — The `buy_*` price list the Import machine crafts, each good priced in the denomination of the era that needs it. Separate from `import.lua` because it runs a stage later. Returns its `resources` table, which `cost.lua` uses as the solver's seeds
+    - `prices.lua` — The `buy_*` price list the Import machine crafts, each good priced in the denomination of the era that needs it. Separate from `import.lua` because it runs a stage later. Returns its `resources` table, which `verify_orders.lua` uses as the solver's seeds
     - `import.lua` — The machine that crafts those `buy_*` recipes, turning currency into goods
     - `starter_recipes.lua` — Re-costs the penny band's goods onto one bought raw material each: `burner-inserter` onto 10 wood, `assembling-machine-1` onto 5 stone. Both ship `enabled = true`, because a penny order cannot wait on research — every technology sits behind a lab, a lab behind copper, and copper behind the Silver Coin only the penny band mints. `automation` keeps its unlock effect for `assembling-machine-1`: that is where `tolls.lua` reads its Penny toll from
     - `starter_inventory.lua` — Control stage. The six-item kit a new game opens with. Replaces freeplay's list through its remote interface rather than extending it, because the vanilla kit's burner mining drill has nothing to work with
@@ -182,7 +182,7 @@ entry needs:
 The spoil chain, the successor list and the band's licence are all **generated** from `band` and
 `grade` — do not hand-write them. The spawn percentages are the exception: they are authored per
 order, because they are a design choice rather than a consequence of position. Neither is the refund
-solved at load: author it, and let `cost.lua` tell you if it is short. To get the number, read the
+solved at load: author it, and let `verify_orders.lua` tell you if it is short. To get the number, read the
 `[cost]` lines the previous load already logged and round up.
 
 Holding the profit to a fifth of the refund is what makes bands 2, 4 and 5 pay a single coin: their
@@ -220,7 +220,7 @@ they are build output and get overwritten.
 Add an entry to the `resources` table in `services/economy/shop/prices.lua` with `item`, `amount`, `price`, and
 `currency` (a field from the `currency` module, e.g. `currency.penny`). Price it in the denomination
 of the era that needs it, and grow the lot size with the denomination so unit prices stay in the same
-range across the ladder. Changing any price invalidates the authored refunds — `cost.lua` will say
+range across the ladder. Changing any price invalidates the authored refunds — `verify_orders.lua` will say
 so at the next load.
 
 ### Currency

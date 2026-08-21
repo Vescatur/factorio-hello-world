@@ -152,7 +152,7 @@ of its own coin pays that floor: the Bond band pays one Bond, because nothing on
 carries a Bond toll.
 
 Those numbers are **authored**, not solved at load: literal, diffable, tunable. The risk with
-authored numbers is that they rot, so [`src/services/economy/money/cost.lua`](../src/services/economy/money/cost.lua) re-solves
+authored numbers is that they rot, so [`src/services/economy/customers/verify_orders.lua`](../src/services/economy/customers/verify_orders.lua) re-solves
 the whole recipe graph on every load and asserts that no refund has fallen behind. Change a shop
 price or a toll and that assertion is what tells you.
 

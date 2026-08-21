@@ -1,7 +1,7 @@
--- cost.lua -- the load-time check that the authored refunds still cover the bill.
+-- verify_orders.lua -- the load-time check that the authored refunds still cover the bill.
 -- Emits no prototypes; it is a smoke alarm.
 --
--- The refunds in customers.lua are authored, and authored numbers rot: change a shop
+-- The refunds in orders.lua are authored, and authored numbers rot: change a shop
 -- price, move a toll, take a Factorio update that re-costs a vanilla recipe, and the
 -- refund quietly stops covering the order. That is a leak, not a crash. So this
 -- re-solves the recipe graph on every load and asserts nothing has fallen behind.
@@ -13,7 +13,7 @@
 --
 -- It does NOT credit byproducts -- each output of a multi-output recipe is priced as
 -- if the whole recipe ran for it, which overprices in the player's favour and cannot
--- mislead. Runs in data-updates, after shop.lua priced and tolls.lua charged.
+-- mislead. Runs in data-updates, after prices.lua priced and tolls.lua charged.
 
 local customers = require("services.economy.customers.orders")
 local currency = require("services.economy.money.currency")
