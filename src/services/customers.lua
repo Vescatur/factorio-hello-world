@@ -12,7 +12,7 @@ local currency = require("services.currency")
 -- Timers for the two terminal tokens, which are not orders and so carry no
 -- `spoil_seconds` of their own.
 local diamond_spoil_seconds = 60
-local angry_wooden_chest_spoil_seconds = 5 * 60
+local angry_burner_inserter_spoil_seconds = 5 * 60
 
 -- Integers over this total, never decimal chances. 0.1 + 0.2 + 0.7 is
 -- 1.0000000000000002 in IEEE doubles, which fails the sum assertion and, worse,
@@ -104,10 +104,10 @@ local orders = {
 --                          recipe consumes them (see tolls.lua) and the launch pays
 --                          1000 Diamonds. The only place the population shrinks
 --                          other than a ghost.
---   angry-wooden-chest -- the entry-level order's last warning: it has no lower
+--   angry-burner-inserter -- the entry-level order's last warning: it has no lower
 --                          grade and no band below to step down to, so it gets one
 --                          extra rung before ghost instead of spoiling straight there.
-local terminal_tokens = { ghost = true, diamond = true, ["angry-wooden-chest"] = true }
+local terminal_tokens = { ghost = true, diamond = true, ["angry-burner-inserter"] = true }
 
 
 -- Built before the generator so the spoil chain resolves against it: a typo fails
@@ -182,7 +182,7 @@ local function spoils_into(order)
     end
     -- Bottom of the ladder, nothing left to step down to: one extra rung before
     -- ghost rather than straight there.
-    return "angry-wooden-chest"
+    return "angry-burner-inserter"
 end
 
 
@@ -290,7 +290,7 @@ data:extend({
     },
     {
         type = "item",
-        name = item_by_key["angry-wooden-chest"],
+        name = item_by_key["angry-burner-inserter"],
         icons = {
             {
                 icon = "__profitorio__/graphics/icons/customer.png",
@@ -301,7 +301,7 @@ data:extend({
                 tint = { r = 1, g = 0.3, b = 0.3, a = 1 }
             },
             {
-                icon = "__base__/graphics/icons/wooden-chest.png",
+                icon = "__base__/graphics/icons/burner-inserter.png",
                 icon_size = 64,
                 icon_mipmaps = 4,
                 scale = 0.3,
@@ -309,7 +309,7 @@ data:extend({
             }
         },
         stack_size = 1,
-        spoil_ticks = angry_wooden_chest_spoil_seconds * 60,
+        spoil_ticks = angry_burner_inserter_spoil_seconds * 60,
         spoil_result = item_by_key.ghost,
     }
 })
