@@ -1,5 +1,4 @@
 factorio-docs/html/*
-tools/profitorio_*.zip
 export/*
 __pycache__/
 *.pyc
