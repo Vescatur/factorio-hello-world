@@ -8,7 +8,7 @@ require("services.removals.military")
 require("services.removals.uranium")
 -- The two services that put vanilla content back rather than taking it away.
 require("services.logistics.loaders")
-require("services.economy.shop.starter_recipes")
+require("services.economy.shop.recipes")
 require("services.interface.item_groups")
 require("services.economy.money.currency")
 require("services.economy.customers.orders")

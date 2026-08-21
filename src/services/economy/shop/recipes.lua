@@ -1,4 +1,4 @@
--- starter_recipes.lua -- re-costs the penny band's goods onto one bought raw material
+-- recipes.lua -- re-costs the penny band's goods onto one bought raw material
 -- each. The other service that adds rather than removes, alongside loaders.lua.
 
 local recosts = {
