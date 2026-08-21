@@ -130,6 +130,43 @@ Two habits that keep it honest:
 above the function each explains. Current whole-repo ratio is ~15% comment lines; treat a file
 drifting past ~20%, or any block over ~20 lines, as a prompt to re-read this section.
 
+### Tuning Happens in Config, Not Code
+
+**Default to an explicit table: one row per subject, every field written out, even when every
+row currently holds the same value.** These numbers are balance knobs and they change often. A
+row that states its amount can be retuned in a diff of digits; a value the code computes can
+only be retuned by editing the computation, and the person retuning it is mid-balance-pass, not
+mid-refactor.
+
+So a rule must never *be* the config. Deriving which price, which timer or which amount applies
+from position in a list, from a name pattern, from a prototype's category or from what some
+neighbouring prototype happens to contain reads as clever and is a ceiling: the first subject
+that needs a different number has nowhere to say so. The same goes for exemptions — a predicate
+only ever excludes what its author anticipated, where a list of exempt names can be appended to
+by anyone. And a one-off belongs in the table as a row, not as a special case bolted on after
+the loop that processes the others.
+
+A computed value is welcome as the **default a row overrides**, never as the decision itself.
+Compute to seed the table, then let the authored value win.
+
+Better still, compute it as a **check**. Where a number genuinely can be solved — the true
+embedded cost of a thing, the sum of a distribution — solve it at load and `assert` the authored
+number still holds, rather than solving it in place of authoring. That keeps the tuning in the
+config and puts the arithmetic to work catching the config going stale, which is the failure mode
+authored numbers actually have: a price moves three files away and the old number is quietly
+wrong rather than loudly broken. Such a check should name the offending entry, log what it
+computed alongside what was authored so the fix can be read straight off the load, and be free to
+overestimate in the safe direction — a check that cannot mislead beats one that is exact.
+
+Generate a field outright only when authoring it could **contradict** another authored field —
+links that must agree with a position on a ladder, where a hand-written value can point at the
+wrong rung or at a prototype that does not exist. Everything else is authored, and a required
+field is `assert`ed present rather than defaulted, so a missing one fails the load by name
+instead of silently taking a value nobody chose.
+
+The litmus test: could the next balance change be a diff of numbers only? If it needs new Lua,
+the config is too thin.
+
 ### Adding or Changing a Customer Order
 
 Orders live in the `orders` table in `services/economy/customers/orders.lua`, currently three per band, and each
@@ -248,6 +285,7 @@ still resolve. Radar is deliberately kept craftable: `satellite` needs five of t
 - **Target Factorio version: 2.1** — uses features not available in earlier versions
 - **Never depend on Space Age** — base game only; don't reference Space Age prototypes or add it to `dependencies`
 - **Never add mod-compatibility code** — no soft dependencies, no `if mods["..."]` branches, no shims for other mods
+- **Tuning happens in config, not code** — balance numbers live in an explicit table, one row per subject with every field stated, even when all rows agree today. Never infer an amount or an exemption from a name pattern, a category or a position; a computed value may seed a row or `assert` that one is still correct, but never replace it. Derive outright only where an authored value could contradict another, and `assert` a required field rather than defaulting it. See [Tuning Happens in Config, Not Code](#tuning-happens-in-config-not-code)
 - **Comments say what the code cannot** — engine constraints that fail silently, deliberate absences, and short local "why" notes. Never design rationale (that lives here or in `docs/`), never history, never a restatement of the next line. Put the note beside the code it guards rather than in the file header, and prefer an assertion message that both documents and enforces. See [Comments](#comments)
 - **Always validate after changes** — run `.\tools\check\prototypes.ps1` after any mod file change to catch prototype errors before committing, and `python tools\check\translations.py` after adding or renaming any prototype
 - **Leave the locale report empty** — `translations.py` must print only its `OK:` line, advisories included. Clear every entry one of two ways: write the description in `src/locale/en/hello-world.cfg`, or, when the name already says everything, paste the reported line into `INTENTIONALLY_UNDESCRIBED` in `tools/check/translations.py` under the comment group that explains why (`*` globs, for prototypes generated in a loop). Never suppress a missing *name* — those render as `Unknown key` in game. See [docs/dev-setup.md](docs/dev-setup.md#the-report-must-come-back-empty)
