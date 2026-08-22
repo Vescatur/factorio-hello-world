@@ -1,8 +1,11 @@
 # check/
 
-Four ways of asking "does it still work", cheapest first. The first two are the ones `CLAUDE.md`
+Five ways of asking "does it still work", cheapest first. The first three are the ones `CLAUDE.md`
 requires after every change; the last two are for behaviour, which has no load-time signal.
 
+- `docs.py` — does the documentation still describe the code. Every backticked path exists, every
+  link resolves, no heading is owned by two files, no file is past its word budget. Launches
+  nothing, so it costs a second and goes first.
 - `prototypes.ps1` — does the data stage load. Headless, no behaviour tested.
 - `translations.py` — any prototype whose name or description resolves to nothing.
 - `probe.ps1` + `probe_client.py` — a headless server on a **copy** of a save, driven with

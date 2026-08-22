@@ -19,9 +19,10 @@ has a source: five bands of customers, one per denomination, and the rocket for 
 
 ## The ladder
 
-Orders are grouped into five **bands**, one per denomination, of three **grades** each — easy,
-medium and hard. A band's orders are the finished goods that era of the factory can build, and
-serving one pays profit in that band's own currency.
+Orders are grouped into five **bands**, one per denomination, currently of three **grades** each —
+easy, medium and hard. Nothing in the code assumes three: a band may hold any number of grades, and
+its top one is derived rather than written down. A band's orders are the finished goods that era of
+the factory can build, and serving one pays profit in that band's own currency.
 
 | Band | Licence | Pays |
 | --- | --- | --- |
@@ -38,7 +39,7 @@ taxing it.
 
 ### Climbing
 
-Only the **hard** order of a band bridges upward, paying a little of the next denomination on top of
+Only the **top** order of a band bridges upward, paying a little of the next denomination on top of
 its own profit. That drip is the only route up the ladder, and it is load-bearing rather than
 flavour: copper is priced in Silver, the `electronics` trigger wants ten copper plates, a lab needs
 circuits, and every technology needs a lab. Remove the drip and a new game cannot research anything,
@@ -79,7 +80,9 @@ sinks:
 That makes the population a rate rather than a count: it settles at the arrival rate times five
 minutes, and no amount of good play raises it.
 
-**Only one Entrance may exist**, enforced at runtime by `src/control.lua`. Placing a second one is
+**Only one Entrance may exist**, enforced at runtime by
+[`src/services/logistics/entrance_limit.lua`](../src/services/logistics/entrance_limit.lua),
+which `src/control.lua` registers. Placing a second one is
 refused: the item is returned to the builder and the running Entrance is left untouched. Blueprint
 ghosts are still allowed; the refusal happens when a bot tries to revive one.
 
@@ -152,7 +155,7 @@ order.
 Each order has a delivery recipe `customer_{item}_deliver`:
 
 - **inputs**: 1 customer item + N of the requested item;
-- **outputs**: the refund, the profit, the bridge if this is a hard order, and exactly one new
+- **outputs**: the refund, the profit, the bridge if this is a top order, and exactly one new
   customer via weighted probability.
 
 The refund and the profit are frequently the same denomination, and a recipe may not name the same
@@ -186,30 +189,42 @@ unit prices stay in the same range across the ladder.
 
 ### 5. Money as a crafting ingredient
 
-Making a thing costs a coin. Which coin is **derived**, not listed: a recipe's toll is the highest
-denomination charged by the technology that unlocks it, because owning that licence is what let you
-build the thing at all. Flat one coin per craft, injected by
-[`src/services/economy/money/tolls.lua`](../src/services/economy/money/tolls.lua).
+Making a thing costs a coin. Which coin is **authored**, one row per vanilla recipe, in
+[`src/services/economy/money/tolls.lua`](../src/services/economy/money/tolls.lua) — every recipe in
+the game has a row, and one with none fails the load by name. Rows are grouped by the technology
+that unlocks the recipe, because owning that licence is what let you build the thing at all; where
+several technologies unlock one recipe it is priced at the **cheapest** of them, since that is the
+one the player actually paid for. The load re-solves that and logs a `[tolls] DRIFT:` line for any
+row that has fallen out of step, but the authored value still wins.
+
+Every toll is currently one coin. The `amount` field is the knob that makes a recipe expensive
+without moving it up the ladder.
 
 The effect is that every assembler needs a money input line — the bus stops being a material bus and
 becomes a material bus plus a money bus. The coin comes back in the refund of whatever you
 eventually deliver, so what the toll really costs is **working capital**: a float big enough to keep
 the machines running between deliveries.
 
-Four things are exempt, on the principle that you pay to make a *thing*, not to move a fluid:
+A row may instead say `toll = false`, on the principle that you pay to make a *thing*, not to move a
+fluid. Those rows are listed, not inferred — each one says why beside it, and the reasons group into
+six kinds:
 
 - **recipes with no item result** — oil processing, cracking, sulfuric acid, lubricant, solid fuel.
   Continuous fluid conversions running thousands of crafts, and an inserter feeding coins into a
   building that otherwise takes only pipes is neither playable nor sensible.
 - **the `smelting` category** — not taste, the engine. Every furnace has `source_inventory_size = 1`,
   so a smelting recipe physically cannot take a second ingredient. Tolling `steel-plate` would raise
-  no error; it would quietly make steel uncraftable in every furnace in the game.
+  no error; it would quietly make steel uncraftable in every furnace in the game. There is an
+  assertion.
 - **barrel fill and empty recipes** — a coin per unbarrelling taxes logistics rather than production
   and can strand the oil chain.
-- **recipes with no unlocking technology, or unlocked only by a trigger technology** — which have no
-  invoice to read a denomination off. This is what keeps the bootstrap alive: a new game has no money
-  at all, so the burner inserter, the transport belt, the stone furnace and the smelting recipes stay
-  free. It falls out of the rule rather than being special-cased.
+- **recipes no technology unlocks** — the player bought no licence, so there is no invoice to read a
+  denomination off. This is what keeps the bootstrap alive: a new game has no money at all, so the
+  burner inserter, the transport belt and the stone furnace stay free.
+- **recipes unlocked only by a trigger technology** — a trigger has no invoice either
+  (`electronics`, `steam-power`).
+- **engine placeholders** — `parameter-0` .. `parameter-9` and `recipe-unknown`, which are not real
+  recipes.
 
 ## The bootstrap
 
@@ -291,8 +306,10 @@ between two `shared_probability` bands where a delivery produces no successor at
 drains the population. Integers cannot do that: band *k+1*'s `min` is built from the same numerator
 as band *k*'s `max`.
 
-The graph itself is generated, not authored. Serving is the only way up: an order mostly brings more
-work at its own level, and only the hard order of a band can bring in a customer from the band above.
+The successor *list* is generated from each order's position on the ladder; the weights along it are
+authored per order, because who walks in next is a design choice rather than a consequence of
+position. Serving is the only way up: an order mostly brings more
+work at its own level, and only the top order of a band can bring in a customer from the band above.
 Since a successor inherits the leftover time, a climb has to happen inside one customer's five
 minutes. Weights are clamped by folding rather than dropping, so every row sums exactly.
 

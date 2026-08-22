@@ -66,7 +66,7 @@ data:extend({
 })
 
 
--- ==== The only recipe the Entrance crafts ====
+-- The only recipe the Entrance crafts.
 --
 -- One Entrance may exist, so this recipe is the sole tap the whole economy runs
 -- from. `energy_required` below and `crafting_speed` above are the two knobs that

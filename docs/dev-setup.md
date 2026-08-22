@@ -2,13 +2,43 @@
 
 ## Prerequisites
 
-- **Factorio 2.1** installed via Steam — base game only; the Space Age expansion is **not** used or required
-- **Steam** at `C:\Program Files (x86)\Steam\steam.exe`
+- **Factorio 2.1.14**, installed and copied into `factorio/` — see [Install Factorio](#1-install-factorio)
+- **Steam** at `C:\Program Files (x86)\Steam\steam.exe` — only `tools/run/playtest.ps1` needs it
 - **VSCode** with [Factorio Mod Debug](https://marketplace.visualstudio.com/items?itemName=justarandomgeek.factoriomod-debug) extension (provides Lua intellisense for Factorio API)
 
 ## Initial Setup
 
-### 1. Enter Dev Mode
+### 1. Install Factorio
+
+Download the installer, run it, then copy the installed game into the repo:
+
+```powershell
+# 1. Download — needs a factorio.com account that owns the game
+Start-Process "https://www.factorio.com/get-download/2.1.14/expansion/win64"
+
+# 2. Run the downloaded installer, accepting the default location
+
+# 3. Copy the install into the repo
+Copy-Item "C:\Program Files\Factorio" ".\factorio" -Recurse
+```
+
+`factorio/` is gitignored: it is a local copy of the game, not part of the mod.
+
+The version is pinned rather than `stable` because `factorio-docs/markdown/` is generated from
+2.1.14 — pinning is what keeps the API reference and the running engine the same version.
+
+`expansion` is the build that includes Space Age. It bundles `space-age`, `elevated-rails`,
+`quality` and `recycler` into `factorio/data/`, and **all four must stay disabled** — the mod is base
+game only (see [Testing Changes](#testing-changes)). Check
+`%APPDATA%\Factorio\mods\mod-list.json`: `base` and `profitorio` enabled, those four not. Swap
+`expansion` for `alpha` to get the base-game-only installer instead, which ships none of them.
+
+Copying the folder does **not** relocate the mods folder. The installer build ships
+`use-system-read-write-data-directories=true` in `config-path.cfg`, so mods, saves and config stay in
+`%APPDATA%\Factorio` wherever the install itself sits — which is the folder `dev-mode.ps1` junctions
+into. The zip package defaults to the opposite and would put them inside `factorio/`.
+
+### 2. Enter Dev Mode
 
 Run `tools/setup/dev-mode.ps1` to create a junction from the Factorio mods folder to `src/`:
 
@@ -16,7 +46,7 @@ Run `tools/setup/dev-mode.ps1` to create a junction from the Factorio mods folde
 .\tools\setup\dev-mode.ps1
 ```
 
-This creates: `%APPDATA%\Factorio\mods\profitorio_1.0.0` → `./src`
+This creates: `%APPDATA%\Factorio\mods\profitorio_<version>` → `./src`
 
 Changes in `src/` are immediately visible to Factorio — no copy step needed.
 
@@ -26,7 +56,7 @@ and puts the junction back. Only one copy of the mod is ever installed, and a fo
 same mod are two copies under one name — with both present the folder wins and the zip is ignored,
 which silently makes a release build untested.
 
-### 2. Launch for Development
+### 3. Launch for Development
 
 Run `tools/run/playtest.ps1` to start Factorio via Steam with the dev save:
 
@@ -40,34 +70,11 @@ This launches Factorio with:
 
 ## Project Structure
 
-```
-profitorio/
-├── src/                    # The mod (deployed via symlink)
-│   ├── info.json           # Mod metadata (name: "profitorio", version, dependencies)
-│   ├── data.lua            # Data-stage entry point — requires all services
-│   ├── data-updates.lua    # prices → tolls → cost, in that order (correctness)
-│   ├── control.lua         # Runtime entry point — composition and event registration only
-│   ├── lib/prototypes.lua  # Shared prototype helpers (delete, hide, re-link)
-│   ├── services/           # Grouped by DOMAIN, not by stage
-│   │   ├── economy/
-│   │   │   ├── customers/  # orders, entrance, entrance_limit, export
-│   │   │   ├── money/      # currency, tolls, cost
-│   │   │   └── shop/       # prices, import, starter_recipes, starter_inventory
-│   │   ├── logistics/      # loaders (data) + assist (control) — one feature, both stages
-│   │   ├── removals/       # ore, electricity, enemies, military, uranium
-│   │   └── interface/      # item_groups — the Profitorio tab and its subgroups
-│   ├── graphics/icons/     # Custom sprites (generated from art/icons/)
-│   └── locale/en/          # English translations
-├── tools/                  # Dev scripts, grouped by purpose
-│   ├── setup/              # dev-mode (junction src/ into the mods folder), requirements
-│   ├── run/                # playtest
-│   ├── check/              # prototypes, translations, probe (+client), player
-│   ├── generate/           # icons (SVG→PNG), api_docs (API dump→markdown)
-│   └── release/            # zip, publish
-├── factorio-data/          # Base game data (read-only reference, do NOT modify)
-├── .vscode/settings.json   # Lua workspace config for Factorio API intellisense
-└── docs/                   # Project documentation
-```
+The one-clause-per-file map is in [CLAUDE.md](../CLAUDE.md#project-map); the reasoning behind the
+layout is in [architecture.md](architecture.md). Two local additions this file owns:
+
+- `factorio/` — the local 2.1.14 install copied in by [Install Factorio](#1-install-factorio) (gitignored)
+- `.vscode/settings.json` — Lua workspace config for Factorio API intellisense
 
 ## VSCode Configuration
 
@@ -117,10 +124,11 @@ see [game-design.md](game-design.md#scope-and-non-goals).
 
 1. Edit files in `src/`
 2. Check the Problems panel is still empty (see [above](#the-problems-panel-must-stay-empty))
-3. Run `.\tools\check\prototypes.ps1` to validate mod loading (catches prototype errors without launching the GUI)
-4. Run `python tools\check\translations.py` to catch prototypes with no translation — it must come back empty (see [below](#the-report-must-come-back-empty))
-5. Run `.\tools\run\playtest.ps1` to playtest in-game
-6. For runtime/control-stage behaviour, drive the real engine — see [Verifying behaviour](#verifying-behaviour)
+3. Run `python tools\check\docs.py` to catch documentation drift — it needs no Factorio, so it is the cheapest rung and must come back empty (see [below](#the-docs-check-must-come-back-empty))
+4. Run `.\tools\check\prototypes.ps1` to validate mod loading (catches prototype errors without launching the GUI)
+5. Run `python tools\check\translations.py` to catch prototypes with no translation — it must come back empty (see [below](#the-report-must-come-back-empty))
+6. Run `.\tools\run\playtest.ps1` to playtest in-game
+7. For runtime/control-stage behaviour, drive the real engine — see [Verifying behaviour](#verifying-behaviour)
 
 ### Verifying behaviour
 
@@ -142,6 +150,39 @@ readback.** Loaders once shipped past a suite scoring 10/10 on `loader_type` whi
 zero items. Count what arrives.
 
 Optional, not a gate — steps 2 to 4 are the required ones.
+
+### Checking the docs
+
+`tools/check/docs.py` reads CLAUDE.md, `docs/` and the skills and checks five things: every
+backticked path exists, every link and `#anchor` resolves, no heading is owned by two files, no file
+is past its word budget, and no source file is undocumented or doc unlinked. It launches nothing and
+finishes in under a second, which is why it sits first in the ladder.
+
+#### The docs check must come back empty
+
+Same rule as the [Problems panel](#the-problems-panel-must-stay-empty) and the
+[locale report](#the-report-must-come-back-empty).
+
+The budget is the part that bites. CLAUDE.md is loaded into every context window, so its length is a
+cost paid on every turn, and `BUDGETS` at the top of the script caps it — making the file
+**append-hostile**: a new section fails the check until something is removed, moved into `docs/`, or
+moved into a skill.
+
+**Raising a budget is a decision, not a fix.** Say why in the table. The failure mode this exists to
+prevent is a file growing 200 words at a time, each addition individually reasonable; a number that
+quietly follows the content prevents nothing.
+
+```powershell
+python tools\check\docs.py                   # the check
+python tools\check\docs.py --strict          # fail on orphans and unused suppressions too
+python tools\check\docs.py --show-suppressed # list the absent paths that are filtered out
+```
+
+- **Exit 0** — no drift
+- **Exit 1** — drift found
+- **Exit 2** — the check could not run
+
+Stdlib only, and it never launches Factorio.
 
 ### Checking prototypes
 
@@ -170,7 +211,7 @@ and keys the reference language has but another language is missing.
 `UNUSED SUPPRESSIONS` block above it:
 
 ```
-OK: no missing translations (14 description(s) intentionally left out).
+OK: no missing translations (N description(s) intentionally left out).
 ```
 
 (The count is whatever the suppression list currently covers.)
@@ -228,5 +269,5 @@ Two consequences worth knowing:
 - **The bump is a working-tree edit.** `src/info.json` is left at the new version — commit and tag it
   yourself. A failed upload keeps the bump rather than rolling it back, because a failure after the
   portal accepted the release is indistinguishable from one before it; retry with `--bump none`.
-- **Building uninstalls the dev junction** (see [Enter Dev Mode](#1-enter-dev-mode)). Run
+- **Building uninstalls the dev junction** (see [Enter Dev Mode](#2-enter-dev-mode)). Run
   `.\tools\setup\dev-mode.ps1` to get back to dev mode.

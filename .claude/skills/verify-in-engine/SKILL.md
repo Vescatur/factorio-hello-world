@@ -8,7 +8,7 @@ description: Verify Profitorio's runtime or data-stage behaviour by driving the 
 `tools/check/prototypes.ps1` answers one question: does the data stage load. It cannot
 tell you whether anything *works*. This skill is for behaviour.
 
-## The rule
+## Assert the effect, not the readback
 
 **Assert the observable effect, never the API readback.**
 
@@ -75,7 +75,7 @@ is the completion signal, because the client has no useful exit code.
 ## Cover the false positives
 
 The happy path is the easy half. Each of these is a plausible-looking case that must
-*not* trigger, and each caught a real bug in the assist logic:
+*not* trigger, and each caught a real bug in the loader binding:
 
 - a belt that is adjacent but **perpendicular** is not feeding you
 - an underground belt's **entry** end swallows items in the direction it faces

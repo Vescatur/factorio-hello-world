@@ -1,6 +1,6 @@
 # Factorio API reference (markdown) — 2.1.14
 
-Generated from the official API dump by `tools/factorio-docs-to-md.py`. Do not edit by hand; rerun the script instead.
+Generated from the official API dump by `tools/generate/api_docs.py`. Do not edit by hand; rerun the script instead.
 
 **This tree is far too large to read in full. Navigate it, do not load it:**
 
