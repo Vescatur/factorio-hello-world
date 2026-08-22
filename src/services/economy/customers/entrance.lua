@@ -68,10 +68,11 @@ data:extend({
 
 -- ==== The only recipe the Entrance crafts ====
 --
--- One Entrance may exist, so this recipe is the sole tap the whole economy
--- runs from. `energy_required` below and `crafting_speed` above are the two
--- knobs that set how fast customers arrive -- retune those, never the building
--- count. Customers arrive at the bottom tier and work their way up from there.
+-- One Entrance may exist, so this recipe is the sole tap the whole economy runs
+-- from. `energy_required` below and `crafting_speed` above are the two knobs that
+-- set how fast customers arrive, and with it how many are alive at once -- retune
+-- those, never the building count. Customers arrive at the bottom tier and work
+-- their way up from there.
 data:extend({
     {
         type = "recipe",
@@ -79,9 +80,9 @@ data:extend({
         categories = { "entrance" },
         enabled = true,
         results = {
-            { type = "item", name = customers.item[customers.entry], amount = 1, always_fresh = true }
+            { type = "item", name = customers.item[customers.entry], amount = 1 }
         },
-        energy_required = 60,
+        energy_required = 5,
         subgroup = "customer-new",
         order = "a"
     }

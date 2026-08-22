@@ -129,13 +129,16 @@ local function append_successors(results, order)
 
         local from = cumulative
         cumulative = cumulative + successor.weight
+        -- The missing `always_fresh` is load-bearing: without it the successor inherits
+        -- the spoil percent of the customer just served, which is what keeps the five
+        -- minutes a total. Setting the flag raises no error and makes customers
+        -- immortal.
         table.insert(results, {
             type = "item", name = successor.customer, amount = 1,
             shared_probability = {
                 min = from / customers.weight_total,
                 max = cumulative / customers.weight_total,
             },
-            always_fresh = true
         })
     end
     assert(cumulative == customers.weight_total,
@@ -170,8 +173,9 @@ for _, order in ipairs(customers.orders) do
             type = "recipe",
             name = recipe_name,
             -- An unlicensed band still gets customers; you just cannot serve them,
-            -- and they decay back down. The penny band ships enabled because every
-            -- technology in the game is downstream of the first delivery.
+            -- so they run out their five minutes and leave a review. The penny band
+            -- ships enabled because every technology is downstream of the first
+            -- delivery.
             enabled = band.licence == nil,
             ingredients = {
                 { type = "item", name = customers.item[order.item], amount = 1 },

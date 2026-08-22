@@ -10,7 +10,7 @@ A loader may only ever be bound to an `import` or an `export`. Anything else —
 an assembler, the Entrance — is refused and the item handed back.
 
 Import and Export are the item-heavy machines: a shop lot and a customer order are both bulk
-deliveries. The Entrance is excluded on purpose, because it crafts one customer a minute and an
+deliveries. The Entrance is excluded on purpose, because it crafts one customer at a time and an
 inserter handles that.
 
 A loader's **bound side** is intrinsic: the tile it faces in `input` mode, the tile behind it in

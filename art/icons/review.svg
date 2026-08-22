@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  What a customer leaves behind when their five minutes run out: customer_review.
+
+  Deliberately a sibling of customer.svg: same 64x64 frame, same footprint
+  (x 15-48 / y 4-59), same #2B1A0D outline at stroke-width 3, so the two read as
+  the same family in an item list.
+
+  The slip carries no verdict: no stars, no faces. The mod does not know how
+  many deliveries that customer already paid for, so the token stays neutral.
+
+  Rendered by tools/generate/icons.py at 64x64.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <g stroke="#2B1A0D" stroke-width="3" stroke-linejoin="round">
+    <!-- Slip, with the top-right corner cut away for the fold. -->
+    <path fill="#F3EAD3"
+          d="M 16.5 9.5
+             C 16.5 6.5 18 5.5 20.5 5.5
+             L 37 5.5
+             L 47.5 16
+             L 47.5 54.5
+             C 47.5 57.5 46 58.5 43.5 58.5
+             L 20.5 58.5
+             C 18 58.5 16.5 57.5 16.5 54.5
+             Z" />
+    <!-- The fold itself, turned face up. -->
+    <path fill="#DCCDA8" d="M 37 5.5 L 37 16 L 47.5 16 Z" />
+  </g>
+  <!-- A faint sheen down the left edge, mirroring the highlight on customer.svg. -->
+  <path fill="#FBF6E8" d="M 20 53 L 20 13 C 20 10 21 9 23 9 L 23 53 Z" />
+  <!-- Three written lines, the last one short, so it reads as filled in. -->
+  <g stroke="#6B5334" stroke-width="3" stroke-linecap="round">
+    <path d="M 24 27 L 41 27" />
+    <path d="M 24 35 L 41 35" />
+    <path d="M 24 43 L 34 43" />
+  </g>
+  <!-- Signed off. -->
+  <path fill="none" stroke="#2B1A0D" stroke-width="2.5" stroke-linecap="round"
+        d="M 23.5 51.5 C 26.5 47.5 28.5 54.5 31.5 50.5 C 34 47 36 53.5 41 49.5" />
+</svg>

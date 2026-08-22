@@ -1,16 +1,18 @@
 # Customer System
 
 > This document describes **mechanics only**. Every concrete number — order amounts, refunds,
-> profits, spoil durations, spawn weights, decay targets, resource prices — lives in the `bands` and
+> profits, the customer lifetime, spawn weights, resource prices — lives in the `bands` and
 > `orders` tables in [`src/services/economy/customers/orders.lua`](../src/services/economy/customers/orders.lua) and the
 > `resources` table in [`src/services/economy/shop/prices.lua`](../src/services/economy/shop/prices.lua), which are the single
 > source of truth. Read the tables there for current values.
 
 ## Overview
 
-The entire economy revolves around customers. Customers are **items that spoil** — an unserved
-customer downgrades to a simpler order, and the simplest order leaves a **ghost** behind. Serving a
-customer refunds what the goods cost you, pays **profit** on top, and **spawns a new customer**.
+The entire economy revolves around customers. Customers are **items that spoil**, and every one of
+them lives exactly five minutes: it arrives, it is served or it is not, and then it leaves a
+**review** behind. Serving a customer refunds what the goods cost you, pays **profit** on top, and
+**spawns a new customer** — but that successor inherits the leftover time rather than starting
+over, so a delivery buys no patience.
 
 Money is the re-skinned science pack ladder — see [Currency](#currency) below. Every denomination
 has a source: five bands of customers, one per denomination, and the rocket for the sixth.
@@ -46,7 +48,8 @@ ever.
 
 The four upper bands have their delivery recipes `enabled = false` until the matching technology is
 researched. A customer from a band you have no licence for still walks in — you simply cannot serve
-them, and they decay back down. The penny band ships enabled, because everything else in the game is
+them, so they run out their five minutes and leave a review. The penny band ships enabled, because
+everything else in the game is
 downstream of the first delivery.
 
 This is what the four technologies named after a denomination do now. They lost their science pack
@@ -62,13 +65,19 @@ It is the seed of the economy, and it only runs in an **Entrance** building.
 
 ### 1a. The Entrance cap
 
-The customer population is **conserved**: every delivery recipe consumes exactly one customer and
-emits exactly one replacement. Spoilage does not remove a customer either — it swaps them for a
-lower grade. So the population has a single source, the Entrance, and two sinks:
+A delivery is **conserving**: it consumes exactly one customer and emits exactly one replacement.
+Time is not. Because that replacement inherits the leftover life rather than a fresh timer, every
+line of succession that started at the Entrance ends five minutes later in a review, however many
+deliveries it paid for on the way. So the population has a single source, the Entrance, and two
+sinks:
 
-- the bottom order spoiling into a **ghost**, which no recipe accepts;
+- **the five minutes running out**, the ordinary end of every customer, which leaves a review no
+  recipe accepts;
 - a **satellite launch**, which consumes its Diamond client and emits no successor. Every launch
-  permanently costs you one customer.
+  costs you one customer early.
+
+That makes the population a rate rather than a count: it settles at the arrival rate times five
+minutes, and no amount of good play raises it.
 
 **Only one Entrance may exist**, enforced at runtime by `src/control.lua`. Placing a second one is
 refused: the item is returned to the builder and the running Entrance is left untouched. Blueprint
@@ -82,38 +91,49 @@ To retune customer throughput, change `energy_required` on the `customer-new` re
 Each order is an item named `customer_{item}`. They:
 
 - have a **stack size of 1** (cannot be bulk-stored);
-- **spoil**, creating the time pressure. The timer lengthens with the band, because the goods take
-  longer to build;
+- **spoil**, creating the time pressure. Every customer item carries the *same* timer, taken
+  straight from `total_life_seconds` in `orders.lua` rather than authored per order, because a
+  successor inherits a *percentage* of the timer it replaces and two different timers would make
+  one inherited 60% mean two different numbers of seconds;
 - display a composite icon: customer sprite plus the requested item.
 
-### 2a. Order decay
+### 2a. The five minutes
 
-A customer who waits out the timer does not vanish — `spoil_result` steps them down one grade, with
-a fresh timer. This keeps an unfinished factory playable: an order you cannot fill yet drifts down
-until it reaches something you can serve. You lose the payout, not the customer.
+A customer's timer is its whole life, and **nothing refreshes it**:
 
-The chain is generated from one uniform rule, so it cannot hold a typo: an order steps down one
-grade, and the easiest order of a band steps down to the hardest order of the band below. A gold
-band customer therefore walks fifteen steps before it ever litters.
+- **Crafting the goods spends it.** `spoil_tick` is an absolute tick, so the clock runs while your
+  assemblers work and while the customer waits in the Export's ingredient slot.
+- **Delivering does not reset it.** A delivery's successor carries no `always_fresh`, and a Factorio
+  product inherits the spoil percentage of its spoilable ingredients by default. The successor is
+  born as far through its life as the customer it replaced.
+- **Running out ends the customer.** There is no walk down the grades: `spoil_result` is the review,
+  for every order alike.
 
 ```
-gold hard → gold medium → gold easy → bond hard → … → penny medium → penny easy → ghost
+arrives → served, served, served … → five minutes → review
 ```
 
-### 2b. Ghosts
+So an order you cannot fill yet does not drift down into one you can. You lose the customer, and
+what is left behind is litter.
 
-`ghost` is a **terminal token**: a valid decay target that is not an order. It has no order to fill,
-so the generator skips it and `customer_ghost` is written by hand in `orders.lua`. It is
-deliberately a dead end:
+### 2b. Reviews
 
-- **no spoil timer** — a ghost never decays into anything;
+`review` is a **terminal token**: a spoil target that is not an order. It has no order to fill, so
+the generator skips it and `customer_review` is written by hand in `orders.lua`. It is deliberately
+a dead end:
+
+- **no spoil timer** — a review never decays into anything;
 - **no recipe of any kind** — it cannot be served, sold, or voided.
 
-So ghosts only ever accumulate, one stack slot each, for the rest of the save. Failing to serve a
-burner inserter order is not a wash; it leaves permanent litter you have to store or route around.
+The name is neutral on purpose. It says nothing about how the visit went, because the mod does not
+know: the customer who left it may have paid for a dozen deliveries first.
 
-A ghost that appears inside a machine's ingredient slot **jams that machine for good**, since no
-recipe will consume it. That is intended, not a bug. Do not "fix" it by giving ghosts a spoil timer
+Reviews therefore only ever accumulate, for the rest of the save, and they arrive at the Entrance's
+rate rather than only when you fail — every customer leaves one. They stack, so the pile stays a
+logistics problem rather than an arithmetic one, but there is no way to be rid of it.
+
+A review that appears inside a machine's ingredient slot **jams that machine for good**, since no
+recipe will consume it. That is intended, not a bug. Do not "fix" it by giving reviews a spoil timer
 or a disposal recipe.
 
 ### 2c. The rocket client
@@ -123,8 +143,8 @@ most valuable customer in the game. They have no delivery recipe. Instead, `cust
 **ingredient of the vanilla `satellite` recipe** — you build a satellite around the client and launch
 it, and the launch pays vanilla's `rocket_launch_products`, 1000 Diamonds.
 
-They spoil like anyone else, back down into the gold band, so the satellite chain has to be buffered
-and ready before one arrives. They enter the population only as a successor of the gold band's hard
+They run the same five minutes as anyone else, and inherit whatever was left of the customer that
+brought them in, so the satellite chain has to be buffered and ready before one arrives. They enter the population only as a successor of the gold band's hard
 order.
 
 ### 3. Delivery recipes
@@ -271,9 +291,10 @@ between two `shared_probability` bands where a delivery produces no successor at
 drains the population. Integers cannot do that: band *k+1*'s `min` is built from the same numerator
 as band *k*'s `max`.
 
-The graph itself is generated, not authored. Serving pushes up, spoiling pulls down: an order mostly
-brings more work at its own level, and only the hard order of a band can bring in a customer from the
-band above. Weights are clamped by folding rather than dropping, so every row sums exactly.
+The graph itself is generated, not authored. Serving is the only way up: an order mostly brings more
+work at its own level, and only the hard order of a band can bring in a customer from the band above.
+Since a successor inherits the leftover time, a climb has to happen inside one customer's five
+minutes. Weights are clamped by folding rather than dropping, so every row sums exactly.
 
 ## Key Factorio 2.1 features used
 
@@ -282,9 +303,10 @@ does not use Space Age content. It is also not compatible with other mods; see
 [game-design.md](game-design.md#scope-and-non-goals).
 
 - **`spoil_ticks`** — makes customer items expire, creating time pressure
-- **`spoil_result`** — expiring customers step down a grade instead of disappearing, and the bottom
-  order becomes a permanent ghost
+- **`spoil_result`** — an expired customer becomes a permanent review rather than disappearing
 - **`shared_probability`** — mutually exclusive random outputs for spawning exactly one new customer per delivery
-- **`always_fresh = true`** — newly spawned customers start with full spoil timer
+- **product spoilage inheritance** — a result with no `always_fresh` inherits the spoil percentage of
+  its spoilable ingredients (weighted by `ItemIngredientPrototype::spoil_weight`, default 1), which
+  is what makes the five minutes a total rather than a per-delivery allowance
 - **`rocket_launch_products`** — vanilla's satellite payout, which is the only source of Diamonds
 - **`spoiling_required = true`** in info.json — tells Factorio this mod requires the spoilage system

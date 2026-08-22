@@ -7,8 +7,8 @@ declares at `icon_size = 64` is produced here, so re-run after editing any SVG.
 
 Usage:
     python tools/generate/icons.py --all
-    python tools/generate/icons.py art/icons/ghost.svg
-    python tools/generate/icons.py art/icons/ghost.svg --out /tmp/preview.png --size 128
+    python tools/generate/icons.py art/icons/review.svg
+    python tools/generate/icons.py art/icons/review.svg --out /tmp/preview.png --size 128
 
 Requires resvg-py (see tools/setup/requirements.txt). Deterministic and idempotent.
 """

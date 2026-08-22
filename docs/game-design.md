@@ -56,8 +56,8 @@ We borrow the **mechanical philosophy** of restaurant tycoon games, not their th
 - **No enemies, no combat** — biters, spitters and nests never generate, and the weapon tree (guns, ammo, grenades, turrets, walls, gates, mines, combat armor and equipment, tank, spidertron, artillery) is removed along with its technologies. There is no territory to hold and no ore patch to defend, so defence was never a problem this mod posed — and most of the tree was unreachable regardless, since `explosives` needs coal and sulfur needs crude oil. Removing it means the crafting menu and tech tree describe the game you are actually playing.
 - **Money is the bottleneck** — every raw material and every technology has a price, paid only out of customer deliveries. See [customer-system.md](customer-system.md#currency) for the denomination ladder.
 - **Loaders are Import/Export infrastructure** — vanilla's three loaders are un-hidden and retyped to one tile, but a loader can only attach to an Import or an Export. They exist to feed the two machines that move goods in bulk, not to become a general chest-to-belt mover, so the rest of the factory is still built out of inserters.
-- **Spoilage creates urgency** — customers expire in seconds, so your factory must be responsive, not just high-throughput
-- **Customer chains create progression** — orders sit in five bands, one per denomination, and only a band's hardest order can bring in a customer from the band above. Serving pushes up, spoiling pulls down, so the mix parks itself on the hardest thing the factory can actually deliver.
+- **Spoilage creates urgency** — a customer lives five minutes from the moment it arrives, and serving one buys it no more time, so your factory must be responsive, not just high-throughput
+- **Customer chains create progression** — orders sit in five bands, one per denomination, and only a band's hardest order can bring in a customer from the band above. Serving is the only way up, and a customer's five minutes are the whole window to climb, so the mix parks itself on the hardest thing the factory can deliver quickly.
 
 ### Design Principles
 

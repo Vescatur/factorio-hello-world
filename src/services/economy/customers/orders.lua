@@ -1,18 +1,19 @@
--- orders.lua -- who walks in, what they order, and what they decay into.
+-- orders.lua -- who walks in, what they order, and how long they last.
 --
 -- Owns the band table and the item prototype for each order. The recipes that
 -- consume them live with the machine that crafts them: `customer-new` in
 -- entrance.lua, `customer_<x>_deliver` in export.lua.
 --
--- The `refund` numbers are authored, not solved. cost.lua re-solves the recipe
+-- The `refund` numbers are authored, not solved. verify_orders.lua re-solves the recipe
 -- graph on every load and asserts none has fallen behind what its order costs.
 -- See docs/customer-system.md for the ladder and the probability trees.
 local currency = require("services.economy.money.currency")
 
--- Timers for the two terminal tokens, which are not orders and so carry no
--- `spoil_seconds` of their own.
-local diamond_spoil_seconds = 60
-local angry_burner_inserter_spoil_seconds = 5 * 60
+-- A customer's whole life: from the Entrance that mints it to the review it leaves
+-- behind. One clock for the whole ladder, because a delivery hands its successor a
+-- PERCENTAGE of the timer it consumed (see export.lua): with two timers in play, one
+-- inherited 60% would mean two different numbers of seconds.
+local total_life_seconds = 5 * 60
 
 -- Integers over this total, never decimal chances. 0.1 + 0.2 + 0.7 is
 -- 1.0000000000000002 in IEEE doubles, which fails the sum assertion and, worse,
@@ -37,9 +38,6 @@ local bands = {
 
 -- `band` and `grade` place the order on the ladder; `refund` is a map of
 -- denomination key -> amount and `profit` a plain number in the band's currency.
--- `spoil_seconds` is this order's own spoil timer, authored per order rather than
--- shared by band.
---
 -- `spawn` is whole percent, indexed BY GRADE: `spawn[g]` is the chance a delivery
 -- brings back a grade-`g` customer of the same band, so a row has exactly as many
 -- numbers as its band has grades. A literal 0 means "never spawn this grade". The
@@ -54,60 +52,56 @@ local bands = {
 local orders = {
     -- Penny -- wood, stone and iron, all hand-craftable, no research at all.
     { band = 1, grade = 1, item = "burner-inserter",        amount = 2,   refund = { penny = 2 },  profit = 1,
-      spawn = { 80, 20, 0 }, spoil_seconds = 5 * 60 },
+      spawn = { 80, 20, 0 } },
     { band = 1, grade = 2, item = "assembling-machine-1",   amount = 20,  refund = { penny = 30 }, profit = 6,
-      spawn = { 40, 40, 20 }, spoil_seconds = 30 },
+      spawn = { 40, 40, 20 } },
     { band = 1, grade = 3, item = "transport-belt",         amount = 100, refund = { penny = 75 }, profit = 15,
-      spawn = { 60, 20, 0, up = 20 }, spoil_seconds = 30 },
+      spawn = { 60, 20, 0, up = 20 } },
 
     -- Silver -- the first copper, and the first machines built out of it.
     { band = 2, grade = 1, item = "inserter",               amount = 10,  refund = { penny = 20, silver_coin = 2 }, profit = 1,
-      spawn = { 25, 50, 25 }, spoil_seconds = 30 },
+      spawn = { 25, 50, 25 } },
     { band = 2, grade = 2, item = "splitter",               amount = 10,  refund = { penny = 90, silver_coin = 8 }, profit = 2,
-      spawn = { 25, 25, 50 }, spoil_seconds = 30 },
+      spawn = { 25, 25, 50 } },
     { band = 2, grade = 3, item = "assembling-machine-2",   amount = 5,   refund = { penny = 65, silver_coin = 8 }, profit = 2,
-      spawn = { 25, 25, 25, up = 25 }, spoil_seconds = 30 },
+      spawn = { 25, 25, 25, up = 25 } },
 
     -- Banknote -- nothing here exists without coal and crude oil.
     { band = 3, grade = 1, item = "bulk-inserter",          amount = 5,   refund = { penny = 143, silver_coin = 31,  banknote = 1 }, profit = 1,
-      spawn = { 25, 50, 25 }, spoil_seconds = 30 },
+      spawn = { 25, 50, 25 } },
     { band = 3, grade = 2, item = "electric-furnace",       amount = 5,   refund = { penny = 160, silver_coin = 63,  banknote = 8 }, profit = 2,
-      spawn = { 25, 25, 50 }, spoil_seconds = 30 },
+      spawn = { 25, 25, 50 } },
     { band = 3, grade = 3, item = "productivity-module",    amount = 10,  refund = { penny = 75,  silver_coin = 143, banknote = 5 }, profit = 1,
-      spawn = { 25, 25, 25, up = 25 }, spoil_seconds = 30 },
+      spawn = { 25, 25, 25, up = 25 } },
 
     -- Bond -- the robot era.
     { band = 4, grade = 1, item = "construction-robot",     amount = 10,  refund = { penny = 119, silver_coin = 63,  banknote = 34 }, profit = 1,
-      spawn = { 25, 50, 25 }, spoil_seconds = 30 },
+      spawn = { 25, 50, 25 } },
     { band = 4, grade = 2, item = "logistic-robot",         amount = 10,  refund = { penny = 129, silver_coin = 110, banknote = 36 }, profit = 1,
-      spawn = { 25, 25, 50 }, spoil_seconds = 30 },
+      spawn = { 25, 25, 50 } },
     { band = 4, grade = 3, item = "roboport",               amount = 2,   refund = { penny = 405, silver_coin = 225, banknote = 10 }, profit = 1,
-      spawn = { 25, 25, 25, up = 25 }, spoil_seconds = 30 },
+      spawn = { 25, 25, 25, up = 25 } },
 
     -- Gold -- everything here pays a Bond toll of its own to be built at all.
     { band = 5, grade = 1, item = "express-transport-belt", amount = 20,  refund = { penny = 315, silver_coin = 20,  banknote = 4,  bond = 20 }, profit = 1,
-      spawn = { 25, 50, 25 }, spoil_seconds = 30 },
+      spawn = { 25, 50, 25 } },
     { band = 5, grade = 2, item = "beacon",                 amount = 5,   refund = { penny = 275, silver_coin = 268, banknote = 9,  bond = 5 },  profit = 1,
-      spawn = { 25, 25, 50 }, spoil_seconds = 30 },
+      spawn = { 25, 25, 50 } },
     { band = 5, grade = 3, item = "productivity-module-3",  amount = 2,   refund = { penny = 893, silver_coin = 994, banknote = 86, bond = 2 },  profit = 1,
-      spawn = { 25, 25, 25, up = 25 }, spoil_seconds = 30 },
+      spawn = { 25, 25, 25, up = 25 } },
 }
 
 
 -- Customer items that are not orders: neither gets a delivery recipe, so the
 -- generator skips both and their prototypes are written by hand.
 --
---   ghost              -- no order, no recipe, no spoil timer, so ghosts only pile
---                          up. One spoiling inside a machine's ingredient slot jams
---                          it for good.
---   diamond            -- the client who wants a rocket launched. The satellite
---                          recipe consumes them (see tolls.lua) and the launch pays
---                          1000 Diamonds. The only place the population shrinks
---                          other than a ghost.
---   angry-burner-inserter -- the entry-level order's last warning: it has no lower
---                          grade and no band below to step down to, so it gets one
---                          extra rung before ghost instead of spoiling straight there.
-local terminal_tokens = { ghost = true, diamond = true, ["angry-burner-inserter"] = true }
+--   review   -- what every customer leaves behind once its five minutes are up. No
+--              recipe and no spoil timer, so reviews only ever pile up. One spoiling
+--              inside a machine's ingredient slot jams that machine for good.
+--   diamond  -- the client who wants a rocket launched. The satellite recipe consumes
+--              them (see tolls.lua) and the launch pays 1000 Diamonds. The only way a
+--              customer leaves without leaving a review.
+local terminal_tokens = { review = true, diamond = true }
 
 
 -- Built before the generator so the spoil chain resolves against it: a typo fails
@@ -163,26 +157,6 @@ end
 -- authored, so it follows a band that gains or loses a grade.
 for _, order in ipairs(orders) do
     order.is_top = order.grade == top_grade[order.band]
-end
-
-
--- One uniform rule: an order steps down one grade, and the easiest order of a band
--- steps down to the TOP order of the band below -- looked up, not written as a 3.
--- The bottom spoils into a ghost. So an unlicensed band costs the payout, never the
--- customer.
-local function spoils_into(order)
-    local lower = at(order.band, order.grade - 1)
-    if lower then
-        return lower.item
-    end
-    local below = order.band - 1
-    local band_below = top_grade[below] and at(below, top_grade[below])
-    if band_below then
-        return band_below.item
-    end
-    -- Bottom of the ladder, nothing left to step down to: one extra rung before
-    -- ghost rather than straight there.
-    return "angry-burner-inserter"
 end
 
 
@@ -260,10 +234,13 @@ end
 data:extend({
     {
         type = "item",
-        name = item_by_key.ghost,
-        icon = "__profitorio__/graphics/icons/ghost.png",
+        name = item_by_key.review,
+        icon = "__profitorio__/graphics/icons/review.png",
         icon_size = 64,
-        stack_size = 1,
+        -- Every customer ends as one of these and no recipe takes them, so the pile
+        -- grows at the Entrance's rate for the whole save. Stacking keeps that a
+        -- logistics problem rather than an arithmetic one -- it is still a dead end.
+        stack_size = 100,
     },
     {
         type = "item",
@@ -283,46 +260,13 @@ data:extend({
             }
         },
         stack_size = 1,
-        spoil_ticks = diamond_spoil_seconds * 60,
-        -- By position, not the last row of the table, so reordering rows cannot
-        -- silently re-point it.
-        spoil_result = item_by_key[at(#bands, top_grade[#bands]).item],
-    },
-    {
-        type = "item",
-        name = item_by_key["angry-burner-inserter"],
-        icons = {
-            {
-                icon = "__profitorio__/graphics/icons/customer.png",
-                icon_size = 64,
-                icon_mipmaps = 4,
-                -- Red tint on the silhouette only, so the wooden chest stays legible
-                -- while still reading as one rung angrier than the plain order.
-                tint = { r = 1, g = 0.3, b = 0.3, a = 1 }
-            },
-            {
-                icon = "__base__/graphics/icons/burner-inserter.png",
-                icon_size = 64,
-                icon_mipmaps = 4,
-                scale = 0.3,
-                shift = { 6, 6 }
-            }
-        },
-        stack_size = 1,
-        spoil_ticks = angry_burner_inserter_spoil_seconds * 60,
-        spoil_result = item_by_key.ghost,
+        spoil_ticks = total_life_seconds * 60,
+        spoil_result = item_by_key.review,
     }
 })
 
 for _, order in ipairs(orders) do
-    order.spoils_into = spoils_into(order)
     order.successors = successors_of(order)
-
-    assert(item_by_key[order.spoils_into],
-        "customers: '" .. order.item .. "' spoils into '" .. tostring(order.spoils_into)
-            .. "', which is neither an order nor a terminal token")
-    assert(type(order.spoil_seconds) == "number" and order.spoil_seconds > 0,
-        "customers: '" .. order.item .. "' has no positive spoil_seconds")
 
     data:extend({
         {
@@ -343,8 +287,10 @@ for _, order in ipairs(orders) do
                 }
             },
             stack_size = 1,
-            spoil_ticks = order.spoil_seconds * 60,
-            spoil_result = item_by_key[order.spoils_into],
+            spoil_ticks = total_life_seconds * 60,
+            -- The whole life, not this rung's share of it: there is no lower grade to
+            -- step down into, only the review.
+            spoil_result = item_by_key.review,
         }
     })
 end
@@ -355,7 +301,7 @@ end
 local entry = at(1, 1).item
 assert(item_by_key[entry], "customers: entry order '" .. entry .. "' is not an order")
 
-log("[customers] " .. #orders .. " orders across " .. #bands .. " bands, plus ghost and diamond.")
+log("[customers] " .. #orders .. " orders across " .. #bands .. " bands, plus review and diamond.")
 
 -- Anything a delivery recipe emits has to be in here; the one thing that must never
 -- end up in a result is the vanilla item the customer is asking for.
