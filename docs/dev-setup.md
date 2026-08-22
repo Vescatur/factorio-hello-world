@@ -41,7 +41,7 @@ This launches Factorio with:
 ## Project Structure
 
 ```
-factorio-hello-world/
+profitorio/
 ├── src/                    # The mod (deployed via symlink)
 │   ├── info.json           # Mod metadata (name: "profitorio", version, dependencies)
 │   ├── data.lua            # Data-stage entry point — requires all services
